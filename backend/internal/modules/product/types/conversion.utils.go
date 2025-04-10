@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"sort"
 
+	provisionsTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/types"
+
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 
 	additiveTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
@@ -19,6 +21,7 @@ type ProductSizeModels struct {
 	ProductSize *data.ProductSize
 	Additives   []data.ProductSizeAdditive
 	Ingredients []data.ProductSizeIngredient
+	Provisions  []data.ProductSizeProvision
 }
 
 func MapToBaseProductDTO(product *data.Product) BaseProductDTO {
@@ -102,17 +105,35 @@ func ConvertToProductSizeAdditiveDTO(productSizeAdditive *data.ProductSizeAdditi
 	}
 }
 
+func ConvertToProductSizeProvisionDTO(productSizeProvision *data.ProductSizeProvision) ProductSizeProvisionDTO {
+	return ProductSizeProvisionDTO{
+		Provision: *provisionsTypes.MapToProvisionDTO(&productSizeProvision.Provision),
+		Volume:    productSizeProvision.Volume,
+	}
+}
+
+func ConvertToProductSizeIngredientDTO(productSizeIngredient *data.ProductSizeIngredient) ProductSizeIngredientDTO {
+	return ProductSizeIngredientDTO{
+		Ingredient: *ingredientTypes.ConvertToIngredientResponseDTO(&productSizeIngredient.Ingredient),
+		Quantity:   productSizeIngredient.Quantity,
+	}
+}
+
 func MapToProductSizeDetails(productSize data.ProductSize) ProductSizeDetailsDTO {
 	additives := make([]ProductSizeAdditiveDTO, len(productSize.Additives))
 	ingredients := make([]ProductSizeIngredientDTO, len(productSize.ProductSizeIngredients))
+	provisions := make([]ProductSizeProvisionDTO, len(productSize.ProductSizeProvisions))
 
 	for i, productSizeIngredient := range productSize.ProductSizeIngredients {
-		ingredients[i].Ingredient = *ingredientTypes.ConvertToIngredientResponseDTO(&productSizeIngredient.Ingredient)
-		ingredients[i].Quantity = productSizeIngredient.Quantity
+		ingredients[i] = ConvertToProductSizeIngredientDTO(&productSizeIngredient)
 	}
 
 	for i, productSizeAdditive := range productSize.Additives {
 		additives[i] = ConvertToProductSizeAdditiveDTO(&productSizeAdditive)
+	}
+
+	for i, productSizeProvision := range productSize.ProductSizeProvisions {
+		provisions[i] = ConvertToProductSizeProvisionDTO(&productSizeProvision)
 	}
 
 	return ProductSizeDetailsDTO{
@@ -120,13 +141,14 @@ func MapToProductSizeDetails(productSize data.ProductSize) ProductSizeDetailsDTO
 		TotalNutrition: *CalculateTotalNutrition(&productSize),
 		Additives:      additives,
 		Ingredients:    ingredients,
+		Provisions:     provisions,
 	}
 }
 
 func CreateToProductModel(dto *CreateProductDTO) *data.Product {
 	product := &data.Product{
 		Name:        dto.Name,
-		Description: *dto.Description,
+		Description: utils.DerefString(dto.Description),
 		CategoryID:  dto.CategoryID,
 	}
 
@@ -145,6 +167,7 @@ func CreateToProductSizeModel(dto *CreateProductSizeDTO) *data.ProductSize {
 
 	productSize.Additives = mapAdditivesToProductSizeAdditives(dto.Additives)
 	productSize.ProductSizeIngredients = mapIngredientsToProductSizeIngredients(dto.Ingredients)
+	productSize.ProductSizeProvisions = mapProvisionsToProductSizeProvisions(dto.Provisions)
 
 	return productSize
 }
@@ -155,13 +178,15 @@ func UpdateProductToModel(dto *UpdateProductDTO, product *data.Product) error {
 	}
 
 	if dto.Name != nil {
-		if dto.Name != &product.Name {
+		if *dto.Name != product.Name {
 			product.Name = *dto.Name
 		}
 	}
 
 	if dto.Description != nil {
-		product.Description = *dto.Description
+		if *dto.Description != product.Description {
+			product.Description = *dto.Description
+		}
 	}
 
 	if dto.CategoryID != 0 {
@@ -192,11 +217,13 @@ func UpdateProductSizeToModels(dto *UpdateProductSizeDTO) *ProductSizeModels {
 
 	additives := mapAdditivesToProductSizeAdditives(dto.Additives)
 	ingredients := mapIngredientsToProductSizeIngredients(dto.Ingredients)
+	provisions := mapProvisionsToProductSizeProvisions(dto.Provisions)
 
 	return &ProductSizeModels{
 		ProductSize: productSize,
 		Additives:   additives,
 		Ingredients: ingredients,
+		Provisions:  provisions,
 	}
 }
 
@@ -225,7 +252,7 @@ func mapAdditivesToProductSizeAdditives(additivesDTO []SelectedAdditiveDTO) []da
 	return additives
 }
 
-func mapIngredientsToProductSizeIngredients(ingredientsDTO []SelectedIngredientDTO) []data.ProductSizeIngredient {
+func mapIngredientsToProductSizeIngredients(ingredientsDTO []ingredientTypes.SelectedIngredientDTO) []data.ProductSizeIngredient {
 	if ingredientsDTO == nil {
 		return nil
 	}
@@ -243,64 +270,67 @@ func mapIngredientsToProductSizeIngredients(ingredientsDTO []SelectedIngredientD
 	return ingredients
 }
 
-var emptyStringRu = "пустое значение"
+func mapProvisionsToProductSizeProvisions(provisionsDTO []provisionsTypes.SelectedProvisionDTO) []data.ProductSizeProvision {
+	if provisionsDTO == nil {
+		return nil
+	}
 
-// emptyStringEn = "empty value"
-// emptyStringKk = "бос мән"
+	provisions := make([]data.ProductSizeProvision, 0, len(provisionsDTO))
 
-func GenerateProductChanges(before *data.Product, dto *UpdateProductDTO, imageKey *data.StorageImageKey) []details.CentralCatalogChange {
+	for _, dto := range provisionsDTO {
+		provision := data.ProductSizeProvision{
+			ProvisionID: dto.ProvisionID,
+			Volume:      dto.Volume,
+		}
+		provisions = append(provisions, provision)
+	}
+
+	return provisions
+}
+
+func GenerateProductChanges(before *data.Product, dto *UpdateProductDTO, newImageKey *data.StorageImageKey) []details.CentralCatalogChange {
 	var changes []details.CentralCatalogChange
 
-	if dto.Name != nil && dto.Name != &before.Name {
+	if dto.Name != nil && *dto.Name != before.Name {
 		key := "notification.centralCatalogUpdateDetails.nameChange"
 
+		var oldNameParam interface{} = before.Name
+		if before.Name == "" {
+			oldNameParam = ""
+		}
+
+		var newNameParam interface{} = *dto.Name
 		if *dto.Name == "" {
-			changes = append(changes, details.CentralCatalogChange{
-				Key: key,
-				Params: map[string]interface{}{
-					"OldName": before.Name,
-					"NewName": emptyStringRu,
-				},
-			})
-		} else {
-			changes = append(changes, details.CentralCatalogChange{
-				Key: key,
-				Params: map[string]interface{}{
-					"OldName": before.Name,
-					"NewName": dto.Name,
-				},
-			})
+			newNameParam = ""
 		}
-	}
 
-	if dto.Description != nil && dto.Description != &before.Description {
-		key := "notification.centralCatalogUpdateDetails.descriptionChange"
-		if *dto.Description == "" {
-			changes = append(changes, details.CentralCatalogChange{
-				Key: key,
-				Params: map[string]interface{}{
-					"OldDescription": before.Description,
-					"NewDescription": emptyStringRu,
-				},
-			})
-		} else {
-			changes = append(changes, details.CentralCatalogChange{
-				Key: key,
-				Params: map[string]interface{}{
-					"OldDescription": before.Description,
-					"NewDescription": dto.Description,
-				},
-			})
-		}
-	}
-
-	if imageKey != before.ImageKey {
-		key := "notification.centralCatalogUpdateDetails.imageUrlChange"
 		changes = append(changes, details.CentralCatalogChange{
 			Key: key,
 			Params: map[string]interface{}{
-				"OldImageURL": before.ImageKey.GetURL(),
-				"NewImageURL": imageKey.GetURL(),
+				"OldName": oldNameParam,
+				"NewName": newNameParam,
+			},
+		})
+	}
+
+	if dto.Description != nil && *dto.Description != before.Description {
+		key := "notification.centralCatalogUpdateDetails.descriptionChange"
+
+		var oldDescParam interface{} = before.Description
+		if before.Description == "" {
+			oldDescParam = ""
+		}
+
+		var newDescParam interface{} = *dto.Description
+		if *dto.Description == "" {
+			newDescParam = ""
+		}
+
+		changes = append(changes, details.CentralCatalogChange{
+			Key: key,
+			Params: map[string]interface{}{
+				"OldDescription": oldDescParam,
+				"NewDescription": newDescParam,
 			},
 		})
 	}
@@ -353,10 +383,10 @@ func CalculateTotalNutrition(productSize *data.ProductSize) *TotalNutrition {
 		totalNutrition.AllergenIngredients = append(totalNutrition.AllergenIngredients, name)
 	}
 
-	totalNutrition.Calories = utils.RoundToOneDecimal(totalNutrition.Calories)
-	totalNutrition.Proteins = utils.RoundToOneDecimal(totalNutrition.Proteins)
-	totalNutrition.Fats = utils.RoundToOneDecimal(totalNutrition.Fats)
-	totalNutrition.Carbs = utils.RoundToOneDecimal(totalNutrition.Carbs)
+	totalNutrition.Calories = utils.RoundToDecimal(totalNutrition.Calories, 1)
+	totalNutrition.Proteins = utils.RoundToDecimal(totalNutrition.Proteins, 1)
+	totalNutrition.Fats = utils.RoundToDecimal(totalNutrition.Fats, 1)
+	totalNutrition.Carbs = utils.RoundToDecimal(totalNutrition.Carbs, 1)
 
 	return totalNutrition
 }

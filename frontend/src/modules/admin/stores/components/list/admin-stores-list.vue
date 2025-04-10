@@ -28,14 +28,14 @@
 				<!-- Status -->
 				<TableCell class="p-4">
 					<span
-            :class="[
+						:class="[
               'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs',
               store.franchisee ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
               ]"
-          >
-            {{ store.franchisee ? 'Франшиза' : 'Официальное' }}
-          </span>
-        </TableCell>
+					>
+						{{ store.franchisee ? 'Франшиза' : 'Официальное' }}
+					</span>
+				</TableCell>
 			</TableRow>
 		</TableBody>
 	</Table>

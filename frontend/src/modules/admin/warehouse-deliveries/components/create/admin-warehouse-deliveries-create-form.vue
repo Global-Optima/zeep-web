@@ -35,7 +35,7 @@
 		<Card>
 			<CardHeader>
 				<CardTitle>Выберите поставщика</CardTitle>
-				<CardDescription> Укажите поставщика для этой доставки. </CardDescription>
+				<CardDescription>Укажите поставщика для этой доставки.</CardDescription>
 			</CardHeader>
 			<CardContent>
 				<Button
@@ -55,7 +55,7 @@
 					<div>
 						<CardTitle>Материалы доставки</CardTitle>
 						<CardDescription class="mt-2">
-							Добавьте материалы и укажите их количество и упаковку.
+							Добавьте материалы и укажите их количество, цену и упаковку.
 						</CardDescription>
 					</div>
 					<Button
@@ -75,13 +75,15 @@
 							<TableHead>Упаковка</TableHead>
 							<TableHead>Категория</TableHead>
 							<TableHead>Количество</TableHead>
+							<TableHead>Цена за упаковку</TableHead>
+							<TableHead>Итоговая цена</TableHead>
 							<TableHead class="text-center"></TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>
 						<TableRow v-if="materials.length === 0">
 							<TableCell
-								colspan="5"
+								colspan="7"
 								class="py-5 text-muted-foreground text-center"
 							>
 								Нет добавленных материалов
@@ -92,17 +94,32 @@
 							:key="material.stockMaterialId"
 						>
 							<TableCell>{{ material.name }}</TableCell>
-							<TableCell> {{ material.size }} {{ material.unit.name }} </TableCell>
+							<TableCell>{{ material.size }} {{ material.unit.name }}</TableCell>
 							<TableCell>{{ material.category }}</TableCell>
 							<TableCell>
 								<Input
 									type="number"
 									v-model.number="material.quantity"
-									:min="1"
+									min="1"
+									step="1"
 									class="w-20"
 									:class="{ 'border-red-500': material.quantity <= 0 }"
 									placeholder="Введите количество"
 								/>
+							</TableCell>
+							<TableCell>
+								<Input
+									type="number"
+									v-model.number="material.price"
+									min="0"
+									step="0.01"
+									class="w-20"
+									:class="{ 'border-red-500': material.price <= 0 }"
+									placeholder="Введите цену"
+								/>
+							</TableCell>
+							<TableCell>
+								{{ (material.quantity * material.price).toFixed(2) }}
 							</TableCell>
 							<TableCell class="text-center">
 								<Trash
@@ -112,6 +129,20 @@
 							</TableCell>
 						</TableRow>
 					</TableBody>
+					<TableFooter v-if="materials.length > 0">
+						<TableRow>
+							<TableCell
+								colspan="5"
+								class="font-medium"
+								>Итого</TableCell
+							>
+							<TableCell>
+								{{ totalSum.toFixed(2) }}
+							</TableCell>
+							<!-- Empty cell for action column -->
+							<TableCell></TableCell>
+						</TableRow>
+					</TableFooter>
 				</Table>
 			</CardContent>
 		</Card>
@@ -121,15 +152,13 @@
 			<Button
 				variant="outline"
 				@click="onCancel"
+				>Отменить</Button
 			>
-				Отменить
-			</Button>
 			<Button
 				type="submit"
 				@click="onSubmit"
+				>Сохранить</Button
 			>
-				Сохранить
-			</Button>
 		</div>
 
 		<!-- Dialogs -->
@@ -149,41 +178,45 @@
 
 <script setup lang="ts">
 import { Button } from '@/core/components/ui/button'
+import { ref, computed } from 'vue'
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
 } from '@/core/components/ui/card'
 import { Input } from '@/core/components/ui/input'
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+	TableFooter,
 } from '@/core/components/ui/table'
 import { useToast } from '@/core/components/ui/toast'
 import { ChevronLeft, Trash } from 'lucide-vue-next'
-import { ref } from 'vue'
 
 // Dialog Components
 import AdminStockMaterialsSelectDialog from '@/modules/admin/stock-materials/components/admin-stock-materials-select-dialog.vue'
+import AdminSelectSupplierDialog from '@/modules/admin/suppliers/components/admin-select-supplier-dialog.vue'
 
 // Interfaces
 import type { StockMaterialsDTO, StockMaterialsFilter } from '@/modules/admin/stock-materials/models/stock-materials.model'
-import AdminSelectSupplierDialog from '@/modules/admin/suppliers/components/admin-select-supplier-dialog.vue'
 import type { SupplierDTO } from '@/modules/admin/suppliers/models/suppliers.model'
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 import type { ReceiveWarehouseDelivery, ReceiveWarehouseStockMaterial } from '@/modules/admin/warehouse-stocks/models/warehouse-stock.model'
 
-interface  ReceiveWarehouseStockMaterialForm extends ReceiveWarehouseStockMaterial {
-  name: string
-  category: string
-  size: number
-  unit: UnitDTO
+// Extended interface: now includes price
+interface ReceiveWarehouseStockMaterialForm extends ReceiveWarehouseStockMaterial {
+	stockMaterialId: number
+	name: string
+	category: string
+	size: number
+	unit: UnitDTO
+	price: number
 }
 
 const emit = defineEmits<{
@@ -198,7 +231,6 @@ const selectedSupplier = ref<{ id: number; name: string } | null>(null)
 // Dialog States
 const openSupplierDialog = ref(false)
 const openStockMaterialDialog = ref(false)
-
 const stockMaterialFilter = ref<StockMaterialsFilter>({})
 
 // Toast
@@ -208,25 +240,23 @@ const { toast } = useToast()
 function selectSupplier(supplier: SupplierDTO) {
 	selectedSupplier.value = supplier
 	openSupplierDialog.value = false
-  materials.value = []
-  stockMaterialFilter.value = {supplierId: supplier.id}
+	materials.value = []
+	stockMaterialFilter.value = { supplierId: supplier.id }
 }
 
 // Add Stock Material
 function addStockMaterial(stockMaterial: StockMaterialsDTO) {
 	const exists = materials.value.some((item) => item.stockMaterialId === stockMaterial.id)
-
-	if (exists) {
-		return
-	}
+	if (exists) return
 
 	materials.value.push({
 		stockMaterialId: stockMaterial.id,
 		quantity: 0,
+		price: 0,
 		name: stockMaterial.name,
-    category: stockMaterial.category.name,
-    size: stockMaterial.size,
-    unit: stockMaterial.unit
+		category: stockMaterial.category.name,
+		size: stockMaterial.size,
+		unit: stockMaterial.unit,
 	})
 
 	openStockMaterialDialog.value = false
@@ -236,6 +266,11 @@ function addStockMaterial(stockMaterial: StockMaterialsDTO) {
 function removeMaterial(index: number) {
 	materials.value.splice(index, 1)
 }
+
+// Compute total sum of all material totals (quantity * price)
+const totalSum = computed(() =>
+	materials.value.reduce((acc, material) => acc + material.quantity * material.price, 0)
+)
 
 // Submit
 function onSubmit() {

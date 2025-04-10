@@ -183,9 +183,12 @@ func (s *productService) UpdateProduct(productID uint, dto *types.UpdateProductD
 		s.logger.Error(wrappedErr)
 		return nil, wrappedErr
 	}
+
+	oldProduct := *product
 	oldImageKey := product.ImageKey
 	oldVideoKey := product.VideoKey
 
+	// Update product using DTO.
 	err = types.UpdateProductToModel(dto, product)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to update product: %w", err)
@@ -196,11 +199,9 @@ func (s *productService) UpdateProduct(productID uint, dto *types.UpdateProductD
 	if dto.DeleteImage && dto.Image == nil {
 		product.ImageKey = nil
 	}
-
 	if dto.DeleteVideo && dto.Video == nil {
 		product.VideoKey = nil
 	}
-
 	if dto.Image != nil || dto.Video != nil {
 		imageKey, videoKey, err := s.storageRepo.ConvertAndUploadMedia(dto.Image, dto.Video)
 		if err != nil {
@@ -235,7 +236,6 @@ func (s *productService) UpdateProduct(productID uint, dto *types.UpdateProductD
 				}
 			}
 		}()
-
 		return nil, wrappedErr
 	}
 
@@ -246,7 +246,6 @@ func (s *productService) UpdateProduct(productID uint, dto *types.UpdateProductD
 			}
 		}()
 	}
-
 	if oldVideoKey != nil && oldVideoKey != product.VideoKey {
 		go func() {
 			if err := s.storageRepo.MarkFileAsDeleted(oldVideoKey.GetConvertedVideoObjectKey()); err != nil {
@@ -255,8 +254,7 @@ func (s *productService) UpdateProduct(productID uint, dto *types.UpdateProductD
 		}()
 	}
 
-	changes := types.GenerateProductChanges(product, dto, product.ImageKey)
-
+	changes := types.GenerateProductChanges(&oldProduct, dto, product.ImageKey)
 	if len(changes) != 0 {
 		notificationDetails := &details.CentralCatalogUpdateDetails{
 			BaseNotificationDetails: details.BaseNotificationDetails{

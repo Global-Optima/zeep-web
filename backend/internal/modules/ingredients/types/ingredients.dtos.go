@@ -51,3 +51,8 @@ type IngredientFilter struct {
 	MaxCalories   *float64 `form:"maxCalories"`
 	IsAllergen    *bool    `form:"isAllergen"`
 }
+
+type SelectedIngredientDTO struct {
+	IngredientID uint    `json:"ingredientId" binding:"required,gt=0"`
+	Quantity     float64 `json:"quantity" binding:"required,gt=0"`
+}

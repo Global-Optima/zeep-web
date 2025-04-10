@@ -5,6 +5,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives"
 	storeAdditives "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies"
+	additivesTechnicalMap "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/technicalMap"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/analytics"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/categories"
@@ -22,6 +23,10 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/recipes"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts"
+	productTechnicalMap "github.com/Global-Optima/zeep-web/backend/internal/modules/product/technicalMap"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/provisions"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/storeProvisions"
+	provisionsTechnicalMap "github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/technicalMap"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stockRequests"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
@@ -76,7 +81,7 @@ func (r *Router) RegisterNotificationsRoutes(handler *notifications.Notification
 	}
 }
 
-func (r *Router) RegisterProductRoutes(handler *product.ProductHandler) {
+func (r *Router) RegisterProductRoutes(handler *product.ProductHandler, productTechMapHandler *productTechnicalMap.TechnicalMapHandler) {
 	router := r.EmployeeRoutes.Group("/products")
 	{
 		router.GET("", handler.GetProducts)
@@ -89,6 +94,7 @@ func (r *Router) RegisterProductRoutes(handler *product.ProductHandler) {
 		router.DELETE("sizes/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteProductSize)
 		router.POST("/sizes", middleware.EmployeeRoleMiddleware(), handler.CreateProductSize)
 		router.PUT("/sizes/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateProductSize)
+		router.GET("/sizes/:id/technical-map", middleware.EmployeeRoleMiddleware(), productTechMapHandler.GetProductSizeTechnicalMapByID)
 	}
 }
 
@@ -163,7 +169,7 @@ func (r *Router) RegisterProductCategoriesRoutes(handler *categories.CategoryHan
 	}
 }
 
-func (r *Router) RegisterAdditivesRoutes(handler *additives.AdditiveHandler) {
+func (r *Router) RegisterAdditivesRoutes(handler *additives.AdditiveHandler, additivesTechMapHandler *additivesTechnicalMap.TechnicalMapHandler) {
 	router := r.EmployeeRoutes.Group("/additives")
 	{
 		router.GET("", handler.GetAdditives)
@@ -171,6 +177,7 @@ func (r *Router) RegisterAdditivesRoutes(handler *additives.AdditiveHandler) {
 		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateAdditive)
 		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateAdditive)
 		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteAdditive)
+		router.GET("/:id/technical-map", middleware.EmployeeRoleMiddleware(), additivesTechMapHandler.GetAdditiveTechnicalMapByID)
 
 		additiveCategories := router.Group("/categories")
 		{
@@ -401,6 +408,30 @@ func (r *Router) RegisterStockRequestRoutes(handler *stockRequests.StockRequestH
 			statusGroup.PATCH("/reject-store", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.RejectStoreStatus)             // Store
 			statusGroup.PATCH("/completed", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.SetCompletedStatus)               // Store
 		}
+	}
+}
+
+func (r *Router) RegisterProvisionsRoutes(handler *provisions.ProvisionHandler, provisionTechMapHandler *provisionsTechnicalMap.TechnicalMapHandler) {
+	router := r.EmployeeRoutes.Group("/provisions")
+	{
+		router.GET("", handler.GetProvisions)
+		router.GET("/:id", handler.GetProvisionByID)
+		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateProvision)
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateProvisionByID)
+		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteProvisionByID)
+		router.GET("/:id/technical-map", middleware.EmployeeRoleMiddleware(), provisionTechMapHandler.GetProvisionTechnicalMapByID)
+	}
+}
+
+func (r *Router) RegisterStoreProvisionsRoutes(handler *storeProvisions.StoreProvisionHandler) {
+	router := r.EmployeeRoutes.Group("/store-provisions")
+	{
+		router.GET("", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.GetStoreProvisions)
+		router.GET("/:id", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.GetStoreProvisionByID)
+		router.POST("", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.CreateStoreProvision)
+		router.POST("/:id/complete", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.CompleteStoreProvisionByID)
+		router.PUT("/:id", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.UpdateStoreProvisionByID)
+		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(data.StorePermissions...), handler.DeleteStoreProvisionByID)
 	}
 }
 

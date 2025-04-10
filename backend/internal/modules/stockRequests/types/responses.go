@@ -7,6 +7,7 @@ import (
 
 var (
 	Response500StockRequest                     = localization.NewResponseKey(500, data.StockRequestComponent)
+	Response404StockRequest                     = localization.NewResponseKey(404, data.StockRequestComponent)
 	Response403StockRequest                     = localization.NewResponseKey(403, data.StockRequestComponent)
 	Response400StockRequest                     = localization.NewResponseKey(400, data.StockRequestComponent)
 	Response400StockRequestInsufficientStock    = localization.NewResponseKey(400, data.StockRequestComponent, "INSUFFICIENT_STOCK")

@@ -155,6 +155,11 @@ func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrd
 		return nil, fmt.Errorf("order can not be empty")
 	}
 
+	if err := ValidateMultipleSelect(storeID, *createOrderDTO, s.storeAdditiveRepo); err != nil {
+		s.logger.Error(err)
+		return nil, types.ErrMultipleSelect // TODO: test updates
+	}
+
 	frozenMap, err := s.orderRepo.CalculateFrozenStock(storeID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to calculate frozen stock: %w", err)
@@ -166,6 +171,7 @@ func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrd
 
 	storeProductSizeIDs, storeAdditiveIDs := RetrieveIDs(*createOrderDTO)
 	validations, err := s.StockAndPriceValidationResults(
+		createOrderDTO.Suborders,
 		storeID,
 		storeProductSizeIDs,
 		storeAdditiveIDs,
@@ -206,6 +212,7 @@ func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrd
 }
 
 func (s *orderService) StockAndPriceValidationResults(
+	suborders []types.CreateSubOrderDTO,
 	storeID uint,
 	storeProductSizeIDs, storeAdditiveIDs []uint,
 	frozenMap map[uint]float64,
@@ -216,7 +223,12 @@ func (s *orderService) StockAndPriceValidationResults(
 		return nil, err
 	}
 
-	additivePrices, additiveNames, err := ValidateStoreAdditives(storeID, storeAdditiveIDs, s.storeAdditiveRepo, frozenMap)
+	additivePrices, additiveNames, err := ValidateStoreAdditives(
+		storeID,
+		suborders,
+		s.storeAdditiveRepo,
+		frozenMap,
+	)
 	if err != nil {
 		s.logger.Error(fmt.Errorf("additive validation failed: %w", err))
 		return nil, err
@@ -232,48 +244,73 @@ func (s *orderService) StockAndPriceValidationResults(
 
 func ValidateStoreAdditives(
 	storeID uint,
-	storeAdditiveIDs []uint,
+	suborders []types.CreateSubOrderDTO,
 	repo storeAdditives.StoreAdditiveRepository,
 	frozenMap map[uint]float64,
 ) (map[uint]float64, map[uint]string, error) {
 	prices := make(map[uint]float64)
 	additiveNames := make(map[uint]string)
 
-	// This map will count how many additives are selected per category.
-	categoryCount := make(map[uint]int)
+	for _, suborder := range suborders {
+		storePsID := suborder.StoreProductSizeID
+		for _, storeAddID := range suborder.StoreAdditivesIDs {
+			sa, psa, err := repo.GetStoreAdditiveWithProductSizeAdditive(storeID, storePsID, storeAddID)
+			if err != nil {
+				return nil, nil, fmt.Errorf("error loading storeAdditive/PSA for suborder: %w", err)
+			}
+			if sa == nil {
+				return nil, nil, fmt.Errorf("no storeAdditive found for storeAddID=%d", storeAddID)
+			}
 
-	for _, addID := range storeAdditiveIDs {
-		storeAdd, err := repo.GetStoreAdditiveByID(addID, &contexts.StoreContextFilter{StoreID: &storeID})
-		if err != nil {
-			return nil, nil, fmt.Errorf("error with store additive: %w", err)
-		}
-		if storeAdd == nil {
-			return nil, nil, fmt.Errorf("store additive with ID %d is nil", addID)
-		}
-		if storeAdd.Additive.Name == "" {
-			return nil, nil, fmt.Errorf("store additive with ID %d has an empty name", addID)
-		}
+			if psa == nil {
+				return nil, nil, fmt.Errorf(
+					"additive %d not linked to storeProductSize %d in store %d",
+					storeAddID, storePsID, storeID,
+				)
+			}
 
-		// Increase the count for the additive's category.
-		categoryID := storeAdd.Additive.AdditiveCategoryID
-		categoryCount[categoryID]++
+			if sa.IsOutOfStock {
+				return nil, nil, fmt.Errorf(
+					"additive %s (ID=%d) is out of stock",
+					sa.Additive.Name, storeAddID,
+				)
+			}
 
-		// If the additive category does NOT allow multiple selection,
-		// then more than one additive in this category is an error.
-		if !storeAdd.Additive.Category.IsMultipleSelect && categoryCount[categoryID] > 1 {
-			return nil, nil, types.ErrMultipleSelect
-		}
+			var price float64
+			if psa.IsDefault {
+				price = 0
+			} else {
+				if sa.StorePrice != nil {
+					price = *sa.StorePrice
+				} else {
+					price = sa.Additive.BasePrice
+				}
+			}
 
-		// Get the effective price (store-specific price overrides the base price if available).
-		price := storeAdd.Additive.BasePrice
-		if storeAdd.StorePrice != nil {
-			price = *storeAdd.StorePrice
+			prices[storeAddID] = price
+			additiveNames[storeAddID] = sa.Additive.Name
 		}
-		prices[addID] = price
-		additiveNames[addID] = storeAdd.Additive.Name
+	}
+	return prices, additiveNames, nil
+}
+
+func ValidateMultipleSelect(storeID uint, createOrderDTO types.CreateOrderDTO, repo storeAdditives.StoreAdditiveRepository) error {
+	for _, suborder := range createOrderDTO.Suborders {
+		categoryCount := make(map[uint]int)
+		for _, addID := range suborder.StoreAdditivesIDs {
+			storeAdd, err := repo.GetStoreAdditiveByID(addID, &contexts.StoreContextFilter{StoreID: &storeID})
+			if err != nil {
+				return err
+			}
+			categoryID := storeAdd.Additive.AdditiveCategoryID
+			categoryCount[categoryID]++
+			if !storeAdd.Additive.Category.IsMultipleSelect && categoryCount[categoryID] > 1 {
+				return types.ErrMultipleSelect
+			}
+		}
 	}
 
-	return prices, additiveNames, nil
+	return nil
 }
 
 func ValidateStoreProductSizes(
@@ -333,10 +370,10 @@ func (s *orderService) CheckAndAccumulateSuborders(
 		sps, err := s.storeProductRepo.GetSufficientStoreProductSizeById(storeID, sub.StoreProductSizeID, frozenMap)
 		if err != nil {
 			s.logger.Error(fmt.Errorf(
-				"insufficient stock for store product size %d: %w",
+				"error occured while trying to get sufficient store product size %d: %w",
 				sub.StoreProductSizeID, err,
 			))
-			return types.ErrInsufficientStock
+			return err
 		}
 
 		// If success, we 'freeze' that usage. We add the usage from the product size to the frozenMap.
@@ -349,10 +386,10 @@ func (s *orderService) CheckAndAccumulateSuborders(
 			sa, err := s.storeAdditiveRepo.GetSufficientStoreAdditiveByID(storeID, addID, frozenMap)
 			if err != nil {
 				s.logger.Error(fmt.Errorf(
-					"insufficient stock for store additive %d: %w",
+					"error occured while trying to get sufficient store additive %d: %w",
 					addID, err,
 				))
-				return types.ErrInsufficientStock
+				return err
 			}
 			// freeze additive usage
 			for _, ingrUsage := range sa.Additive.Ingredients {

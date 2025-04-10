@@ -74,6 +74,11 @@ func (h *CategoryHandler) GetCategoryByID(c *gin.Context) {
 
 	category, err := h.service.GetCategoryByID(uint(id))
 	if err != nil {
+		if errors.Is(err, types.ErrCategoryNotFound) {
+			localization.SendLocalizedResponseWithKey(c, types.Response404ProductCategory)
+			return
+		}
+
 		localization.SendLocalizedResponseWithKey(c, types.Response500ProductCategory)
 		return
 	}
@@ -146,6 +151,11 @@ func (h *CategoryHandler) UpdateCategory(c *gin.Context) {
 
 	existingCategory, err := h.service.GetCategoryByID(uint(id))
 	if err != nil {
+		if errors.Is(err, types.ErrCategoryNotFound) {
+			localization.SendLocalizedResponseWithKey(c, types.Response404ProductCategory)
+			return
+		}
+
 		localization.SendLocalizedResponseWithKey(c, types.Response500ProductCategory)
 		return
 	}

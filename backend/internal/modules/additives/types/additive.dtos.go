@@ -3,9 +3,16 @@ package types
 import (
 	"mime/multipart"
 
+	provisionsTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/types"
+
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 	unitTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/units/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+)
+
+const (
+	PROVISIONS_FORM_DATA_KEY  = "provisions"
+	INGREDIENTS_FORM_DATA_KEY = "ingredients"
 )
 
 type AdditiveCategoriesFilterQuery struct {
@@ -54,6 +61,12 @@ type AdditiveDTO struct {
 type AdditiveDetailsDTO struct {
 	AdditiveDTO
 	Ingredients []AdditiveIngredientDTO `json:"ingredients"`
+	Provisions  []AdditiveProvisionDTO  `json:"provisions"`
+}
+
+type AdditiveProvisionDTO struct {
+	Volume    float64                      `json:"volume"`
+	Provision provisionsTypes.ProvisionDTO `json:"provision"`
 }
 
 type AdditiveIngredientDTO struct {
@@ -86,14 +99,15 @@ type UpdateAdditiveCategoryDTO struct {
 }
 
 type UpdateAdditiveDTO struct {
-	Name               *string                 `form:"name" binding:"min=0,omitempty"`
-	Description        *string                 `form:"description" binding:"omitempty"`
-	BasePrice          *float64                `form:"basePrice" binding:"omitempty,gte=0"`
-	Size               *float64                `form:"size" binding:"omitempty,gt=0"`
-	UnitID             *uint                   `form:"unitId" binding:"omitempty,gt=0"`
-	AdditiveCategoryID *uint                   `form:"additiveCategoryId" binding:"omitempty,gt=0"`
-	MachineId          *string                 `form:"machineId" binding:"omitempty"`
-	Ingredients        []SelectedIngredientDTO `json:"-"`
+	Name               *string                                 `form:"name" binding:"min=0,omitempty"`
+	Description        *string                                 `form:"description" binding:"omitempty"`
+	BasePrice          *float64                                `form:"basePrice" binding:"omitempty,gte=0"`
+	Size               *float64                                `form:"size" binding:"omitempty,gt=0"`
+	UnitID             *uint                                   `form:"unitId" binding:"omitempty,gt=0"`
+	AdditiveCategoryID *uint                                   `form:"additiveCategoryId" binding:"omitempty,gt=0"`
+	MachineId          *string                                 `form:"machineId" binding:"omitempty"`
+	Ingredients        []ingredientTypes.SelectedIngredientDTO `json:"-"`
+	Provisions         []provisionsTypes.SelectedProvisionDTO  `json:"-"`
 	Image              *multipart.FileHeader
 	DeleteImage        bool `form:"deleteImage"`
 }
@@ -104,18 +118,14 @@ type AdditiveCategoryDTO struct {
 }
 
 type CreateAdditiveDTO struct {
-	Name               string                  `form:"name" binding:"required"`
-	Description        *string                 `form:"description" binding:"omitempty"`
-	BasePrice          float64                 `form:"basePrice" binding:"gte=0"`
-	Size               float64                 `form:"size" binding:"gt=0"`
-	UnitID             uint                    `form:"unitId" binding:"gt=0"`
-	AdditiveCategoryID uint                    `form:"additiveCategoryId" binding:"gt=0"`
-	MachineId          string                  `form:"machineId" binding:"required"`
-	Ingredients        []SelectedIngredientDTO `json:"-"`
+	Name               string                                  `form:"name" binding:"required"`
+	Description        *string                                 `form:"description" binding:"omitempty"`
+	BasePrice          float64                                 `form:"basePrice" binding:"gte=0"`
+	Size               float64                                 `form:"size" binding:"gt=0"`
+	UnitID             uint                                    `form:"unitId" binding:"gt=0"`
+	AdditiveCategoryID uint                                    `form:"additiveCategoryId" binding:"gt=0"`
+	MachineId          string                                  `form:"machineId" binding:"required"`
+	Ingredients        []ingredientTypes.SelectedIngredientDTO `json:"-"`
+	Provisions         []provisionsTypes.SelectedProvisionDTO  `json:"-"`
 	Image              *multipart.FileHeader
-}
-
-type SelectedIngredientDTO struct {
-	IngredientID uint    `json:"ingredientId" binding:"required,gt=0"`
-	Quantity     float64 `json:"quantity" binding:"required,gt=0"`
 }

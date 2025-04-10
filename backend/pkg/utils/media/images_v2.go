@@ -3,50 +3,18 @@ package media
 import (
 	"bytes"
 	"fmt"
-	"image"
-	"image/png"
 	"io"
 	"mime/multipart"
+	"net/http"
 	"path/filepath"
 	"strings"
+	"time"
 
-	"github.com/HugoSmits86/nativewebp"
-	"github.com/disintegration/imaging"
+	"github.com/Global-Optima/zeep-web/backend/internal/config"
 )
 
-type ImageConverter interface {
-	Convert(img image.Image) ([]byte, error)
-}
-
-type PNGConverter struct{}
-
-func (PNGConverter) Convert(img image.Image) ([]byte, error) {
-	var webpBuffer bytes.Buffer
-	if err := nativewebp.Encode(&webpBuffer, img, nil); err != nil {
-		return nil, fmt.Errorf("failed to encode PNG image to WebP: %v", err)
-	}
-	return webpBuffer.Bytes(), nil
-}
-
-type JPEGConverter struct{}
-
-func (JPEGConverter) Convert(img image.Image) ([]byte, error) {
-	var jpegBuffer bytes.Buffer
-
-	if err := imaging.Encode(&jpegBuffer, img, imaging.JPEG, imaging.JPEGQuality(50), imaging.PNGCompressionLevel(png.BestCompression)); err != nil {
-		return nil, fmt.Errorf("failed to re-encode JPEG: %v", err)
-	}
-
-	reEncodedImg, err := imaging.Decode(&jpegBuffer)
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode re-encoded JPEG: %v", err)
-	}
-
-	var webpBuffer bytes.Buffer
-	if err := nativewebp.Encode(&webpBuffer, reEncodedImg, nil); err != nil {
-		return nil, fmt.Errorf("failed to encode JPEG image to WebP: %v", err)
-	}
-	return webpBuffer.Bytes(), nil
+var httpClient = &http.Client{
+	Timeout: 60 * time.Second,
 }
 
 func ConvertImageToRawAndWebpV2(fileHeader *multipart.FileHeader) (*FilesPair, error) {
@@ -67,27 +35,18 @@ func ConvertImageToRawAndWebpV2(fileHeader *multipart.FileHeader) (*FilesPair, e
 		return nil, err
 	}
 
-	if ext == ".jpeg" || ext == ".jpg" {
-		return &FilesPair{
-			CommonFileName: uniqueName,
-			OriginalFile: &FileData{
-				Ext:  TAR_GZ_FORMAT_KEY,
-				Data: zipBytes,
-			},
-			ConvertedFile: &FileData{
-				Ext:  ext,
-				Data: rawBytes,
-			},
-		}, nil
+	var mode string
+	switch ext {
+	case ".jpeg", ".jpg":
+		mode = "lossy"
+	case ".png":
+		mode = "lossless"
+	default:
+		// For unsupported extensions, default to lossless.
+		mode = "lossless"
 	}
 
-	img, err := decodeImage(rawBytes)
-	if err != nil {
-		return nil, err
-	}
-
-	converter := selectConverter(ext)
-	webpBytes, err := converter.Convert(img)
+	webpBytes, err := callImageConverterService(rawBytes, mode)
 	if err != nil {
 		return nil, err
 	}
@@ -105,6 +64,61 @@ func ConvertImageToRawAndWebpV2(fileHeader *multipart.FileHeader) (*FilesPair, e
 	}, nil
 }
 
+func callImageConverterService(imageBytes []byte, mode string) ([]byte, error) {
+	var buf bytes.Buffer
+	writer := multipart.NewWriter(&buf)
+	fieldName := "image"
+	dummyFileName := "image"
+	if mode == "lossy" {
+		dummyFileName += ".jpg"
+	} else {
+		dummyFileName += ".png"
+	}
+
+	part, err := writer.CreateFormFile(fieldName, dummyFileName)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create form file: %v", err)
+	}
+	if _, err := part.Write(imageBytes); err != nil {
+		return nil, fmt.Errorf("failed to write image data to form: %v", err)
+	}
+	if err := writer.Close(); err != nil {
+		return nil, fmt.Errorf("failed to close multipart writer: %v", err)
+	}
+
+	cfg := config.GetConfig()
+	url := cfg.Server.ImageConverterURL + "/convert?mode=" + mode
+
+	req, err := http.NewRequest("POST", url, &buf)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create HTTP request: %v", err)
+	}
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+
+	resp, err := httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to call conversion service: %v", err)
+	}
+	defer func() {
+		err := resp.Body.Close()
+		if err != nil {
+			fmt.Printf("failed to close response body: %v\n", err)
+		}
+	}()
+
+	if resp.StatusCode != http.StatusOK {
+		bodyBytes, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("conversion service returned status %d: %s", resp.StatusCode, string(bodyBytes))
+	}
+
+	webpBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read conversion service response: %v", err)
+	}
+	return webpBytes, nil
+}
+
+// readFile reads the entire file from the provided multipart.FileHeader.
 func readFile(fileHeader *multipart.FileHeader) ([]byte, error) {
 	file, err := fileHeader.Open()
 	if err != nil {
@@ -123,14 +137,6 @@ func readFile(fileHeader *multipart.FileHeader) ([]byte, error) {
 	return rawBytes, nil
 }
 
-func decodeImage(rawBytes []byte) (image.Image, error) {
-	img, err := imaging.Decode(bytes.NewReader(rawBytes))
-	if err != nil {
-		return nil, fmt.Errorf("failed to decode image: %v", err)
-	}
-	return img, nil
-}
-
 func getLowercaseExtension(fileName string) (string, error) {
 	ext := strings.ToLower(filepath.Ext(fileName))
 	if ext == "" {
@@ -145,13 +151,4 @@ func compressOriginal(uniqueName, ext string, rawBytes []byte) ([]byte, error) {
 		return nil, err
 	}
 	return zipBytes, nil
-}
-
-func selectConverter(ext string) ImageConverter {
-	switch ext {
-	case ".jpeg", ".jpg":
-		return JPEGConverter{}
-	default:
-		return PNGConverter{}
-	}
 }

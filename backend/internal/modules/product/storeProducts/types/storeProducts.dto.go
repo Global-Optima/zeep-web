@@ -34,6 +34,7 @@ type StoreProductSizeDetailsDTO struct {
 	StoreProductSizeDTO
 	Additives   []productTypes.ProductSizeAdditiveDTO   `json:"additives"`
 	Ingredients []productTypes.ProductSizeIngredientDTO `json:"ingredients"`
+	Provisions  []productTypes.ProductSizeProvisionDTO  `json:"provisions"`
 }
 
 type CreateStoreProductDTO struct {

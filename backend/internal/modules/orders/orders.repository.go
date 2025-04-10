@@ -54,27 +54,28 @@ func (r *orderRepository) CloneWithTransaction(tx *gorm.DB) orderRepository {
 }
 
 func (r *orderRepository) CreateOrder(order *data.Order) (uint, error) {
-	const workingHours = 16 // Working hours for a cafe
+	// Decide at what hour in UTC the "day" (or shift) resets
+	const shiftStartHour = 0 // 0 means midnight UTC, 4 would mean 4:00 AM UTC, etc.
+	const maxDisplayNumber = 999
 
 	err := r.db.Transaction(func(tx *gorm.DB) error {
-		// Lock the store's orders for consistency
+		// (A) Lock rows for the store
 		if err := tx.Exec(`
-			SELECT 1
-			FROM orders
-			WHERE store_id = ?
-			FOR UPDATE
-		`, order.StoreID).Error; err != nil {
+					SELECT 1
+					FROM orders
+					WHERE store_id = ?
+					FOR UPDATE
+			`, order.StoreID).Error; err != nil {
 			if !errors.Is(err, gorm.ErrRecordNotFound) {
 				return fmt.Errorf("failed to lock rows for store %d: %w", order.StoreID, err)
 			}
 		}
 
+		// (B) Fetch the latest order (DisplayNumber + CreatedAt) for the store
 		var lastOrder struct {
 			DisplayNumber int
 			CreatedAt     time.Time
 		}
-
-		// Fetch the latest order for the store
 		if err := tx.Model(&data.Order{}).
 			Where("store_id = ?", order.StoreID).
 			Order("created_at DESC").
@@ -86,29 +87,42 @@ func (r *orderRepository) CreateOrder(order *data.Order) (uint, error) {
 			}
 		}
 
+		// (C) Determine the next DisplayNumber
+		nowUTC := time.Now().UTC()
+		lastUTC := lastOrder.CreatedAt.UTC() // last order time in UTC
 		var nextDisplayNumber int
-		now := time.Now()
 
-		// Check if the elapsed time since the last order exceeds the working hours
-		if now.Sub(lastOrder.CreatedAt) > time.Duration(workingHours)*time.Hour {
-			// Reset display number if more than working hours have passed
+		if lastOrder.DisplayNumber == 0 {
+			// Means there's no prior order, so start from 1
 			nextDisplayNumber = 1
 		} else {
-			// Increment display number if within the same working period
-			nextDisplayNumber = lastOrder.DisplayNumber + 1
+			// Compare "shift date" of now and the last order
+			lastShiftDate := getShiftDate(lastUTC, shiftStartHour)
+			currShiftDate := getShiftDate(nowUTC, shiftStartHour)
+
+			if lastShiftDate != currShiftDate {
+				// It's a new day/shift, reset to 1
+				nextDisplayNumber = 1
+			} else {
+				// Same shift, increment the last display number
+				nextDisplayNumber = lastOrder.DisplayNumber + 1
+			}
 		}
 
-		// Ensure display number doesn't exceed the maximum
-		if nextDisplayNumber > 999 {
+		// (D) Enforce maximum display number
+		if nextDisplayNumber > maxDisplayNumber {
 			nextDisplayNumber = 1
 		}
-		order.DisplayNumber = nextDisplayNumber
 
-		// Create the new order
+		order.DisplayNumber = nextDisplayNumber
+		order.CreatedAt = nowUTC // or let GORM set automatically
+
+		// (E) Insert the new order
 		if err := tx.Create(order).Error; err != nil {
 			return fmt.Errorf("failed to create order: %w", err)
 		}
 
+		// (F) Any post‐processing, e.g., recalc out of stock
 		orderIngredients, err := r.getOrderIngredients(tx, order.ID)
 		if err != nil {
 			return fmt.Errorf("failed to get order ingredients: %w", err)
@@ -122,6 +136,23 @@ func (r *orderRepository) CreateOrder(order *data.Order) (uint, error) {
 	})
 
 	return order.ID, err
+}
+
+// getShiftDate normalizes a time to the "shift start" boundary in UTC.
+func getShiftDate(t time.Time, shiftStartHour int) time.Time {
+	// Force t to UTC (in case it's not already)
+	t = t.UTC()
+
+	// Build a time at shiftStartHour:00 in UTC for the same calendar day as t
+	// Example: if shiftStartHour=4, then "today" starts at 04:00 UTC.
+	shifted := time.Date(t.Year(), t.Month(), t.Day(), shiftStartHour, 0, 0, 0, time.UTC)
+
+	// If t is earlier in the day than shiftStartHour, that means the "shift date"
+	// is actually the previous day. So we subtract one day.
+	if t.Before(shifted) {
+		shifted = shifted.AddDate(0, 0, -1)
+	}
+	return shifted
 }
 
 func (r *orderRepository) getOrderIngredients(tx *gorm.DB, orderID uint) ([]uint, error) {
@@ -176,7 +207,7 @@ func (r *orderRepository) GetOrders(filter types.OrdersFilterQuery) ([]data.Orde
 
 	query := r.db.
 		Preload("Suborders.StoreProductSize.ProductSize.Unit").
-		Preload("Suborders.StoreProductSize.ProductSize.Product").
+		Preload("Suborders.StoreProductSize.ProductSize.Product.Category").
 		Preload("Suborders.SuborderAdditives.StoreAdditive.Additive").
 		Order("created_at DESC")
 
@@ -240,7 +271,7 @@ func (r *orderRepository) GetAllBaristaOrders(filter types.OrdersTimeZoneFilter)
 
 	// Base query with preloads and business logic
 	query := r.db.
-		Preload("Suborders.StoreProductSize.ProductSize.Product").
+		Preload("Suborders.StoreProductSize.ProductSize.Product.Category").
 		Preload("Suborders.StoreProductSize.ProductSize.Unit").
 		Preload("Suborders.SuborderAdditives.StoreAdditive.Additive").
 		Where("store_id = ?", *filter.StoreID).
@@ -293,9 +324,9 @@ func getTimeZoneLocation(filter types.OrdersTimeZoneFilter) (*time.Location, err
 
 func (r *orderRepository) GetOrderById(orderId uint) (*data.Order, error) {
 	var order data.Order
-	err := r.db.Preload("Suborders.StoreProductSize.ProductSize.Product").
-		Preload("Suborders.SuborderAdditives.StoreAdditive.Additive").
+	err := r.db.Preload("Suborders.SuborderAdditives.StoreAdditive.Additive").
 		Preload("Suborders.StoreProductSize.ProductSize.Unit").
+		Preload("Suborders.StoreProductSize.ProductSize.Product.Category").
 		Preload("Store").
 		Where("id = ?", orderId).
 		First(&order).Error
@@ -379,6 +410,7 @@ func (r *orderRepository) GetOrderBySubOrderID(subOrderID uint) (*data.Order, er
 		Preload("Suborders.StoreProductSize").
 		Preload("Suborders.StoreProductSize.ProductSize").
 		Preload("Suborders.StoreProductSize.ProductSize.Product").
+		Preload("Suborders.StoreProductSize.ProductSize.Product.Category").
 		Preload("Suborders.StoreProductSize.ProductSize.Unit").
 		Preload("Suborders.SuborderAdditives.StoreAdditive.Additive").
 		Joins("JOIN suborders ON suborders.order_id = orders.id").
@@ -438,10 +470,10 @@ func (r *orderRepository) GetOrdersForExport(filter *types.OrdersExportFilterQue
 		Preload("DeliveryAddress")
 
 	if filter.StartDate != nil {
-		query = query.Where("created_at >= ?", *filter.StartDate)
+		query = query.Where("created_at >= ?", filter.StartDate.UTC())
 	}
 	if filter.EndDate != nil {
-		query = query.Where("created_at <= ?", *filter.EndDate)
+		query = query.Where("created_at <= ?", filter.EndDate.UTC())
 	}
 	if filter.StoreID != nil {
 		query = query.Where("store_id = ?", *filter.StoreID)
@@ -450,7 +482,28 @@ func (r *orderRepository) GetOrdersForExport(filter *types.OrdersExportFilterQue
 	if err := query.Find(&orders).Error; err != nil {
 		return nil, err
 	}
+
+	clientLoc := time.Local // Default to the system's local timezone.
+	if filter.TimeZoneLocation != nil && *filter.TimeZoneLocation != "" {
+		if loc, err := time.LoadLocation(*filter.TimeZoneLocation); err == nil {
+			clientLoc = loc
+		}
+	}
+
+	orders = convertOrdersToLocalTime(orders, clientLoc)
+
 	return orders, nil
+}
+
+func convertOrdersToLocalTime(orders []data.Order, loc *time.Location) []data.Order {
+	for i, order := range orders {
+		orders[i].CreatedAt = order.CreatedAt.In(loc)
+		if !order.CreatedAt.IsZero() {
+			createdAt := order.CreatedAt.In(loc)
+			orders[i].CreatedAt = createdAt
+		}
+	}
+	return orders
 }
 
 func (r *orderRepository) GetSuborderByID(suborderID uint) (*data.Suborder, error) {

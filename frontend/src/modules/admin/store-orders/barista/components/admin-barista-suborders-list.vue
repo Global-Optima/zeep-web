@@ -18,6 +18,10 @@
 						{{ suborder.productSize.productName }} {{ suborder.productSize.sizeName }}
 					</p>
 					<p class="text-gray-700 text-sm line-clamp-2">
+						{{suborder.productSize.size}}
+						{{ suborder.productSize.unit.name.toLowerCase() }}
+					</p>
+					<p class="text-gray-700 text-sm line-clamp-2">
 						{{ suborder.additives.map(a => a.additive.name).join(', ') || 'Без модификаторов' }}
 					</p>
 				</div>

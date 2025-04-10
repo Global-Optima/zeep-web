@@ -11,12 +11,14 @@ import (
 type CronManager struct {
 	scheduler *gocron.Scheduler
 	logger    *zap.SugaredLogger
+	enabled   bool
 }
 
-func NewCronManager(logger *zap.SugaredLogger) *CronManager {
+func NewCronManager(enabled bool, logger *zap.SugaredLogger) *CronManager {
 	return &CronManager{
 		scheduler: gocron.NewScheduler(time.UTC),
 		logger:    logger,
+		enabled:   enabled,
 	}
 }
 
@@ -28,6 +30,11 @@ const (
 )
 
 func (cm *CronManager) RegisterJob(interval CronJob, task func(), timeUTC ...string) error {
+	if !cm.enabled {
+		cm.logger.Info("Cron jobs are disabled; skipping job registration.")
+		return nil
+	}
+
 	switch interval {
 	case HourlyJob:
 		_, err := cm.scheduler.Every(1).Hour().Do(task)
@@ -40,7 +47,6 @@ func (cm *CronManager) RegisterJob(interval CronJob, task func(), timeUTC ...str
 			if err != nil {
 				return err
 			}
-
 			cm.logger.Infof("Job registered for interval: %s at %v", interval, timeUTC[0])
 		} else {
 			_, err := cm.scheduler.Every(1).Day().At("00:00").Do(task)
@@ -58,11 +64,19 @@ func (cm *CronManager) RegisterJob(interval CronJob, task func(), timeUTC ...str
 }
 
 func (cm *CronManager) Start() {
+	if !cm.enabled {
+		cm.logger.Info("Cron jobs are disabled; not starting the cron manager.")
+		return
+	}
 	cm.logger.Info("Starting the cron manager...")
 	cm.scheduler.StartAsync()
 }
 
 func (cm *CronManager) Stop() {
+	if !cm.enabled {
+		cm.logger.Info("Cron jobs are disabled; nothing to stop.")
+		return
+	}
 	cm.logger.Info("Stopping the cron manager...")
 	cm.scheduler.Stop()
 }

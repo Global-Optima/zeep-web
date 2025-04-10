@@ -47,6 +47,26 @@
 							<TableCell>
 								{{ formatPrice(variant.basePrice) }}
 							</TableCell>
+							<TableCell class="text-right">
+								<DropdownMenu>
+									<DropdownMenuTrigger asChild>
+										<Button
+											variant="ghost"
+											size="icon"
+											@click.stop
+										>
+											<EllipsisVertical class="w-6 h-6" />
+										</Button>
+									</DropdownMenuTrigger>
+									<DropdownMenuContent align="end">
+										<DropdownMenuItem
+											@click="(e) => { e.stopPropagation(); onDuplicateClick(variant.id); }"
+										>
+											Дублировать
+										</DropdownMenuItem>
+									</DropdownMenuContent>
+								</DropdownMenu>
+							</TableCell>
 						</TableRow>
 					</TableBody>
 				</Table>
@@ -66,6 +86,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/core/components/ui/table'
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/core/components/ui/dropdown-menu'
+import { EllipsisVertical } from 'lucide-vue-next'
+import { getRouteName } from '@/core/config/routes.config'
 import { formatPrice } from '@/core/utils/price.utils'
 import type { ProductDetailsDTO, ProductSizeDTO } from '@/modules/kiosk/products/models/product.model'
 import { productsService } from '@/modules/kiosk/products/services/products.service'
@@ -108,6 +131,10 @@ const onAddNewVariantClick = () => {
   if (!props.readonly) {
     router.push(`../product-sizes/create?productId=${props.productDetails.id}`)
   }
+}
+
+const onDuplicateClick = (id: number) => {
+ router.push({name: getRouteName('ADMIN_PRODUCT_SIZE_CREATE'), query: {templateProductSizeId: id, productId: props.productDetails.id}})
 }
 </script>
 

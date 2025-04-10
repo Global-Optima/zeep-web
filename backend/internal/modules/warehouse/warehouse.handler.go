@@ -95,7 +95,7 @@ func (h *WarehouseHandler) GetWarehouseByID(c *gin.Context) {
 
 	warehouse, err := h.service.GetWarehouseByID(uint(warehouseID))
 	if err != nil {
-		if err == types.ErrWarehouseNotFound {
+		if errors.Is(err, types.ErrWarehouseNotFound) {
 			localization.SendLocalizedResponseWithKey(c, types.Response404Warehouse)
 			return
 		}
@@ -162,6 +162,10 @@ func (h *WarehouseHandler) UpdateWarehouse(c *gin.Context) {
 
 	warehouse, err := h.service.GetWarehouseByID(uint(warehouseID))
 	if err != nil {
+		if errors.Is(err, types.ErrWarehouseNotFound) {
+			localization.SendLocalizedResponseWithKey(c, types.Response404Warehouse)
+			return
+		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500WarehouseUpdate)
 		return
 	}

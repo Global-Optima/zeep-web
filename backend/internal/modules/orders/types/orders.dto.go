@@ -85,12 +85,13 @@ type UpdateSubOrderDTO struct {
 }
 
 type OrderStoreProductSizeDTO struct {
-	ID          uint               `json:"id"`
-	SizeName    string             `json:"sizeName"`
-	ProductName string             `json:"productName"`
-	Size        float64            `json:"size"`
-	Unit        unitTypes.UnitsDTO `json:"unit"`
-	MachineId   string             `json:"machineId"`
+	ID              uint                 `json:"id"`
+	SizeName        string               `json:"sizeName"`
+	ProductName     string               `json:"productName"`
+	Size            float64              `json:"size"`
+	Unit            unitTypes.UnitsDTO   `json:"unit"`
+	MachineId       string               `json:"machineId"`
+	MachineCategory data.MachineCategory `json:"machineCategory"`
 }
 
 type OrderStoreAdditiveDTO struct {
@@ -160,10 +161,11 @@ type OrderDeliveryAddressDTO struct {
 }
 
 type OrdersExportFilterQuery struct {
-	StartDate *time.Time `form:"startDate" binding:"omitempty"`
-	EndDate   *time.Time `form:"endDate" binding:"omitempty"`
-	StoreID   *uint      `form:"storeId" binding:"omitempty"`
-	Language  string     `form:"language" binding:"omitempty,oneof=kk ru en"` // Optional language filter
+	StartDate        *time.Time `form:"startDate" binding:"omitempty"`
+	EndDate          *time.Time `form:"endDate" binding:"omitempty"`
+	StoreID          *uint      `form:"storeId" binding:"omitempty"`
+	Language         string     `form:"language" binding:"omitempty,oneof=kk ru en"` // Optional language filter
+	TimeZoneLocation *string    `form:"timezoneLocation" binding:"omitempty"`
 }
 
 type OrderExportDTO struct {

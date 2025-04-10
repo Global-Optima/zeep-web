@@ -69,6 +69,7 @@ import {
   TableRow,
 } from '@/core/components/ui/table'
 import { toast } from '@/core/components/ui/toast'
+import { useAxiosLocaleToast, type AxiosLocalizedError } from '@/core/hooks/use-axios-locale-toast.hooks'
 import { useHasRole } from '@/core/hooks/use-has-roles.hook'
 import { formatPrice } from '@/core/utils/price.utils'
 import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
@@ -107,6 +108,8 @@ function getStatusLabel(additive: StoreAdditiveDTO): string {
 
 const router = useRouter()
 const queryClient = useQueryClient()
+const { toastLocalizedError } = useAxiosLocaleToast()
+
 
 const {additives} = defineProps<{additives: StoreAdditiveDTO[]}>()
 
@@ -118,8 +121,8 @@ const {mutate: deleteStoreAdditive} = useMutation({
 			toast({title: "Модификатор удален из кафе"})
 			queryClient.invalidateQueries({queryKey: ['admin-store-additives']})
 		},
-		onError: () => {
-      toast({title: "Произошла ошибка при удалении"})
+		onError: (error: AxiosLocalizedError) => {
+			toastLocalizedError(error,  "Произошла ошибка при удалении.")
 		},
 })
 

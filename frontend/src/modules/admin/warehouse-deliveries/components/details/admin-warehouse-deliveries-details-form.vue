@@ -24,7 +24,8 @@
 			<CardContent>
 				<ul class="space-y-2">
 					<li>
-						<span>Склад: </span> <span class="font-medium">{{ delivery.warehouse.name}}</span>
+						<span>Склад: </span>
+						<span class="font-medium">{{ delivery.warehouse.name }}</span>
 					</li>
 					<li>
 						<span>Количество: </span>
@@ -33,9 +34,6 @@
 					<li>
 						<span>Поставщик: </span>
 						<span class="font-medium">{{ delivery.supplier.name }}</span>
-					</li>
-					<li>
-						<span>Склад: </span> <span class="font-medium">{{ delivery.warehouse.name }}</span>
 					</li>
 					<li>
 						<span>Дата доставки: </span>
@@ -59,6 +57,8 @@
 							<TableHead>Упаковка</TableHead>
 							<TableHead>Количество</TableHead>
 							<TableHead>Срок годности</TableHead>
+							<TableHead>Цена за упаковку</TableHead>
+							<TableHead>Итоговая цена</TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>
@@ -67,21 +67,37 @@
 							:key="material.stockMaterial.id"
 						>
 							<TableCell class="py-4 font-medium">{{ material.stockMaterial.name }}</TableCell>
-							<TableCell
-								>{{ material.stockMaterial.size }} {{ material.stockMaterial.unit.name }}</TableCell
-							>
+							<TableCell>
+								{{ material.stockMaterial.size }} {{ material.stockMaterial.unit.name }}
+							</TableCell>
 							<TableCell>{{ material.quantity }}</TableCell>
 							<TableCell>{{ format(material.expirationDate, "dd.MM.yyyy") }}</TableCell>
+							<TableCell>{{ material.price.toFixed(2) }}</TableCell>
+							<TableCell>{{ (material.quantity * material.price).toFixed(2) }}</TableCell>
 						</TableRow>
 						<TableRow v-if="delivery.materials.length === 0">
 							<TableCell
-								colspan="3"
+								colspan="6"
 								class="py-4 text-center text-muted-foreground"
 							>
 								Материалы отсутствуют
 							</TableCell>
 						</TableRow>
 					</TableBody>
+					<TableFooter>
+						<TableRow>
+							<!-- Span first 5 columns for the total label -->
+							<TableCell
+								colspan="5"
+								class="=font-medium"
+							>
+								Итого
+							</TableCell>
+							<TableCell>
+								{{ totalSum.toFixed(2) }}
+							</TableCell>
+						</TableRow>
+					</TableFooter>
 				</Table>
 			</CardContent>
 		</Card>
@@ -91,31 +107,28 @@
 <script setup lang="ts">
 import { Button } from '@/core/components/ui/button'
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
+	Card,
+	CardContent,
+	CardDescription,
+	CardHeader,
+	CardTitle,
 } from '@/core/components/ui/card'
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+	TableFooter,
 } from '@/core/components/ui/table'
 import type { WarehouseDeliveryDTO } from '@/modules/admin/warehouse-stocks/models/warehouse-stock.model'
 import { format } from 'date-fns'
 import { ChevronLeft } from 'lucide-vue-next'
+import { computed } from 'vue'
 
-const { delivery } = defineProps<{
-	delivery: WarehouseDeliveryDTO
-}>()
-
-const emit = defineEmits<{
-	(e: 'onCancel'): void
-}>()
+const { delivery } = defineProps<{ delivery: WarehouseDeliveryDTO }>()
+const emit = defineEmits<{ (e: 'onCancel'): void }>()
 
 // Utility Function: Format Date
 function formatDate(date: Date): string {
@@ -125,6 +138,14 @@ function formatDate(date: Date): string {
 		year: 'numeric',
 	})
 }
+
+// Compute the total sum (quantity * price) for all materials
+const totalSum = computed(() => {
+	return delivery.materials.reduce(
+		(acc, material) => acc + material.quantity * material.price,
+		0
+	)
+})
 
 const onCancel = () => {
 	emit('onCancel')

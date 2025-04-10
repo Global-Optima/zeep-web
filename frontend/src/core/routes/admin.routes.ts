@@ -11,6 +11,7 @@ import AppAdminLayout from '../layouts/admin/app-admin-layout.vue'
 import { ADMIN_EMPLOYEES_CHILDREN_ROUTES } from './admin/admin-employees.routes'
 import { ADMIN_STORE_ORDERS_CHILDREN_ROUTES } from './admin/admin-orders.routes'
 import type { AppRouteRecord, ParentRoutePage } from './routes.types'
+import { ADMIN_PROVISIONS_CHILDREN_ROUTES } from './admin/admin-provisions.routes'
 
 export const ADMIN_CHILDREN_ROUTES = {
 	...ADMIN_ADDITIVES_CHILDREN_ROUTES,
@@ -24,6 +25,7 @@ export const ADMIN_CHILDREN_ROUTES = {
 	...ADMIN_FRANCHISEES_CHILDREN_ROUTES,
 	...ADMIN_WAREHOUSES_CHILDREN_ROUTES,
 	...ADMIN_STORE_ORDERS_CHILDREN_ROUTES,
+	...ADMIN_PROVISIONS_CHILDREN_ROUTES,
 
 	ADMIN_NOTIFICATIONS: {
 		path: 'notifications',

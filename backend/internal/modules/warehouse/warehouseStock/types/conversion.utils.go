@@ -17,6 +17,7 @@ func DeliveriesToDeliveryResponses(deliveries []data.SupplierWarehouseDelivery) 
 				StockMaterial:  *stockMaterialTypes.ConvertStockMaterialToStockMaterialResponse(&material.StockMaterial),
 				Quantity:       material.Quantity,
 				Barcode:        material.Barcode,
+				Price:          material.Price,
 				ExpirationDate: material.ExpirationDate,
 			}
 		}
@@ -40,6 +41,7 @@ func ToDeliveryResponse(delivery data.SupplierWarehouseDelivery) WarehouseDelive
 			StockMaterial:  *stockMaterialTypes.ConvertStockMaterialToStockMaterialResponse(&material.StockMaterial),
 			Quantity:       material.Quantity,
 			Barcode:        material.Barcode,
+			Price:          material.Price,
 			ExpirationDate: material.ExpirationDate,
 		}
 	}

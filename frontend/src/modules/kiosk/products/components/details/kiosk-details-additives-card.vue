@@ -8,11 +8,17 @@
 		<LazyImage
 			:src="additive.imageUrl"
 			alt="Изображение модификатора"
-			:class="cn('rounded-[22px] size-16 md:size-24 object-contain', isPriceZero && 'md:size-16 rounded-[14px]')"
+			:class="cn(
+        'rounded-[22px] size-16 md:size-24 object-contain',
+        isPriceZero && 'md:size-16 rounded-[14px]'
+      )"
 		/>
 
 		<div
-			:class="cn('flex flex-col justify-between items-start w-full h-full', isPriceZero && 'md:justify-center')"
+			:class="cn(
+        'flex flex-col justify-between items-start w-full h-full',
+        isPriceZero && 'md:justify-center'
+      )"
 		>
 			<p
 				class="text-lg md:text-2xl text-left line-clamp-2"
@@ -40,7 +46,9 @@
 					<button
 						v-if="showSelectedIndicator"
 						class="relative flex-shrink-0 rounded-full focus:outline-none size-8"
-						:class="[isSelected || additive.isDefault ? 'bg-primary' : 'bg-gray-200']"
+						:class="[
+              (isSelected || additive.isDefault) ? 'bg-primary' : 'bg-gray-200'
+            ]"
 						data-testid="additive-button"
 					>
 						<span
@@ -62,20 +70,21 @@ import type { StoreAdditiveCategoryItemDTO } from '@/modules/admin/store-additiv
 import { computed } from 'vue'
 
 const props = defineProps<{
-  additive: StoreAdditiveCategoryItemDTO;
-  isSelected: boolean;
+  additive: StoreAdditiveCategoryItemDTO
+  isSelected: boolean
+  hasCategoryPrice: boolean
 }>()
 
-const emit = defineEmits(['click:additive'])
+const emit = defineEmits<{
+  (e: 'click:additive', additive: StoreAdditiveCategoryItemDTO): void
+}>()
 
-// Whether to render this card at all.
 const isVisible = computed(() => {
   return !(props.additive.isDefault && props.additive.isHidden)
 })
 
-// Compute the base classes for the card.
 const cardClasses = computed(() => {
-  const classes = [
+  const base = [
     'relative',
     'text-center',
     'bg-white',
@@ -91,51 +100,61 @@ const cardClasses = computed(() => {
   ]
 
   if (props.additive.isOutOfStock) {
-    classes.push('!cursor-not-allowed', 'opacity-60')
+    base.push('!cursor-not-allowed', 'opacity-60')
+  } else if (props.isSelected) {
+    base.push('bg-primary', 'border-primary', 'cursor-pointer')
   } else {
-    if (props.isSelected) {
-      classes.push('bg-primary', 'border-primary', 'cursor-pointer')
-    } else {
-      classes.push('border-transparent', 'cursor-pointer')
-    }
+    base.push('border-transparent', 'cursor-pointer')
   }
 
-  // Default additives have a fixed state.
   if (props.additive.isDefault) {
-    classes.push('cursor-not-allowed', 'opacity-50', '!border-primary')
+    base.push('cursor-not-allowed', 'opacity-50', '!border-primary')
   }
 
-  return classes
+  return base
 })
 
-// Format the price display text.
 const priceDisplay = computed(() => {
   if (props.additive.isDefault) {
     return 'Входит в состав'
   }
+
   if (props.additive.storePrice !== 0) {
     return formatPrice(props.additive.storePrice)
   }
-  return '' // Hide text if price is 0.
+
+  if (props.hasCategoryPrice) {
+    return formatPrice(0)
+  }
+
+  return ''
 })
 
-// Text color class for the price.
 const priceTextClass = computed(() => {
   return props.additive.isOutOfStock ? 'text-gray-400' : 'text-primary'
 })
 
-// Show the selected indicator only if selected (or default) and price is not 0.
-
-const isPriceZero = computed(() => props.additive.storePrice === 0)
-
-const showSelectedIndicator = computed(() => {
-  return (props.isSelected || props.additive.isDefault) && !isPriceZero.value
+const isPriceZero = computed(() => {
+  return props.additive.storePrice === 0 && !props.hasCategoryPrice
 })
 
-const handleClick = () => {
+const showSelectedIndicator = computed(() => {
+  if (props.additive.isOutOfStock) return false
+  if (props.additive.isDefault || props.isSelected) {
+    if (isPriceZero.value && !props.hasCategoryPrice) {
+      return false
+    }
+
+    return true
+  }
+  return false
+})
+
+function handleClick() {
   if (props.additive.isDefault || props.additive.isOutOfStock) {
     return
   }
+
   emit('click:additive', props.additive)
 }
 </script>
