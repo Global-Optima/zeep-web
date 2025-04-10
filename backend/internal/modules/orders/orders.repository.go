@@ -225,7 +225,7 @@ func (r *orderRepository) getOrderAdditiveProvisionIDs(orderID uint) ([]uint, er
 
 	err := r.db.Model(&data.AdditiveProvision{}).
 		Distinct("additive_provisions.provision_id").
-		Joins("JOIN store_additives ON store_additives.additive_id = additive_ingredients.additive_id").
+		Joins("JOIN store_additives ON store_additives.additive_id = additive_provisions.additive_id").
 		Joins("JOIN suborder_additives ON suborder_additives.store_additive_id = store_additives.id").
 		Joins("JOIN suborders ON suborders.id = suborder_additives.suborder_id").
 		Where("suborders.order_id = ?", orderID).

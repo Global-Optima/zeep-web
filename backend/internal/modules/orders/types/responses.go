@@ -10,8 +10,9 @@ import (
 var (
 	Response500OrderCreate         = localization.NewResponseKey(http.StatusInternalServerError, data.OrderComponent, data.CreateOperation.ToString())
 	Response500OrderPaymentSuccess = localization.NewResponseKey(http.StatusInternalServerError, data.OrderComponent, "payment", "success")
-	Response500SuborderNextStatus  = localization.NewResponseKey(http.StatusInternalServerError, data.OrderComponent, data.CreateOperation.ToString())
+	Response500SuborderNextStatus  = localization.NewResponseKey(http.StatusInternalServerError, data.OrderComponent, "next_status")
 	Response500OrderPaymentFail    = localization.NewResponseKey(http.StatusInternalServerError, data.OrderComponent, "payment", "fail")
+	Response404Order               = localization.NewResponseKey(http.StatusNotFound, data.OrderComponent)
 	Response400OrderCustomerName   = localization.NewResponseKey(http.StatusBadRequest, data.OrderComponent, "CUSTOMER_NAME")
 	Response400Order               = localization.NewResponseKey(http.StatusBadRequest, data.OrderComponent)
 	Response201Order               = localization.NewResponseKey(http.StatusCreated, data.OrderComponent)

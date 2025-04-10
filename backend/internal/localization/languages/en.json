@@ -116,7 +116,9 @@
     "404-technicalMap": "Technological map not found.",
 
     "500-order": "An unexpected error occurred with the order. Please try again later.",
+    "500-order-nextStatus": "An unexpected error occurred while updating the order status. Please try again later.",
     "500-order-create": "An unexpected error occurred while creating the order. Please try again later.",
+    "404-order": "Order not found.",
     "400-order": "Failed to validate order.",
     "400-order-customerName": "Inappropriate customer name.",
     "409-order-insufficientStock": "Insufficient stock to fulfill the order.",

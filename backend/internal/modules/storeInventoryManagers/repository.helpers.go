@@ -320,31 +320,12 @@ func getOutByInventory(
 		return nil, fmt.Errorf("nil frozen inventory pointer fetched")
 	}
 
-	//TODO make separate functions
-	// === INGREDIENTS ===
-	var ingredientRows []types.IngredientUsageRow
-	err := tx.Model(&data.StoreProductSize{}).
-		Select(`DISTINCT store_product_sizes.store_product_id AS store_product_or_additive_id,
-                product_size_ingredients.ingredient_id,
-                product_size_ingredients.quantity AS required_quantity`).
-		Joins(`JOIN store_products ON store_products.id = store_product_sizes.store_product_id`).
-		Joins(`JOIN product_size_ingredients ON product_size_ingredients.product_size_id = store_product_sizes.product_size_id`).
-		Where(`store_products.id IN ?`, storeProductIDs).
-		Scan(&ingredientRows).Error
+	ingredientRows, err := getIngredientUsageRowsForStoreProducts(tx, storeProductIDs)
 	if err != nil {
 		return nil, err
 	}
 
-	// === PROVISIONS ===
-	var provisionRows []types.ProvisionUsageRow
-	err = tx.Model(&data.StoreProductSize{}).
-		Select(`DISTINCT store_product_sizes.store_product_id AS store_product_or_additive_id,
-                product_size_provisions.provision_id,
-                product_size_provisions.volume AS required_volume`).
-		Joins(`JOIN store_products ON store_products.id = store_product_sizes.store_product_id`).
-		Joins(`JOIN product_size_provisions ON product_size_provisions.product_size_id = store_product_sizes.product_size_id`).
-		Where(`store_products.id IN ?`, storeProductIDs).
-		Scan(&provisionRows).Error
+	provisionRows, err := getProvisionUsageRowsForStoreProducts(tx, storeProductIDs)
 	if err != nil {
 		return nil, err
 	}
@@ -359,11 +340,7 @@ func getOutByInventory(
 		neededIngredientIDs = append(neededIngredientIDs, id)
 	}
 
-	var stocks []data.StoreStock
-	err = tx.Model(&data.StoreStock{}).
-		Where("store_id = ?", storeID).
-		Where("ingredient_id IN ?", neededIngredientIDs).
-		Find(&stocks).Error
+	stocks, err := getRelevantStoreStocks(tx, storeID, neededIngredientIDs)
 	if err != nil {
 		return nil, err
 	}
@@ -383,13 +360,7 @@ func getOutByInventory(
 		neededProvisionIDs = append(neededProvisionIDs, id)
 	}
 
-	var provisions []data.StoreProvision
-	err = tx.Model(&data.StoreProvision{}).
-		Where("store_id = ?", storeID).
-		Where("provision_id IN ?", neededProvisionIDs).
-		Where("status = ?", data.STORE_PROVISION_STATUS_COMPLETED).
-		Where("expires_at IS NULL OR expires_at > ?", time.Now().UTC()).
-		Find(&provisions).Error
+	provisions, err := getRelevantStoreProvisions(tx, storeID, neededProvisionIDs)
 	if err != nil {
 		return nil, err
 	}
@@ -428,6 +399,37 @@ func getOutByInventory(
 	return outIDs, nil
 }
 
+func getIngredientUsageRowsForStoreProducts(tx *gorm.DB, storeProductIDs []uint) ([]types.IngredientUsageRow, error) {
+	var ingredientRows []types.IngredientUsageRow
+	err := tx.Model(&data.StoreProductSize{}).
+		Select(`DISTINCT store_product_sizes.store_product_id AS store_product_or_additive_id,
+                product_size_ingredients.ingredient_id,
+                product_size_ingredients.quantity AS required_quantity`).
+		Joins(`JOIN store_products ON store_products.id = store_product_sizes.store_product_id`).
+		Joins(`JOIN product_size_ingredients ON product_size_ingredients.product_size_id = store_product_sizes.product_size_id`).
+		Where(`store_products.id IN ?`, storeProductIDs).
+		Scan(&ingredientRows).Error
+	if err != nil {
+		return nil, err
+	}
+	return ingredientRows, nil
+}
+func getProvisionUsageRowsForStoreProducts(tx *gorm.DB, storeProductIDs []uint) ([]types.ProvisionUsageRow, error) {
+	var provisionRows []types.ProvisionUsageRow
+	err := tx.Model(&data.StoreProductSize{}).
+		Select(`DISTINCT store_product_sizes.store_product_id AS store_product_or_additive_id,
+                product_size_provisions.provision_id,
+                product_size_provisions.volume AS required_volume`).
+		Joins(`JOIN store_products ON store_products.id = store_product_sizes.store_product_id`).
+		Joins(`JOIN product_size_provisions ON product_size_provisions.product_size_id = store_product_sizes.product_size_id`).
+		Where(`store_products.id IN ?`, storeProductIDs).
+		Scan(&provisionRows).Error
+	if err != nil {
+		return nil, err
+	}
+	return provisionRows, nil
+}
+
 func getOutByDefaultAdditives(
 	tx *gorm.DB,
 	storeProductIDs []uint,
@@ -441,41 +443,16 @@ func getOutByDefaultAdditives(
 		return nil, fmt.Errorf("nil frozen inventory pointer fetched")
 	}
 
-	//TODO make separate functions
-	// === INGREDIENTS ===
-	var ingredientRows []types.IngredientUsageRow
-	err := tx.Model(&data.StoreProductSize{}).
-		Select(`DISTINCT store_product_sizes.store_product_id AS store_product_or_additive_id,
-                additive_ingredients.ingredient_id,
-                additive_ingredients.quantity AS required_quantity`).
-		Joins(`JOIN store_products ON store_products.id = store_product_sizes.store_product_id`).
-		Joins(`JOIN product_size_additives
-               ON product_size_additives.product_size_id = store_product_sizes.product_size_id
-               AND product_size_additives.is_default = TRUE`).
-		Joins(`JOIN additive_ingredients
-               ON additive_ingredients.additive_id = product_size_additives.additive_id`).
-		Where(`store_products.id IN ?`, storeProductIDs).
-		Scan(&ingredientRows).Error
+	ingredientRows, err := getIngredientUsageRowsForDefaultAdditives(tx, storeProductIDs)
 	if err != nil {
 		return nil, err
 	}
 
-	// === PROVISIONS ===
-	var provisionRows []types.ProvisionUsageRow
-	err = tx.Model(&data.StoreProductSize{}).
-		Select(`DISTINCT store_product_sizes.store_product_id AS store_product_or_additive_id,
-                additive_provisions.provision_id,
-                additive_provisions.volume AS required_volume`).
-		Joins(`JOIN store_products ON store_products.id = store_product_sizes.store_product_id`).
-		Joins(`JOIN product_size_additives ON product_size_additives.product_size_id = store_product_sizes.product_size_id AND product_size_additives.is_default = TRUE`).
-		Joins(`JOIN additive_provisions ON additive_provisions.additive_id = product_size_additives.additive_id`).
-		Where(`store_products.id IN ?`, storeProductIDs).
-		Scan(&provisionRows).Error
+	provisionRows, err := getProvisionUsageRowsForDefaultAdditives(tx, storeProductIDs)
 	if err != nil {
 		return nil, err
 	}
 
-	// === LOAD INGREDIENT STOCK ===
 	ingredientSet := make(map[uint]struct{})
 	for _, row := range ingredientRows {
 		ingredientSet[row.IngredientID] = struct{}{}
@@ -485,11 +462,7 @@ func getOutByDefaultAdditives(
 		neededIngredientIDs = append(neededIngredientIDs, id)
 	}
 
-	var stocks []data.StoreStock
-	err = tx.Model(&data.StoreStock{}).
-		Where("store_id = ?", storeID).
-		Where("ingredient_id IN ?", neededIngredientIDs).
-		Find(&stocks).Error
+	stocks, err := getRelevantStoreStocks(tx, storeID, neededIngredientIDs)
 	if err != nil {
 		return nil, err
 	}
@@ -509,13 +482,7 @@ func getOutByDefaultAdditives(
 		neededProvisionIDs = append(neededProvisionIDs, id)
 	}
 
-	var provisions []data.StoreProvision
-	err = tx.Model(&data.StoreProvision{}).
-		Where("store_id = ?", storeID).
-		Where("provision_id IN ?", neededProvisionIDs).
-		Where("status = ?", data.STORE_PROVISION_STATUS_COMPLETED).
-		Where("expires_at IS NULL OR expires_at > ?", time.Now().UTC()).
-		Find(&provisions).Error
+	provisions, err := getRelevantStoreProvisions(tx, storeID, neededProvisionIDs)
 	if err != nil {
 		return nil, err
 	}
@@ -551,6 +518,43 @@ func getOutByDefaultAdditives(
 	return outIDs, nil
 }
 
+func getIngredientUsageRowsForDefaultAdditives(tx *gorm.DB, storeProductIDs []uint) ([]types.IngredientUsageRow, error) {
+	var ingredientRows []types.IngredientUsageRow
+	err := tx.Model(&data.StoreProductSize{}).
+		Select(`DISTINCT store_product_sizes.store_product_id AS store_product_or_additive_id,
+                additive_ingredients.ingredient_id,
+                additive_ingredients.quantity AS required_quantity`).
+		Joins(`JOIN store_products ON store_products.id = store_product_sizes.store_product_id`).
+		Joins(`JOIN product_size_additives
+               ON product_size_additives.product_size_id = store_product_sizes.product_size_id
+               AND product_size_additives.is_default = TRUE`).
+		Joins(`JOIN additive_ingredients
+               ON additive_ingredients.additive_id = product_size_additives.additive_id`).
+		Where(`store_products.id IN ?`, storeProductIDs).
+		Scan(&ingredientRows).Error
+	if err != nil {
+		return nil, err
+	}
+	return ingredientRows, nil
+}
+
+func getProvisionUsageRowsForDefaultAdditives(tx *gorm.DB, storeProductIDs []uint) ([]types.ProvisionUsageRow, error) {
+	var provisionRows []types.ProvisionUsageRow
+	err := tx.Model(&data.StoreProductSize{}).
+		Select(`DISTINCT store_product_sizes.store_product_id AS store_product_or_additive_id,
+                additive_provisions.provision_id,
+                additive_provisions.volume AS required_volume`).
+		Joins(`JOIN store_products ON store_products.id = store_product_sizes.store_product_id`).
+		Joins(`JOIN product_size_additives ON product_size_additives.product_size_id = store_product_sizes.product_size_id AND product_size_additives.is_default = TRUE`).
+		Joins(`JOIN additive_provisions ON additive_provisions.additive_id = product_size_additives.additive_id`).
+		Where(`store_products.id IN ?`, storeProductIDs).
+		Scan(&provisionRows).Error
+	if err != nil {
+		return nil, err
+	}
+	return provisionRows, nil
+}
+
 func getOutOfStockStoreAdditiveIDs(
 	tx *gorm.DB,
 	storeAdditiveIDs []uint,
@@ -564,8 +568,6 @@ func getOutOfStockStoreAdditiveIDs(
 		return nil, fmt.Errorf("nil frozen inventory pointer fetched")
 	}
 
-	//TODO make separate functions
-	// === INGREDIENTS ===
 	var ingredientRows []types.IngredientUsageRow
 	err := tx.Model(&data.StoreAdditive{}).
 		Select(`DISTINCT store_additives.id AS store_product_or_additive_id,
@@ -579,7 +581,6 @@ func getOutOfStockStoreAdditiveIDs(
 		return nil, err
 	}
 
-	// === PROVISIONS ===
 	var provisionRows []types.ProvisionUsageRow
 	err = tx.Model(&data.StoreAdditive{}).
 		Select(`DISTINCT store_additives.id AS store_product_or_additive_id,
@@ -603,11 +604,7 @@ func getOutOfStockStoreAdditiveIDs(
 		neededIngredientIDs = append(neededIngredientIDs, id)
 	}
 
-	var stocks []data.StoreStock
-	err = tx.Model(&data.StoreStock{}).
-		Where("store_id = ?", storeID).
-		Where("ingredient_id IN ?", neededIngredientIDs).
-		Find(&stocks).Error
+	stocks, err := getRelevantStoreStocks(tx, storeID, neededIngredientIDs)
 	if err != nil {
 		return nil, err
 	}
@@ -617,7 +614,6 @@ func getOutOfStockStoreAdditiveIDs(
 		stockMap[s.IngredientID] = s.Quantity - frozen.Ingredients[s.IngredientID]
 	}
 
-	// === LOAD PROVISION STOCK ===
 	provisionSet := make(map[uint]struct{})
 	for _, row := range provisionRows {
 		provisionSet[row.ProvisionID] = struct{}{}
@@ -627,13 +623,7 @@ func getOutOfStockStoreAdditiveIDs(
 		neededProvisionIDs = append(neededProvisionIDs, id)
 	}
 
-	var provisions []data.StoreProvision
-	err = tx.Model(&data.StoreProvision{}).
-		Where("store_id = ?", storeID).
-		Where("provision_id IN ?", neededProvisionIDs).
-		Where("status = ?", data.STORE_PROVISION_STATUS_COMPLETED).
-		Where("expires_at IS NULL OR expires_at > ?", time.Now().UTC()).
-		Find(&provisions).Error
+	provisions, err := getRelevantStoreProvisions(tx, storeID, neededProvisionIDs)
 	if err != nil {
 		return nil, err
 	}
@@ -642,7 +632,7 @@ func getOutOfStockStoreAdditiveIDs(
 	for _, p := range provisions {
 		provisionStockMap[p.ProvisionID] += p.Volume
 	}
-	// Вычитаем замороженные объёмы
+
 	for pid, frozenQty := range frozen.Provisions {
 		provisionStockMap[pid] -= frozenQty
 		if provisionStockMap[pid] < 0 {
@@ -675,6 +665,32 @@ func getOutOfStockStoreAdditiveIDs(
 	return outIDs, nil
 }
 
+func getRelevantStoreStocks(tx *gorm.DB, storeID uint, ingredientIDs []uint) ([]data.StoreStock, error) {
+	var stocks []data.StoreStock
+	err := tx.Model(&data.StoreStock{}).
+		Where("store_id = ?", storeID).
+		Where("ingredient_id IN ?", ingredientIDs).
+		Find(&stocks).Error
+	if err != nil {
+		return nil, err
+	}
+	return stocks, nil
+}
+
+func getRelevantStoreProvisions(tx *gorm.DB, storeID uint, provisionIDs []uint) ([]data.StoreProvision, error) {
+	var provisions []data.StoreProvision
+	err := tx.Model(&data.StoreProvision{}).
+		Where("store_id = ?", storeID).
+		Where("provision_id IN ?", provisionIDs).
+		Where("status = ?", data.STORE_PROVISION_STATUS_COMPLETED).
+		Where("expires_at IS NULL OR expires_at > ?", time.Now().UTC()).
+		Find(&provisions).Error
+	if err != nil {
+		return nil, err
+	}
+	return provisions, nil
+}
+
 func getStoreProductIDsByProductSizes(tx *gorm.DB, storeID uint, productSizeIDs []uint) ([]uint, error) {
 	var ids []uint
 	err := tx.Model(&data.StoreProduct{}).
@@ -692,7 +708,7 @@ func getAllIngredientIDsByProductSizes(tx *gorm.DB, productSizeIDs []uint) ([]ui
 		return nil, nil
 	}
 
-	directIDs, err := getProductSizeDirectIngredientsByProductSizeIDs(tx, productSizeIDs)
+	directIngredientIDs, err := getProductSizeDirectIngredientsByProductSizeIDs(tx, productSizeIDs)
 	if err != nil {
 		return nil, err
 	}
@@ -702,7 +718,7 @@ func getAllIngredientIDsByProductSizes(tx *gorm.DB, productSizeIDs []uint) ([]ui
 		return nil, err
 	}
 
-	return utils.UnionSlices(directIDs, additiveIngredientIDs), nil
+	return utils.UnionSlices(directIngredientIDs, additiveIngredientIDs), nil
 }
 
 func getAllProvisionIDsByProductSizes(tx *gorm.DB, productSizeIDs []uint) ([]uint, error) {
@@ -710,17 +726,51 @@ func getAllProvisionIDsByProductSizes(tx *gorm.DB, productSizeIDs []uint) ([]uin
 		return nil, nil
 	}
 
-	directIDs, err := getProductSizeDirectProvisionsByProductSizeIDs(tx, productSizeIDs)
+	directProvisionIDs, err := getProductSizeDirectProvisionsByProductSizeIDs(tx, productSizeIDs)
 	if err != nil {
 		return nil, err
 	}
 
-	additiveIDs, err := getDefaultAdditiveProvisionsByProductSizeIDs(tx, productSizeIDs)
+	additiveProvisionIDs, err := getDefaultAdditiveProvisionsByProductSizeIDs(tx, productSizeIDs)
 	if err != nil {
 		return nil, err
 	}
 
-	return utils.UnionSlices(directIDs, additiveIDs), nil
+	return utils.UnionSlices(directProvisionIDs, additiveProvisionIDs), nil
+}
+
+func getAllIngredientIDsByAdditives(tx *gorm.DB, additiveIDs []uint) ([]uint, error) {
+	if len(additiveIDs) == 0 {
+		return nil, nil
+	}
+
+	var ingredientIDs []uint
+	err := tx.Model(&data.AdditiveIngredient{}).
+		Distinct("additive_ingredients.ingredient_id").
+		Where("additive_ingredients.additive_id IN ?", additiveIDs).
+		Pluck("additive_ingredients.ingredient_id", &ingredientIDs).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch direct ingredientIDs: %w", err)
+	}
+
+	return ingredientIDs, nil
+}
+
+func getAllProvisionIDsByAdditives(tx *gorm.DB, additiveIDs []uint) ([]uint, error) {
+	if len(additiveIDs) == 0 {
+		return nil, nil
+	}
+
+	var provisionIDs []uint
+	err := tx.Model(&data.AdditiveProvision{}).
+		Distinct("additive_provisions.provision_id").
+		Where("additive_provisions.additive_id IN ?", additiveIDs).
+		Pluck("additive_provisions.provision_id", &provisionIDs).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch direct provisionIDs: %w", err)
+	}
+
+	return provisionIDs, nil
 }
 
 func getProductSizeDirectProvisionsByProductSizeIDs(tx *gorm.DB, productSizeIDs []uint) ([]uint, error) {

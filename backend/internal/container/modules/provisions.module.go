@@ -101,7 +101,7 @@ func NewStoreProvisionsModule(
 		notificationService,
 		base.Logger,
 	)
-	err := cronManager.RegisterJob(scheduler.HourlyJob, func() {
+	err := cronManager.RegisterJob(scheduler.HalfHourlyJob, func() {
 		storeProvisionCronTasks.CheckStoreProvisionNotifications()
 	})
 	if err != nil {

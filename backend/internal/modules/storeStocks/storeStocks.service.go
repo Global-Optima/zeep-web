@@ -153,7 +153,6 @@ func (s *storeStockService) UpdateStockById(storeId, stockId uint, input *types.
 		return wrappedErr
 	}
 
-	//TODO move to transaction manager
 	err = s.repo.SaveStock(storeStock)
 	if err != nil {
 		wrappedErr := utils.WrapError("error updating stock", err)
@@ -161,15 +160,16 @@ func (s *storeStockService) UpdateStockById(storeId, stockId uint, input *types.
 		return wrappedErr
 	}
 
-	err = s.storeInventoryManagerRepo.RecalculateStoreInventory(storeId,
-		&storeInventoryManagersTypes.RecalculateInput{
-			IngredientIDs: []uint{storeStock.IngredientID},
-		})
-	if err != nil {
-		wrappedErr := utils.WrapError("error recalculating stock", err)
-		s.logger.Error(wrappedErr)
-		return err
-	}
+	go func() {
+		err = s.storeInventoryManagerRepo.RecalculateStoreInventory(storeId,
+			&storeInventoryManagersTypes.RecalculateInput{
+				IngredientIDs: []uint{storeStock.IngredientID},
+			})
+		if err != nil {
+			wrappedErr := utils.WrapError("error recalculating stock", err)
+			s.logger.Error(wrappedErr)
+		}
+	}()
 
 	err = s.checkStockAndNotify(storeId, stockId)
 	if err != nil {

@@ -328,6 +328,11 @@ func (h *OrderHandler) FailOrderPayment(c *gin.Context) {
 
 	err := h.service.FailOrderPayment(orderID)
 	if err != nil {
+		switch {
+		case errors.Is(err, types.ErrOrderNotFound):
+			localization.SendLocalizedResponseWithKey(c, types.Response404Order)
+			return
+		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500OrderPaymentFail)
 		return
 	}

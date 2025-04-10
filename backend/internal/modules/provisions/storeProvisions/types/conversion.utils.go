@@ -39,8 +39,9 @@ func MapToStoreProvisionDetailsDTO(sp *data.StoreProvision) *StoreProvisionDetai
 	ingredients := make([]StoreProvisionIngredientDTO, len(sp.StoreProvisionIngredients))
 	for i, spi := range sp.StoreProvisionIngredients {
 		ingredients[i] = StoreProvisionIngredientDTO{
-			Ingredient: *ingredientTypes.ConvertToIngredientResponseDTO(&spi.Ingredient),
-			Quantity:   spi.Quantity,
+			Ingredient:      *ingredientTypes.ConvertToIngredientResponseDTO(&spi.Ingredient),
+			Quantity:        spi.Quantity,
+			InitialQuantity: spi.InitialQuantity,
 		}
 	}
 
@@ -50,15 +51,20 @@ func MapToStoreProvisionDetailsDTO(sp *data.StoreProvision) *StoreProvisionDetai
 	}
 }
 
-func CreateToStoreProvisionModel(storeID uint, dto *CreateStoreProvisionDTO, centralCatalogProvision *data.Provision) *data.StoreProvision {
+func CreateToStoreProvisionModel(storeID uint, dto *CreateStoreProvisionDTO, centralCatalogProvision *data.Provision) (*data.StoreProvision, error) {
+	ingredients, err := mapIngredientsToStoreProvisionIngredients(dto.Volume, centralCatalogProvision)
+	if err != nil {
+		return nil, err
+	}
+
 	return &data.StoreProvision{
 		ProvisionID:               dto.ProvisionID,
 		Volume:                    dto.Volume,
 		ExpirationInMinutes:       dto.ExpirationInMinutes,
 		Status:                    data.STORE_PROVISION_STATUS_PREPARING,
 		StoreID:                   storeID,
-		StoreProvisionIngredients: mapIngredientsToStoreProvisionIngredients(dto.Volume, centralCatalogProvision),
-	}
+		StoreProvisionIngredients: ingredients,
+	}, nil
 }
 
 func UpdateToStoreProvisionModels(storeProvision *data.StoreProvision, dto *UpdateStoreProvisionDTO) (*StoreProvisionModels, error) {
@@ -66,8 +72,8 @@ func UpdateToStoreProvisionModels(storeProvision *data.StoreProvision, dto *Upda
 		return nil, fmt.Errorf("dto is nil")
 	}
 
-	if storeProvision == nil || storeProvision.ID == 0 || storeProvision.ProvisionID == 0 {
-		return nil, fmt.Errorf("invalid argument for ID paramters fetched while validating existing provision")
+	if storeProvision == nil || storeProvision.ID == 0 || storeProvision.ProvisionID == 0 || storeProvision.Provision.AbsoluteVolume == 0 {
+		return nil, fmt.Errorf("invalid arguments for storeProvision or provision model")
 	}
 
 	updateModels := &StoreProvisionModels{
@@ -75,9 +81,12 @@ func UpdateToStoreProvisionModels(storeProvision *data.StoreProvision, dto *Upda
 	}
 
 	if dto.Volume != nil {
-		multiplier := CalculateStoreProvisionIngredientsMultiplier(*dto.Volume, storeProvision.Provision.AbsoluteVolume)
-		storeProvision.Volume = *dto.Volume
+		multiplier, err := CalculateStoreProvisionIngredientsMultiplier(*dto.Volume, storeProvision.Provision.AbsoluteVolume)
+		if err != nil {
+			return nil, ErrInvalidStoreProvisionIngredientsVolume
+		}
 		updateModels.StoreProvisionIngredientsMultiplier = &multiplier
+		storeProvision.Volume = *dto.Volume
 	}
 
 	if dto.ExpirationInMinutes != nil {
@@ -87,20 +96,37 @@ func UpdateToStoreProvisionModels(storeProvision *data.StoreProvision, dto *Upda
 	return updateModels, nil
 }
 
-func mapIngredientsToStoreProvisionIngredients(volume float64, provision *data.Provision) []data.StoreProvisionIngredient {
-	result := make([]data.StoreProvisionIngredient, len(provision.ProvisionIngredients))
-	multiplier := CalculateStoreProvisionIngredientsMultiplier(volume, provision.AbsoluteVolume)
-
-	for i, ingredient := range provision.ProvisionIngredients {
-		result[i] = data.StoreProvisionIngredient{
-			IngredientID:    ingredient.IngredientID,
-			Quantity:        ingredient.Quantity * multiplier,
-			InitialQuantity: ingredient.Quantity,
-		}
+func mapIngredientsToStoreProvisionIngredients(volume float64, provision *data.Provision) ([]data.StoreProvisionIngredient, error) {
+	if provision == nil || provision.AbsoluteVolume == 0 {
+		return nil, fmt.Errorf("invalid input data")
 	}
-	return result
+
+	multiplier, err := CalculateStoreProvisionIngredientsMultiplier(volume, provision.AbsoluteVolume)
+	if err != nil {
+		return nil, ErrInvalidStoreProvisionIngredientsVolume
+	}
+
+	result := make([]data.StoreProvisionIngredient, 0, len(provision.ProvisionIngredients))
+	for _, ingredient := range provision.ProvisionIngredients {
+		calculated := ingredient.Quantity * multiplier
+		rounded := utils.RoundToDecimal(calculated, 2)
+
+		if rounded == 0 {
+			return nil, ErrInvalidStoreProvisionIngredientsVolume
+		}
+
+		result = append(result, data.StoreProvisionIngredient{
+			IngredientID:    ingredient.IngredientID,
+			Quantity:        rounded,
+			InitialQuantity: ingredient.Quantity,
+		})
+	}
+	return result, nil
 }
 
-func CalculateStoreProvisionIngredientsMultiplier(volume, absoluteVolume float64) float64 {
-	return utils.RoundToDecimal(volume/absoluteVolume, 2)
+func CalculateStoreProvisionIngredientsMultiplier(volume, absoluteVolume float64) (float64, error) {
+	if absoluteVolume == 0 {
+		return 0, fmt.Errorf("cannot divide by 0")
+	}
+	return utils.RoundToDecimal(volume/absoluteVolume, 2), nil
 }

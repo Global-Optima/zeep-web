@@ -26,8 +26,9 @@ type StoreProvisionDetailsDTO struct {
 }
 
 type StoreProvisionIngredientDTO struct {
-	Ingredient ingredientTypes.IngredientDTO `json:"ingredient"`
-	Quantity   float64                       `json:"quantity"`
+	Ingredient      ingredientTypes.IngredientDTO `json:"ingredient"`
+	Quantity        float64                       `json:"quantity"`
+	InitialQuantity float64                       `json:"initialQuantity"`
 }
 
 type CreateStoreProvisionDTO struct {

@@ -63,6 +63,9 @@ func (h *StoreProvisionHandler) CreateStoreProvision(c *gin.Context) {
 		case errors.Is(err, types.ErrStoreProvisionDailyLimitReached):
 			localization.SendLocalizedResponseWithKey(c, types.Response409StoreProvisionLimit)
 			return
+		case errors.Is(err, types.ErrInvalidStoreProvisionIngredientsVolume):
+			localization.SendLocalizedResponseWithKey(c, types.Response400StoreProvision)
+			return
 		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500StoreProvisionCreate)
 		return

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers"
 	storeInventoryManagersTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers/types"
+	"github.com/sirupsen/logrus"
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
@@ -160,6 +161,7 @@ func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrd
 		return nil, fmt.Errorf("order can not be empty")
 	}
 
+	logrus.Infof("Order: %v", createOrderDTO)
 	if err := ValidateMultipleSelect(storeID, *createOrderDTO, s.storeAdditiveRepo); err != nil {
 		s.logger.Error(err)
 		return nil, types.ErrMultipleSelect // TODO: test updates

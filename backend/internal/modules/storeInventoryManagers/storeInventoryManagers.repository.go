@@ -6,6 +6,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -50,32 +51,55 @@ func (r *storeInventoryManagerRepository) DeductStoreInventoryByProductSize(stor
 		return nil, err
 	}
 
-	deductedStoreInventory := &types.DeductedStoreInventory{}
+	defaultProductSizeAdditiveIngredients, err := r.getProductSizeDefaultAdditiveIngredients(productSizeID)
+	if err != nil {
+		return nil, err
+	}
 
+	defaultProductSizeAdditiveProvisions, err := r.getProductSizeDefaultAdditiveProvisions(productSizeID)
+	if err != nil {
+		return nil, err
+	}
+
+	ingredientMap := make(map[uint]float64)
+	for _, ing := range productSizeIngredients {
+		ingredientMap[ing.IngredientID] += ing.Quantity
+	}
+	for _, ing := range defaultProductSizeAdditiveIngredients {
+		ingredientMap[ing.IngredientID] += ing.Quantity
+	}
+
+	provisionMap := make(map[uint]float64)
+	for _, prov := range productSizeProvisions {
+		provisionMap[prov.ProvisionID] += prov.Volume
+	}
+	for _, prov := range defaultProductSizeAdditiveProvisions {
+		provisionMap[prov.ProvisionID] += prov.Volume
+	}
+
+	deducted := &types.DeductedStoreInventory{}
 	err = r.db.Transaction(func(tx *gorm.DB) error {
-		for _, ingredient := range productSizeIngredients {
-			updatedStock, err := deductStoreStock(tx, storeID, ingredient.IngredientID, ingredient.Quantity)
+		for ingID, qty := range ingredientMap {
+			updatedStock, err := deductStoreStock(tx, storeID, ingID, qty)
 			if err != nil {
 				return err
 			}
-			deductedStoreInventory.StoreStocks = append(deductedStoreInventory.StoreStocks, *updatedStock)
+			deducted.StoreStocks = append(deducted.StoreStocks, *updatedStock)
 		}
 
-		for _, provision := range productSizeProvisions {
-			updatedProvisions, err := deductStoreProvisions(tx, storeID, provision.ProvisionID, provision.Volume)
+		for provID, vol := range provisionMap {
+			updatedProvisions, err := deductStoreProvisions(tx, storeID, provID, vol)
 			if err != nil {
 				return err
 			}
-			//TODO should handle storeProvisions with 0 volume
-			deductedStoreInventory.StoreProvisions = append(deductedStoreInventory.StoreProvisions, updatedProvisions...)
+			deducted.StoreProvisions = append(deducted.StoreProvisions, updatedProvisions...)
 		}
 		return nil
 	})
 	if err != nil {
 		return nil, err
 	}
-
-	return deductedStoreInventory, nil
+	return deducted, nil
 }
 
 func (r *storeInventoryManagerRepository) DeductStoreInventoryByAdditive(storeID, additiveID uint) (*types.DeductedStoreInventory, error) {
@@ -167,6 +191,8 @@ func (r *storeInventoryManagerRepository) RecalculateStoreInventory(storeID uint
 
 	var productSizesIngredientIDs,
 		productSizesProvisionIDs,
+		additiveIngredientIDs,
+		additiveProvisionIDs,
 		storeProductIDsFromPS,
 		storeProductIDsFromIngredients,
 		storeProductIDsFromProvisions,
@@ -199,17 +225,26 @@ func (r *storeInventoryManagerRepository) RecalculateStoreInventory(storeID uint
 		}
 	}
 
-	totalIngredientIDs = utils.UnionSlices(input.IngredientIDs, productSizesIngredientIDs)
-	totalProvisionIDs = utils.UnionSlices(input.ProvisionIDs, productSizesProvisionIDs)
-
 	if hasAdditives {
 		storeAdditiveIDsFromAdditives, err = getStoreAdditiveIDsByAdditives(r.db, storeID, input.AdditiveIDs)
 		if err != nil {
 			return err
 		}
+
+		additiveIngredientIDs, err = getAllIngredientIDsByAdditives(r.db, input.AdditiveIDs)
+		if err != nil {
+			return err
+		}
+
+		additiveProvisionIDs, err = getAllProvisionIDsByAdditives(r.db, input.AdditiveIDs)
+		if err != nil {
+			return err
+		}
 	}
 
-	//TODO remove IF?
+	totalIngredientIDs = utils.UnionSlices(input.IngredientIDs, productSizesIngredientIDs, additiveIngredientIDs)
+	totalProvisionIDs = utils.UnionSlices(input.ProvisionIDs, productSizesProvisionIDs, additiveProvisionIDs)
+
 	if len(totalIngredientIDs) > 0 || len(totalProvisionIDs) > 0 {
 		frozenInventoryFilter := &types.FrozenInventoryFilter{
 			IngredientIDs: totalIngredientIDs,
@@ -220,6 +255,8 @@ func (r *storeInventoryManagerRepository) RecalculateStoreInventory(storeID uint
 		if err != nil {
 			return err
 		}
+
+		logrus.Infof("FROZEN INVENTORY FETCHED: %v", frozenInventory)
 	}
 
 	if len(totalIngredientIDs) > 0 {
@@ -295,6 +332,30 @@ func (r *storeInventoryManagerRepository) getProductSizeIngredients(productSizeI
 		return nil, fmt.Errorf("failed to fetch product size ingredients: %w", err)
 	}
 	return productSizeIngredients, nil
+}
+
+func (r *storeInventoryManagerRepository) getProductSizeDefaultAdditiveIngredients(productSizeID uint) ([]data.AdditiveIngredient, error) {
+	var additiveIngredients []data.AdditiveIngredient
+	err := r.db.Joins("JOIN product_size_additives ON product_size_additives.additive_id = additive_ingredients.additive_id").
+		Preload("Ingredient.Unit").
+		Where("product_size_additives.product_size_id = ? AND product_size_additives.is_default = TRUE", productSizeID).
+		Find(&additiveIngredients).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch product size additive ingredients: %w", err)
+	}
+	return additiveIngredients, nil
+}
+
+func (r *storeInventoryManagerRepository) getProductSizeDefaultAdditiveProvisions(productSizeID uint) ([]data.AdditiveProvision, error) {
+	var additiveProvisions []data.AdditiveProvision
+	err := r.db.Joins("JOIN product_size_additives ON product_size_additives.additive_id = additive_provisions.additive_id").
+		Preload("Provision.Unit").
+		Where("product_size_additives.product_size_id = ? AND product_size_additives.is_default = TRUE", productSizeID).
+		Find(&additiveProvisions).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch product size additive provisions: %w", err)
+	}
+	return additiveProvisions, nil
 }
 
 func (r *storeInventoryManagerRepository) getProductSizeProvisions(productSizeID uint) ([]data.ProductSizeProvision, error) {

@@ -99,7 +99,12 @@ func (s *storeProvisionService) CreateStoreProvision(storeID uint, dto *types.Cr
 		return nil, types.ErrStoreProvisionDailyLimitReached
 	}
 
-	storeProvision := types.CreateToStoreProvisionModel(storeID, dto, centralCatalogProvision)
+	storeProvision, err := types.CreateToStoreProvisionModel(storeID, dto, centralCatalogProvision)
+	if err != nil {
+		wrapped := fmt.Errorf("failed to validate store provision: %w", err)
+		s.logger.Error(wrapped)
+		return nil, wrapped
+	}
 
 	ingredientIDs, err := s.formAddStockDTOsFromProvisions([]uint{storeProvision.ProvisionID})
 	if err != nil {
@@ -163,13 +168,10 @@ func (s *storeProvisionService) CompleteStoreProvision(storeID, storeProvisionID
 		return nil, wrapped
 	}
 
-	var ingredientsToRecalculate []uint
-
 	//filter storeStocks to recalculate: only keep stocks below or equal to lowStockThreshold
-	for _, stock := range deductedStocks {
-		if stock.Quantity <= stock.LowStockThreshold {
-			ingredientsToRecalculate = append(ingredientsToRecalculate, stock.IngredientID)
-		}
+	ingredientsToRecalculate := make([]uint, len(deductedStocks))
+	for i, stock := range deductedStocks {
+		ingredientsToRecalculate[i] = stock.IngredientID
 	}
 
 	err = s.storeInventoryManagerRepo.RecalculateStoreInventory(storeProvision.StoreID, &storeInventoryManagersTypes.RecalculateInput{
