@@ -41,6 +41,7 @@ import {
   TableRow,
 } from '@/core/components/ui/table'
 import { toast } from '@/core/components/ui/toast'
+import { useAxiosLocaleToast, type AxiosLocalizedError } from '@/core/hooks/use-axios-locale-toast.hooks'
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 import { unitsService } from '@/modules/admin/units/services/units.service'
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
@@ -51,6 +52,8 @@ const {units} = defineProps<{units: UnitDTO[]}>()
 
 const router = useRouter();
 const queryClient = useQueryClient()
+const { toastLocalizedError } = useAxiosLocaleToast()
+
 
 const {mutate: deleteMutation} = useMutation({
 		mutationFn: (id: number) => unitsService.deleteUnit(id),
@@ -58,8 +61,8 @@ const {mutate: deleteMutation} = useMutation({
 			toast({title: "Успешное удаление"})
 			queryClient.invalidateQueries({queryKey: ['admin-units']})
 		},
-		onError: () => {
-      toast({title: "Произошла ошибка при удалении"})
+		onError: (error: AxiosLocalizedError) => {
+			toastLocalizedError(error, "Произошла ошибка при удалении")
 		},
 })
 

@@ -11,7 +11,7 @@ var (
 	Response500IngredientUpdate = localization.NewResponseKey(500, data.IngredientComponent, data.UpdateOperation.ToString())
 	Response500IngredientDelete = localization.NewResponseKey(500, data.IngredientComponent, data.DeleteOperation.ToString())
 	Response404Ingredient       = localization.NewResponseKey(404, data.IngredientComponent)
-	Response409IngredientInUse  = localization.NewResponseKey(409, data.IngredientComponent, data.DeleteOperation.ToString(), "in-use")
+	Response409IngredientInUse  = localization.NewResponseKey(409, data.IngredientComponent, data.DeleteOperation.ToString(), "IN_USE")
 	Response201IngredientCreate = localization.NewResponseKey(201, data.IngredientComponent)
 	Response200IngredientUpdate = localization.NewResponseKey(200, data.IngredientComponent, data.UpdateOperation.ToString())
 	Response200IngredientDelete = localization.NewResponseKey(200, data.IngredientComponent, data.DeleteOperation.ToString())
