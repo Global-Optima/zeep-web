@@ -2,7 +2,6 @@ package storeProducts
 
 import (
 	"fmt"
-
 	"github.com/Global-Optima/zeep-web/backend/api/storage"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
@@ -14,6 +13,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts/types"
 	productTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
+	storeInventoryManagersTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"go.uber.org/zap"
 )
@@ -30,6 +30,12 @@ type StoreProductService interface {
 	CreateMultipleStoreProducts(storeID uint, dtos []types.CreateStoreProductDTO) ([]uint, error)
 	UpdateStoreProduct(storeID, storeProductID uint, dto *types.UpdateStoreProductDTO) error
 	DeleteStoreProduct(storeID, storeProductID uint) error
+
+	CheckSufficientStoreProductSizeByID(
+		storeID,
+		storeProductSizeID uint,
+		frozenInventory *storeInventoryManagersTypes.FrozenInventory,
+	) error
 }
 
 type storeProductService struct {
@@ -351,4 +357,12 @@ func (s *storeProductService) validateProductSizesByProductID(productSizeIDs []u
 	}
 
 	return nil
+}
+
+func (s *storeProductService) CheckSufficientStoreProductSizeByID(
+	storeID,
+	storeProductSizeID uint,
+	frozenInventory *storeInventoryManagersTypes.FrozenInventory,
+) error {
+	return s.transactionManager.CheckSufficientStoreProductSizeById(storeID, storeProductSizeID, frozenInventory)
 }

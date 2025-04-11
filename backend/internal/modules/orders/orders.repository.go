@@ -34,7 +34,6 @@ type OrderRepository interface {
 	GetSuborderByID(suborderID uint) (*data.Suborder, error)
 	GetOrderInventory(orderID uint) (*storeInventoryManagersTypes.InventoryIDsLists, error)
 
-	CalculateFrozenStock(storeID uint) (map[uint]float64, error)
 	HandlePaymentSuccess(orderID uint, paymentTransaction *data.Transaction) (*data.Order, error)
 	HardDeleteOrderByID(orderID uint) error
 	CloneWithTransaction(tx *gorm.DB) orderRepository
@@ -555,27 +554,6 @@ func (r *orderRepository) GetSuborderByID(suborderID uint) (*data.Suborder, erro
 		return nil, err
 	}
 	return &suborder, nil
-}
-
-func (r *orderRepository) CalculateFrozenStock(storeID uint) (map[uint]float64, error) {
-	frozenStock := make(map[uint]float64)
-
-	activeOrders, err := r.loadActiveOrders(storeID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load active orders for store %d: %w", storeID, err)
-	}
-
-	for _, order := range activeOrders {
-		for _, sub := range order.Suborders {
-			if !isSuborderActive(sub) {
-				continue
-			}
-			accumulateProductUsage(&frozenStock, sub)
-			accumulateAdditiveUsage(&frozenStock, sub)
-		}
-	}
-
-	return frozenStock, nil
 }
 
 func (r *orderRepository) loadActiveOrders(storeID uint) ([]data.Order, error) {

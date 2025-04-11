@@ -3,7 +3,9 @@ package storeInventoryManagers
 import (
 	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	storeProvisionsTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/storeProvisions/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers/types"
+	storeStocksTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -11,6 +13,17 @@ import (
 )
 
 type StoreInventoryManagerRepository interface {
+	CheckStoreStocks(
+		storeID uint,
+		requiredIngredientQuantityMap map[uint]float64,
+		frozenInventory *types.FrozenInventory,
+	) error
+	CheckStoreProvisions(
+		storeID uint,
+		requiredProvisionVolumeMap map[uint]float64,
+		frozenInventory *types.FrozenInventory,
+	) error
+
 	DeductStoreInventoryByProductSize(storeID, productSizeID uint) (*types.DeductedStoreInventory, error)
 	DeductStoreInventoryByAdditive(storeID, additiveID uint) (*types.DeductedStoreInventory, error)
 	DeductStoreStocksByStoreProvision(storeProvision *data.StoreProvision) ([]data.StoreStock, error)
@@ -320,6 +333,105 @@ func (r *storeInventoryManagerRepository) RecalculateStoreAdditives(
 
 func (r *storeInventoryManagerRepository) CalculateFrozenInventory(storeID uint, filter *types.FrozenInventoryFilter) (*types.FrozenInventory, error) {
 	return calculateFrozenInventory(r.db, storeID, filter)
+}
+
+func (r *storeInventoryManagerRepository) CheckStoreStocks(
+	storeID uint,
+	requiredIngredientQuantityMap map[uint]float64,
+	frozenInventory *types.FrozenInventory,
+) error {
+	if len(requiredIngredientQuantityMap) == 0 {
+		return nil
+	}
+
+	ingredientIDs := make([]uint, 0, len(requiredIngredientQuantityMap))
+	for id := range requiredIngredientQuantityMap {
+		ingredientIDs = append(ingredientIDs, id)
+	}
+
+	stocks, err := getRelevantStoreStocks(r.db, storeID, ingredientIDs)
+	if err != nil {
+		return err
+	}
+
+	stockMap := make(map[uint]data.StoreStock)
+	for _, stock := range stocks {
+		stockMap[stock.IngredientID] = stock
+	}
+
+	for ingredientID, requiredQty := range requiredIngredientQuantityMap {
+		stock, ok := stockMap[ingredientID]
+		if !ok {
+			return fmt.Errorf("%w: stock not found for ingredient ID %d", storeStocksTypes.ErrInsufficientStock, ingredientID)
+		}
+
+		frozen := frozenInventory.Ingredients[ingredientID]
+		if stock.Quantity < frozen {
+			return fmt.Errorf("%w: insufficient stock for ingredient ID %d: already pending %.2f, need %.2f, have %.2f",
+				storeStocksTypes.ErrInsufficientStock, ingredientID, frozen, requiredQty, stock.Quantity)
+		}
+
+		effectiveAvailable := stock.Quantity - frozen
+		if effectiveAvailable < requiredQty {
+			return fmt.Errorf("%w: insufficient effective available for ingredient ID %d: need %.2f, have %.2f",
+				storeStocksTypes.ErrInsufficientStock, ingredientID, requiredQty, effectiveAvailable)
+		}
+
+		frozenInventory.Ingredients[ingredientID] += requiredQty
+	}
+
+	return nil
+}
+
+func (r *storeInventoryManagerRepository) CheckStoreProvisions(
+	storeID uint,
+	requiredProvisionVolumeMap map[uint]float64,
+	frozenInventory *types.FrozenInventory,
+) error {
+	if len(requiredProvisionVolumeMap) == 0 {
+		return nil
+	}
+
+	provisionIDs := make([]uint, 0, len(requiredProvisionVolumeMap))
+	for id := range requiredProvisionVolumeMap {
+		provisionIDs = append(provisionIDs, id)
+	}
+
+	provisions, err := getRelevantStoreProvisions(r.db, storeID, provisionIDs)
+	if err != nil {
+		return err
+	}
+
+	provisionMap := make(map[uint][]data.StoreProvision)
+	for _, provision := range provisions {
+		provisionMap[provision.ProvisionID] = append(provisionMap[provision.ProvisionID], provision)
+	}
+
+	for provisionID, requiredVolume := range requiredProvisionVolumeMap {
+		remaining := requiredVolume
+		for _, provision := range provisionMap[provisionID] {
+			frozen := frozenInventory.Provisions[provisionID]
+			effectiveAvailable := provision.Volume - frozen
+			if effectiveAvailable <= 0 {
+				continue
+			}
+
+			toUse := min(effectiveAvailable, remaining)
+			remaining -= toUse
+			frozenInventory.Provisions[provisionID] += toUse
+
+			if remaining <= 0 {
+				break
+			}
+		}
+
+		if remaining > 0 {
+			return fmt.Errorf("%w: insufficient provision volume for provision ID %d. Need %.2f more",
+				storeProvisionsTypes.ErrInsufficientStoreProvision, provisionID, remaining)
+		}
+	}
+
+	return nil
 }
 
 func (r *storeInventoryManagerRepository) getProductSizeIngredients(productSizeID uint) ([]data.ProductSizeIngredient, error) {

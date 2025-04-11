@@ -1,6 +1,7 @@
 package storeProducts
 
 import (
+	"fmt"
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	storeAdditives "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
@@ -9,6 +10,7 @@ import (
 	storeInventoryManagersTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
 	storeStocksTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks/types"
+	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
@@ -16,6 +18,10 @@ type TransactionManager interface {
 	CreateStoreProductWithStocks(storeID uint, storeProduct *data.StoreProduct, storeAdditives []data.StoreAdditive, ingredientIDs []uint) (storeProductID uint, storeAdditiveIDs []uint, err error)
 	CreateMultipleStoreProductsWithStocks(storeID uint, storeProduct []data.StoreProduct, storeAdditives []data.StoreAdditive, ingredientIDs []uint) (storeProductIDs []uint, storeAdditiveIDs []uint, err error)
 	UpdateStoreProductWithStocks(storeID, storeProductID uint, updateModels *types.StoreProductModels, ingredientIDs []uint) error
+	CheckSufficientStoreProductSizeById(
+		storeID, storeProductSizeID uint,
+		frozenInventory *storeInventoryManagersTypes.FrozenInventory,
+	) error
 }
 
 type transactionManager struct {
@@ -223,4 +229,88 @@ func (m *transactionManager) addStocks(storeStockRepo storeStocks.StoreStockRepo
 	}
 
 	return ids, nil
+}
+
+func (m *transactionManager) CheckSufficientStoreProductSizeById(
+	storeID, storeProductSizeID uint,
+	frozenInventory *storeInventoryManagersTypes.FrozenInventory,
+) error {
+	var storeProductSize data.StoreProductSize
+
+	err := m.db.Model(&data.StoreProductSize{}).
+		Joins("JOIN store_products sp ON store_product_sizes.store_product_id = sp.id").
+		Where("sp.store_id = ? AND store_product_sizes.id = ?", storeID, storeProductSizeID).
+		Preload("ProductSize.Product").
+		Preload("ProductSize.ProductSizeIngredients").
+		Preload("ProductSize.ProductSizeProvisions").
+		Preload("ProductSize.Additives.Additive.Ingredients").
+		Preload("ProductSize.Additives.Additive.AdditiveProvisions").
+		First(&storeProductSize).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return types.ErrStoreProductSizeNotFound
+		}
+		return fmt.Errorf("%w: failed to load StoreProductSize (ID=%d): %w",
+			types.ErrFailedToFetchStoreProductSize, storeProductSizeID, err)
+	}
+
+	if err := m.checkProductSizeIngredients(storeID, &storeProductSize, frozenInventory); err != nil {
+		return err
+	}
+
+	if err := m.checkProductSizeProvisions(storeID, &storeProductSize, frozenInventory); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *transactionManager) checkProductSizeIngredients(
+	storeID uint,
+	storeProductSize *data.StoreProductSize,
+	frozenInventory *storeInventoryManagersTypes.FrozenInventory,
+) error {
+	requiredIngredientQuantityMap := make(map[uint]float64)
+	// Check base ingredients
+	for _, usage := range storeProductSize.ProductSize.ProductSizeIngredients {
+		requiredIngredientQuantityMap[usage.IngredientID] += usage.Quantity
+	}
+
+	// Check ingredients from default additives
+	for _, psa := range storeProductSize.ProductSize.Additives {
+		if !psa.IsDefault {
+			continue
+		}
+		for _, additiveIng := range psa.Additive.Ingredients {
+			requiredIngredientQuantityMap[additiveIng.IngredientID] += additiveIng.Quantity
+		}
+	}
+
+	return m.storeInventoryManagerRepo.CheckStoreStocks(storeID, requiredIngredientQuantityMap, frozenInventory)
+}
+
+func (m *transactionManager) checkProductSizeProvisions(
+	storeID uint,
+	storeProductSize *data.StoreProductSize,
+	frozenInventory *storeInventoryManagersTypes.FrozenInventory,
+) error {
+	requiredProvisionQuantityMap := make(map[uint]float64)
+
+	// Gather base product size provisions
+	for _, usage := range storeProductSize.ProductSize.ProductSizeProvisions {
+		requiredProvisionQuantityMap[usage.ProvisionID] += usage.Volume
+	}
+
+	// Gather provisions from default additives
+	for _, psa := range storeProductSize.ProductSize.Additives {
+		if !psa.IsDefault {
+			continue
+		}
+		for _, additiveProv := range psa.Additive.AdditiveProvisions {
+			requiredProvisionQuantityMap[additiveProv.ProvisionID] += additiveProv.Volume
+		}
+	}
+
+	// Call the provision check
+	return m.storeInventoryManagerRepo.CheckStoreProvisions(storeID, requiredProvisionQuantityMap, frozenInventory)
 }

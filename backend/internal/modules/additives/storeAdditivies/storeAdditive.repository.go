@@ -22,7 +22,6 @@ type StoreAdditiveRepository interface {
 	CreateStoreAdditives(storeAdditives []data.StoreAdditive) ([]uint, error)
 	GetStoreAdditiveWithDetailsByID(storeAdditiveID uint, filter *contexts.StoreContextFilter) (*data.StoreAdditive, error)
 	GetStoreAdditiveByID(storeAdditiveID uint) (*data.StoreAdditive, error)
-	GetSufficientStoreAdditiveByID(storeID, storeAdditiveID uint, frozenStock map[uint]float64) (*data.StoreAdditive, error)
 	GetAvailableAdditivesToAdd(storeID uint, filter *additiveTypes.AdditiveFilterQuery) ([]data.Additive, error)
 	GetStoreAdditives(storeID uint, filter *additiveTypes.AdditiveFilterQuery) ([]data.StoreAdditive, error)
 	GetStoreAdditivesByIDs(storeID uint, IDs []uint) ([]data.StoreAdditive, error)
@@ -398,61 +397,6 @@ func (r *storeAdditiveRepository) GetStoreAdditiveWithProductSizeAdditive(
 	}
 
 	return &sa, &psa, nil
-}
-
-func (r *storeAdditiveRepository) GetSufficientStoreAdditiveByID(
-	storeID, storeAdditiveID uint, frozenMap map[uint]float64,
-) (*data.StoreAdditive, error) {
-	var storeAdditive data.StoreAdditive
-
-	err := r.db.
-		Where("store_id = ?", storeID).
-		Where("id = ?", storeAdditiveID).
-		Preload("Additive").
-		Preload("Additive.Category").
-		Preload("Additive.Unit").
-		Preload("Additive.Ingredients").
-		Preload("Additive.Ingredients.Ingredient.Unit").
-		Preload("Additive.Ingredients.Ingredient.IngredientCategory").
-		First(&storeAdditive).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, types.ErrStoreAdditiveNotFound
-		}
-		return nil, fmt.Errorf("%w: failed to get storeAdditive (id=%d): %w",
-			types.ErrFailedToFetchStoreAdditive, storeAdditiveID, err)
-	}
-
-	for _, ingrUsage := range storeAdditive.Additive.Ingredients {
-		requiredAmount := ingrUsage.Quantity
-
-		var stock data.StoreStock
-		err := r.db.
-			Where("store_id = ? AND ingredient_id = ?", storeID, ingrUsage.IngredientID).
-			First(&stock).Error
-		if err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return nil, types.ErrStoreStockNotFound
-			}
-			return nil, fmt.Errorf("%w: failed to get stock for ingredient %d: %w",
-				types.ErrFailedToFetchStoreStock, ingrUsage.IngredientID, err)
-		}
-
-		if stock.Quantity < frozenMap[ingrUsage.IngredientID] {
-			return nil, fmt.Errorf("%w: insufficient stock for ingredient %q (ID=%d): already pending %.2f, need %.2f, have left %.2f",
-				types.ErrInsufficientStock, ingrUsage.Ingredient.Name, ingrUsage.IngredientID,
-				frozenMap[ingrUsage.IngredientID], requiredAmount, stock.Quantity)
-		}
-
-		effectiveAvailable := stock.Quantity - frozenMap[ingrUsage.IngredientID]
-		if effectiveAvailable < requiredAmount {
-			return nil, fmt.Errorf("%w: insufficient effective stock for ingredient %q (ID=%d): need %.2f, have %.2f",
-				types.ErrInsufficientStock, ingrUsage.Ingredient.Name, ingrUsage.IngredientID,
-				requiredAmount, effectiveAvailable)
-		}
-	}
-
-	return &storeAdditive, nil
 }
 
 func (r *storeAdditiveRepository) GetStoreAdditives(storeID uint, filter *additiveTypes.AdditiveFilterQuery) ([]data.StoreAdditive, error) {

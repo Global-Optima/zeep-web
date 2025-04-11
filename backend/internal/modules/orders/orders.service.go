@@ -59,6 +59,8 @@ type orderService struct {
 	storeAdditiveRepo         storeAdditives.StoreAdditiveRepository
 	storeStockRepo            storeStocks.StoreStockRepository
 	storeInventoryManagerRepo storeInventoryManagers.StoreInventoryManagerRepository
+	storeProductService       storeProducts.StoreProductService
+	storeAdditiveService      storeAdditives.StoreAdditiveService
 	notificationService       notifications.NotificationService
 	transactionManager        TransactionManager
 	logger                    *zap.SugaredLogger
@@ -167,7 +169,7 @@ func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrd
 		return nil, types.ErrMultipleSelect // TODO: test updates
 	}
 
-	frozenMap, err := s.orderRepo.CalculateFrozenStock(storeID)
+	frozenMap, err := s.storeInventoryManagerRepo.CalculateFrozenInventory(storeID, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to calculate frozen stock: %w", err)
 	}
@@ -233,9 +235,9 @@ func (s *orderService) StockAndPriceValidationResults(
 	suborders []types.CreateSubOrderDTO,
 	storeID uint,
 	storeProductSizeIDs, storeAdditiveIDs []uint,
-	frozenMap map[uint]float64,
+	frozenInventory *storeInventoryManagersTypes.FrozenInventory,
 ) (*orderValidationResults, error) {
-	productPrices, productNames, err := ValidateStoreProductSizes(storeID, storeProductSizeIDs, s.storeProductRepo, frozenMap)
+	productPrices, productNames, err := ValidateStoreProductSizes(storeID, storeProductSizeIDs, s.storeProductRepo, frozenInventory)
 	if err != nil {
 		s.logger.Error(fmt.Errorf("product validation failed: %w", err))
 		return nil, err
@@ -245,7 +247,7 @@ func (s *orderService) StockAndPriceValidationResults(
 		storeID,
 		suborders,
 		s.storeAdditiveRepo,
-		frozenMap,
+		frozenInventory,
 	)
 	if err != nil {
 		s.logger.Error(fmt.Errorf("additive validation failed: %w", err))
@@ -264,7 +266,7 @@ func ValidateStoreAdditives(
 	storeID uint,
 	suborders []types.CreateSubOrderDTO,
 	repo storeAdditives.StoreAdditiveRepository,
-	frozenMap map[uint]float64,
+	frozenInventory *storeInventoryManagersTypes.FrozenInventory,
 ) (map[uint]float64, map[uint]string, error) {
 	prices := make(map[uint]float64)
 	additiveNames := make(map[uint]string)
@@ -335,7 +337,7 @@ func ValidateStoreProductSizes(
 	storeID uint,
 	storeProductSizeIDs []uint,
 	repo storeProducts.StoreProductRepository,
-	frozenMap map[uint]float64,
+	frozenInventory *storeInventoryManagersTypes.FrozenInventory,
 ) (map[uint]float64, map[uint]string, error) {
 	prices := make(map[uint]float64)
 	productNames := make(map[uint]string)
@@ -377,7 +379,7 @@ func RetrieveIDs(createOrderDTO types.CreateOrderDTO) ([]uint, []uint) {
 func (s *orderService) CheckAndAccumulateSuborders(
 	storeID uint,
 	suborders []types.CreateSubOrderDTO,
-	frozenMap map[uint]float64,
+	frozenInventory *storeInventoryManagersTypes.FrozenInventory,
 ) error {
 	// Expand any suborders with quantity > 1 into separate single-quantity items
 	expanded := ExpandSuborders(suborders)
@@ -385,7 +387,8 @@ func (s *orderService) CheckAndAccumulateSuborders(
 	// For each single suborder, call existing checks
 	for _, sub := range expanded {
 		// Product Size
-		sps, err := s.storeProductRepo.GetSufficientStoreProductSizeById(storeID, sub.StoreProductSizeID, frozenMap)
+
+		err := s.storeProductService.CheckSufficientStoreProductSizeByID(storeID, sub.StoreProductSizeID, frozenInventory)
 		if err != nil {
 			s.logger.Error(fmt.Errorf(
 				"error occured while trying to get sufficient store product size %d: %w",
@@ -394,24 +397,15 @@ func (s *orderService) CheckAndAccumulateSuborders(
 			return err
 		}
 
-		// If success, we 'freeze' that usage. We add the usage from the product size to the frozenMap.
-		for _, usage := range sps.ProductSize.ProductSizeIngredients {
-			frozenMap[usage.IngredientID] += usage.Quantity
-		}
-
 		// Additives
 		for _, addID := range sub.StoreAdditivesIDs {
-			sa, err := s.storeAdditiveRepo.GetSufficientStoreAdditiveByID(storeID, addID, frozenMap)
+			err := s.storeAdditiveService.CheckSufficientStoreAdditiveByID(storeID, addID, frozenInventory)
 			if err != nil {
 				s.logger.Error(fmt.Errorf(
 					"error occured while trying to get sufficient store additive %d: %w",
 					addID, err,
 				))
 				return err
-			}
-			// freeze additive usage
-			for _, ingrUsage := range sa.Additive.Ingredients {
-				frozenMap[ingrUsage.IngredientID] += ingrUsage.Quantity
 			}
 		}
 	}

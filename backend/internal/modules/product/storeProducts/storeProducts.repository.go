@@ -2,6 +2,7 @@ package storeProducts
 
 import (
 	"fmt"
+	storeInventoryManagersTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers/types"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 
@@ -28,7 +29,7 @@ type StoreProductRepository interface {
 
 	GetStoreProductSizeByID(storeProductSizeID uint) (*data.StoreProductSize, error)
 	GetStoreProductSizeWithDetailsByID(storeID, storeProductSizeID uint) (*data.StoreProductSize, error)
-	GetSufficientStoreProductSizeById(storeID, storeProductSizeID uint, frozenMap map[uint]float64) (*data.StoreProductSize, error)
+	GetSufficientStoreProductSizeById(storeID, storeProductSizeID uint, frozenInventory *storeInventoryManagersTypes.FrozenInventory) (*data.StoreProductSize, error)
 	UpdateProductSize(storeID, productSizeID uint, size *data.StoreProductSize) error
 	DeleteStoreProductSize(storeID, productSizeID uint) error
 	CloneWithTransaction(tx *gorm.DB) StoreProductRepository
@@ -393,7 +394,8 @@ func (r *storeProductRepository) GetStoreProductSizeByID(storeProductSizeID uint
 }
 
 func (r *storeProductRepository) GetSufficientStoreProductSizeById(
-	storeID, storeProductSizeID uint, frozenMap map[uint]float64,
+	storeID, storeProductSizeID uint,
+	frozenInventory *storeInventoryManagersTypes.FrozenInventory,
 ) (*data.StoreProductSize, error) {
 	var storeProductSize data.StoreProductSize
 
@@ -405,11 +407,11 @@ func (r *storeProductRepository) GetSufficientStoreProductSizeById(
 		Preload("ProductSize").
 		Preload("ProductSize.Unit").
 		Preload("ProductSize.Product").
-		Preload("ProductSize.ProductSizeIngredients").
 		Preload("ProductSize.ProductSizeIngredients.Ingredient.Unit").
 		Preload("ProductSize.ProductSizeIngredients.Ingredient.IngredientCategory").
-		Preload("ProductSize.Additives.Additive.Category").
-		Preload("ProductSize.Additives.Additive.Unit").
+		Preload("ProductSize.Additives.Additive").
+		Preload("ProductSize.Additives.Additive.Ingredients.Ingredient.Unit").
+		Preload("ProductSize.Additives.Additive.Ingredients.Ingredient.IngredientCategory").
 		First(&storeProductSize).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -419,36 +421,55 @@ func (r *storeProductRepository) GetSufficientStoreProductSizeById(
 			types.ErrFailedToFetchStoreProductSize, storeProductSizeID, err)
 	}
 
+	usedIngredientQuantity := make(map[uint]float64)
+	// Check base ingredients
 	for _, usage := range storeProductSize.ProductSize.ProductSizeIngredients {
-		needed := usage.Quantity
+		usedIngredientQuantity[usage.IngredientID] += usage.Quantity
+	}
 
-		var stock data.StoreStock
-		err := r.db.Model(&data.StoreStock{}).
-			Where("store_id = ?", storeID).
-			Where("ingredient_id = ?", usage.IngredientID).
-			First(&stock).Error
-		if err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return nil, types.ErrStoreStockNotFound
-			}
-			return nil, fmt.Errorf("%w: failed to find stock for ingredient %d: %w",
-				types.ErrFailedToFetchStoreStock, usage.IngredientID, err)
+	// Check ingredients from default additives
+	for _, psa := range storeProductSize.ProductSize.Additives {
+		if !psa.IsDefault {
+			continue
 		}
-
-		if stock.Quantity < frozenMap[usage.IngredientID] {
-			return nil, fmt.Errorf("%w: insufficient stock for ingredient %q (ID=%d): already pending %.2f, need %.2f, have left %.2f",
-				types.ErrInsufficientStock, usage.Ingredient.Name, usage.IngredientID,
-				frozenMap[usage.IngredientID], needed, stock.Quantity)
-		}
-
-		effectiveAvailable := stock.Quantity - frozenMap[usage.IngredientID]
-		if effectiveAvailable < needed {
-			return nil, fmt.Errorf("%w: insufficient effective available for ingredient %q (ID=%d): need %.2f, have %.2f",
-				types.ErrInsufficientStock, usage.Ingredient.Name, usage.IngredientID, needed, effectiveAvailable)
+		for _, additiveIng := range psa.Additive.Ingredients {
+			usedIngredientQuantity[additiveIng.IngredientID] += additiveIng.Quantity
 		}
 	}
 
 	return &storeProductSize, nil
+}
+
+func (r *storeProductRepository) checkIngredientStock(
+	storeID, ingredientID uint,
+	requiredQty float64,
+	frozenInventory *storeInventoryManagersTypes.FrozenInventory,
+) error {
+	var stock data.StoreStock
+	err := r.db.Model(&data.StoreStock{}).
+		Where("store_id = ? AND ingredient_id = ?", storeID, ingredientID).
+		First(&stock).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return types.ErrStoreStockNotFound
+		}
+		return fmt.Errorf("%w: failed to fetch stock for ingredient ID %d: %w",
+			types.ErrFailedToFetchStoreStock, ingredientID, err)
+	}
+
+	frozen := frozenInventory.Ingredients[ingredientID]
+	if stock.Quantity < frozen {
+		return fmt.Errorf("%w: insufficient stock for ingredient ID %d: already pending %.2f, need %.2f, have %.2f",
+			types.ErrInsufficientStock, ingredientID, frozen, requiredQty, stock.Quantity)
+	}
+
+	effectiveAvailable := stock.Quantity - frozen
+	if effectiveAvailable < requiredQty {
+		return fmt.Errorf("%w: insufficient effective available for ingredient ID %d: need %.2f, have %.2f",
+			types.ErrInsufficientStock, ingredientID, requiredQty, effectiveAvailable)
+	}
+
+	return nil
 }
 
 func (r *storeProductRepository) UpdateProductSize(storeID, productSizeID uint, size *data.StoreProductSize) error {
