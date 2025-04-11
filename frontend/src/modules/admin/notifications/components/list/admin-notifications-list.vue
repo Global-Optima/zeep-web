@@ -77,7 +77,7 @@ const formatTimeAgo = (date: string) => formatDistanceToNow(new Date(date), { lo
 				<TableCell class="py-4">
 					<span v-html="formatLocalizedMessage(notification.messages.ru)"></span>
 				</TableCell>
-				<TableCell>{{ formatTimeAgo(notification.createdAt) }}</TableCell>
+				<TableCell>{{ formatTimeAgo(notification.createdAt) }} назад</TableCell>
 				<TableCell>
 					<span
 						:class="PRIORITY_COLORS[notification.priority]"

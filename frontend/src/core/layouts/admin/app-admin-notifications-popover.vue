@@ -92,7 +92,7 @@ const formatTimeAgo = (date: string) => formatDistanceToNow(new Date(date), { lo
 
 		<PopoverContent
 			align="end"
-			class="p-0 w-full max-w-sm"
+			class="p-0 w-full max-w-md"
 		>
 			<!-- Header -->
 			<div class="flex justify-between items-center gap-10 px-4 pt-4">
@@ -102,7 +102,6 @@ const formatTimeAgo = (date: string) => formatDistanceToNow(new Date(date), { lo
 					:disabled="notificationIds.length === 0"
 					@click="readAll"
 					variant="link"
-					size="sm"
 					class="gap-2 p-0 text-primary"
 				>
 					<CheckCheck class="size-4" />
@@ -132,7 +131,7 @@ const formatTimeAgo = (date: string) => formatDistanceToNow(new Date(date), { lo
 						</p>
 
 						<p class="mt-1 text-gray-500 text-xs">
-							{{ formatTimeAgo(notification.createdAt) }}
+							{{ formatTimeAgo(notification.createdAt) }} назад
 						</p>
 					</div>
 
@@ -155,12 +154,11 @@ const formatTimeAgo = (date: string) => formatDistanceToNow(new Date(date), { lo
 			<!-- Footer -->
 			<div class="flex justify-center items-center px-4 pb-4">
 				<Button
-					size="sm"
 					variant="link"
 					@click="onSeeAllClick"
 					class="text-gray-600"
 				>
-					Посмотреть все
+					Еще
 				</Button>
 			</div>
 		</PopoverContent>

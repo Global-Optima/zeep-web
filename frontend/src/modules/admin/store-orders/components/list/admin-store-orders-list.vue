@@ -13,7 +13,8 @@
 			<TableRow
 				v-for="order in orders"
 				:key="order.id"
-				class="hover:bg-gray-50 h-12"
+				@click="onOrderClick(order.id)"
+				class="hover:bg-slate-50 cursor-pointer"
 			>
 				<TableCell>
 					{{ order.id }}
@@ -59,13 +60,17 @@ import { formatPrice } from '@/core/utils/price.utils'
 import { OrderStatus, type OrderDTO } from '@/modules/admin/store-orders/models/orders.models'
 import { format } from 'date-fns'
 import { ru } from 'date-fns/locale'
+import { useRouter } from 'vue-router'
 
 // Props
 const { orders } = defineProps<{ orders: OrderDTO[] }>();
 
+const router = useRouter()
+
 const formatDate = (dateString: string) => {
   return format(new Date(dateString), 'dd MMMM yyyy, HH:mm', { locale: ru })
 }
+
 const ORDER_STATUS_COLOR: Record<OrderStatus, string> = {
   [OrderStatus.WAITING_FOR_PAYMENT]: 'bg-pink-100 text-pink-800',
   [OrderStatus.PENDING]: 'bg-purple-100 text-purple-800',
@@ -85,4 +90,8 @@ const ORDER_STATUS_FORMATTED: Record<OrderStatus, string> = {
   [OrderStatus.DELIVERED]: 'Доставлен',
   [OrderStatus.CANCELLED]: 'Отменен'
 }
+
+const onOrderClick = (id: number) => {
+  router.push(`/admin/store-orders/${id}`);
+};
 </script>

@@ -199,6 +199,7 @@ export function useOrderEvents(
 	return {
 		status: socketStatus,
 		filteredOrders,
+		allOrders: orders,
 		orderCountsByStatus,
 		setFilter,
 		send,
