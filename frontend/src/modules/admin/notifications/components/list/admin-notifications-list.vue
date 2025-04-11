@@ -77,7 +77,7 @@ const formatTimeAgo = (date: string) => formatDistanceToNow(new Date(date), { lo
 				<TableCell class="py-4">
 					<span v-html="formatLocalizedMessage(notification.messages.ru)"></span>
 				</TableCell>
-				<TableCell>{{ formatTimeAgo(notification.createdAt) }}</TableCell>
+				<TableCell>{{ formatTimeAgo(notification.createdAt) }} назад</TableCell>
 				<TableCell>
 					<span
 						:class="PRIORITY_COLORS[notification.priority]"
@@ -96,7 +96,7 @@ const formatTimeAgo = (date: string) => formatDistanceToNow(new Date(date), { lo
 									@click="emit('markAsRead', notification.id)"
 									v-if="!notification.isRead"
 								>
-									<Check class="text-primary size-6" />
+									<Check class="size-6 text-primary" />
 								</Button>
 							</TooltipTrigger>
 							<TooltipContent>
