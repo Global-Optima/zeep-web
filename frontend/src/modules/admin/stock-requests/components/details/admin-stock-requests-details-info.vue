@@ -20,9 +20,10 @@
 
 					<span
 						v-if="detail.value"
-						v-html="detail.value"
 						class="text-sm"
-					></span>
+					>
+						{{ detail.value }}
+					</span>
 
 					<p
 						v-else
