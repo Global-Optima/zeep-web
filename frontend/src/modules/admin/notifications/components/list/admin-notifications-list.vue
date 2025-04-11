@@ -96,7 +96,7 @@ const formatTimeAgo = (date: string) => formatDistanceToNow(new Date(date), { lo
 									@click="emit('markAsRead', notification.id)"
 									v-if="!notification.isRead"
 								>
-									<Check class="text-primary size-6" />
+									<Check class="size-6 text-primary" />
 								</Button>
 							</TooltipTrigger>
 							<TooltipContent>

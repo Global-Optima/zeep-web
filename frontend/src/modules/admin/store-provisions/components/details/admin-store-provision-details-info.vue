@@ -16,9 +16,10 @@
 						<p class="text-muted-foreground text-sm">{{ detail.label }}</p>
 						<span
 							v-if="detail.value"
-							v-html="detail.value"
 							class="text-sm"
-						></span>
+						>
+							{{ detail.value }}
+						</span>
 						<p
 							v-else
 							class="text-sm"
