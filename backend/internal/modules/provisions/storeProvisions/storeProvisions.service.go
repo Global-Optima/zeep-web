@@ -200,11 +200,20 @@ func (s *storeProvisionService) DeleteStoreProvision(storeID, storeProvisionID u
 		return nil, wrapped
 	}
 
-	err = s.repo.HardDeleteStoreProvision(storeProvisionID)
-	if err != nil {
-		wrapped := fmt.Errorf("failed to delete store provision: %w", err)
-		s.logger.Error(wrapped)
-		return nil, wrapped
+	if storeProvision.Status == data.STORE_PROVISION_STATUS_PREPARING {
+		err = s.repo.HardDeleteStoreProvision(storeProvisionID)
+		if err != nil {
+			wrapped := fmt.Errorf("failed to hard delete store provision: %w", err)
+			s.logger.Error(wrapped)
+			return nil, wrapped
+		}
+	} else {
+		err = s.repo.DeleteStoreProvision(storeProvisionID)
+		if err != nil {
+			wrapped := fmt.Errorf("failed to delete store provision: %w", err)
+			s.logger.Error(wrapped)
+			return nil, wrapped
+		}
 	}
 
 	return types.MapToStoreProvisionDTO(storeProvision), nil

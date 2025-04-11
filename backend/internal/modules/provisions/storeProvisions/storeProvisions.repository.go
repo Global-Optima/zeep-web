@@ -22,6 +22,7 @@ type StoreProvisionRepository interface {
 	HardDeleteStoreProvision(storeProvisionID uint) error
 	CountStoreProvisionsToday(storeID, provisionID uint) (uint, error)
 	SaveStoreProvision(storeProvision *data.StoreProvision) error
+	DeleteStoreProvision(storeProvisionID uint) error
 
 	CloneWithTransaction(tx *gorm.DB) StoreProvisionRepository
 }
@@ -60,10 +61,26 @@ func (r *storeProvisionRepository) GetStoreProvisions(storeID uint, filter *type
 	}
 
 	if len(filter.Statuses) > 0 {
-		if slices.Contains(filter.Statuses, data.STORE_PROVISION_VISUAL_STATUS_EXPIRED) {
-			query = query.Where("status IN (?)", filter.Statuses)
+		now := time.Now().UTC()
+
+		hasExpired := slices.Contains(filter.Statuses, data.STORE_PROVISION_VISUAL_STATUS_EXPIRED)
+
+		var realStatuses []data.StoreProvisionStatus
+		for _, status := range filter.Statuses {
+			if status != data.STORE_PROVISION_VISUAL_STATUS_EXPIRED {
+				realStatuses = append(realStatuses, status)
+			}
+		}
+
+		if hasExpired && len(realStatuses) > 0 {
+			query = query.Where(`
+			status IN ? 
+			OR (status = ? AND expires_at <= ?)
+		`, realStatuses, data.STORE_PROVISION_STATUS_COMPLETED, now)
+		} else if hasExpired {
+			query = query.Where("status = ? AND expires_at <= ?", data.STORE_PROVISION_STATUS_COMPLETED, now)
 		} else {
-			query = query.Where("status IN (?) AND (expires_at > ? OR expires_at IS NULL)", filter.Statuses, time.Now().UTC())
+			query = query.Where("status IN ? AND (expires_at > ? OR expires_at IS NULL)", realStatuses, now)
 		}
 	}
 
@@ -169,6 +186,28 @@ func (r *storeProvisionRepository) SaveStoreProvision(storeProvision *data.Store
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return types.ErrStoreProvisionNotFound
 		}
+		return err
+	}
+
+	return nil
+}
+
+func (r *storeProvisionRepository) DeleteStoreProvision(storeProvisionID uint) error {
+	err := r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Unscoped().
+			Where("store_provision_id = ?", storeProvisionID).
+			Delete(&data.StoreProvisionIngredient{}).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Where("id = ?", storeProvisionID).
+			Delete(&data.StoreProvision{}).Error; err != nil {
+			return err
+		}
+
+		return nil
+	})
+	if err != nil {
 		return err
 	}
 
