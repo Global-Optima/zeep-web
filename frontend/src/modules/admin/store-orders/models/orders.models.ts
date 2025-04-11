@@ -114,12 +114,14 @@ export interface OrderDetailsDTO {
 	deliveryAddress?: OrderDeliveryAddressDTO
 	completedAt?: Date
 	displayNumber: number
+	createdAt: Date
+	transactions: TransactionDTO[]
 }
 
 export interface SuborderDetailsDTO {
 	id: number
 	price: number
-	status: string
+	status: SubOrderStatus
 	storeProductSize: OrderProductSizeDetailsDTO
 	storeAdditives: OrderAdditiveDetailsDTO[]
 	completedAt?: Date

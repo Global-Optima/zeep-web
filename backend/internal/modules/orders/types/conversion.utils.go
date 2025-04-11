@@ -167,15 +167,32 @@ func MapToOrderDetailsDTO(order *data.Order) *OrderDetailsDTO {
 		customerName = &order.CustomerName
 	}
 
+	transactions := make([]TransactionDTO, len(order.Transactions))
+	for i, transaction := range order.Transactions {
+		transactions[i] = TransactionDTO{
+			Bin:           transaction.Bin,
+			TransactionID: transaction.TransactionID,
+			ProcessID:     transaction.ProcessID,
+			PaymentMethod: transaction.PaymentMethod,
+			Amount:        transaction.Amount,
+			Currency:      transaction.Currency,
+			QRNumber:      transaction.QRNumber,
+			CardMask:      transaction.CardMask,
+			ICC:           transaction.ICC,
+		}
+	}
+
 	return &OrderDetailsDTO{
 		ID:              order.ID,
-		CustomerName:    customerName, // Optional
+		CustomerName:    customerName,
 		Status:          order.Status,
 		Total:           order.Total,
 		Suborders:       suborders,
-		DeliveryAddress: deliveryAddress, // Optional
+		DeliveryAddress: deliveryAddress,
 		CompletedAt:     order.CompletedAt,
 		DisplayNumber:   order.DisplayNumber,
+		CreatedAt:       order.CreatedAt,
+		Transactions:    transactions,
 	}
 }
 

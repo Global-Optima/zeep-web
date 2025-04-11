@@ -430,6 +430,7 @@ func (r *orderRepository) GetOrderDetails(orderID uint, filter *contexts.StoreCo
 		Preload("Suborders.StoreProductSize.ProductSize.Product").
 		Preload("Suborders.StoreProductSize.ProductSize.Unit").
 		Preload("DeliveryAddress").
+		Preload("Transactions").
 		Where(&data.Order{
 			BaseEntity: data.BaseEntity{
 				ID: orderID,
