@@ -22,7 +22,7 @@
 						class="flex items-center gap-5 2xl:gap-8 text-3xl lg:text-4xl"
 					>
 						<span
-							:class="cn('flex justify-center items-center px-4 py-2 rounded-md w-16 flex-shrink-0 lg:w-24 font-bold', type === 'PREPARING' && 'bg-blue-100 text-blue-900', type === 'COMPLETED' && 'bg-emerald-100 text-emerald-900')"
+							:class="cn('flex justify-center items-center px-4 py-4 rounded-md w-16 flex-shrink-0 lg:w-24 font-bold', type === 'PREPARING' && 'bg-blue-100 text-blue-900', type === 'COMPLETED' && 'bg-emerald-100 text-emerald-900')"
 						>
 							{{ item.displayNumber }}
 						</span>

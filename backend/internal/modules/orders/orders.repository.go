@@ -56,7 +56,7 @@ func (r *orderRepository) CloneWithTransaction(tx *gorm.DB) orderRepository {
 func (r *orderRepository) CreateOrder(order *data.Order) (uint, error) {
 	// Decide at what hour in UTC the "day" (or shift) resets
 	const shiftStartHour = 0 // 0 means midnight UTC, 4 would mean 4:00 AM UTC, etc.
-	const maxDisplayNumber = 999
+	const maxDisplayNumber = 99
 
 	err := r.db.Transaction(func(tx *gorm.DB) error {
 		// (A) Lock rows for the store
