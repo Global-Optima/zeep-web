@@ -48,6 +48,13 @@ const { handleSubmit, setFieldValue } = useForm({
 })
 
 
+const employeeTypes: EmployeeType[] = [
+	EmployeeType.STORE,
+	EmployeeType.WAREHOUSE,
+	EmployeeType.FRANCHISEE,
+	EmployeeType.REGION,
+]
+
 // Available Roles Based on Selected Type
 const availableRoles = computed(() => {
   if (!selectedType.value) return []
@@ -60,8 +67,6 @@ const availableRoles = computed(() => {
       return [EmployeeRole.FRANCHISEE_MANAGER, EmployeeRole.FRANCHISEE_OWNER]
     case EmployeeType.REGION:
       return [EmployeeRole.REGION_WAREHOUSE_MANAGER]
-    case EmployeeType.ADMIN:
-      return [EmployeeRole.ADMIN, EmployeeRole.OWNER]
     default:
       return []
   }
@@ -87,6 +92,7 @@ const workplaceDialogComponent = computed(() => {
 const onTypeChange = (type: EmployeeType) => {
   selectedType.value = type
   selectedRole.value = null
+  setFieldValue('role', undefined)
   selectedWorkplace.value = null
   setFieldValue('employeeType', type)
 }
@@ -214,7 +220,7 @@ const onSubmit = handleSubmit((values) => {
 								</SelectTrigger>
 								<SelectContent>
 									<SelectItem
-										v-for="type in Object.values(EmployeeType)"
+										v-for="type in employeeTypes"
 										:key="type"
 										:value="type"
 									>
@@ -227,6 +233,7 @@ const onSubmit = handleSubmit((values) => {
 					</FormField>
 					<!-- Role -->
 					<FormField
+					 	:key="selectedType"
 						name="role"
 						v-if="selectedType"
 						v-slot="{ componentField }"
