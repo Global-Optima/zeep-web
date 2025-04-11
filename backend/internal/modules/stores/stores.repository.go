@@ -22,15 +22,15 @@ type StoreRepository interface {
 	GetAllStores(filter *types.StoreFilter) ([]data.Store, error)
 	GetAllStoresForNotifications() ([]data.Store, error)
 	CreateStore(store *data.Store) (uint, error)
+	GetStoreWithDetailsByID(storeID uint) (*data.Store, error)
 	GetStoreByID(storeID uint) (*data.Store, error)
-	GetRawStoreByID(storeID uint) (*data.Store, error)
 	GetStores(filter *types.StoreFilter) ([]data.Store, error)
 	UpdateStore(storeID uint, updateModels *types.StoreUpdateModels) error
 	UpdateStoreSyncTime(storeID uint) (time.Time, error)
 	DeleteStore(storeID uint, hardDelete bool) error
 	CreateFacilityAddress(facilityAddress *data.FacilityAddress) (*data.FacilityAddress, error)
 	GetFacilityAddressByAddress(address string) (*data.FacilityAddress, error)
-	CloneWithTransaction(tx *gorm.DB) storeRepository
+	CloneWithTransaction(tx *gorm.DB) StoreRepository
 }
 
 type storeRepository struct {
@@ -41,8 +41,8 @@ func NewStoreRepository(db *gorm.DB) StoreRepository {
 	return &storeRepository{db: db}
 }
 
-func (r *storeRepository) CloneWithTransaction(tx *gorm.DB) storeRepository {
-	return storeRepository{
+func (r *storeRepository) CloneWithTransaction(tx *gorm.DB) StoreRepository {
+	return &storeRepository{
 		db: tx,
 	}
 }
@@ -108,7 +108,7 @@ func (r *storeRepository) CreateStore(store *data.Store) (uint, error) {
 	return store.ID, nil
 }
 
-func (r *storeRepository) GetRawStoreByID(storeID uint) (*data.Store, error) {
+func (r *storeRepository) GetStoreByID(storeID uint) (*data.Store, error) {
 	var store data.Store
 	if err := r.db.Where(&data.Store{BaseEntity: data.BaseEntity{ID: storeID}}).
 		First(&store).Error; err != nil {
@@ -117,7 +117,7 @@ func (r *storeRepository) GetRawStoreByID(storeID uint) (*data.Store, error) {
 	return &store, nil
 }
 
-func (r *storeRepository) GetStoreByID(storeID uint) (*data.Store, error) {
+func (r *storeRepository) GetStoreWithDetailsByID(storeID uint) (*data.Store, error) {
 	var store data.Store
 	if err := r.db.Preload("FacilityAddress").
 		Preload("Franchisee").

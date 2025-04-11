@@ -27,19 +27,8 @@ func ConvertToAdditiveModel(dto *CreateAdditiveDTO) *data.Additive {
 		MachineId:          dto.MachineId,
 	}
 
-	for _, ingredient := range dto.Ingredients {
-		additive.Ingredients = append(additive.Ingredients, data.AdditiveIngredient{
-			IngredientID: ingredient.IngredientID,
-			Quantity:     ingredient.Quantity,
-		})
-	}
-
-	for _, provision := range dto.Provisions {
-		additive.AdditiveProvisions = append(additive.AdditiveProvisions, data.AdditiveProvision{
-			ProvisionID: provision.ProvisionID,
-			Volume:      provision.Volume,
-		})
-	}
+	additive.Ingredients = mapIngredientsToAdditiveIngredients(dto.Ingredients)
+	additive.AdditiveProvisions = mapProvisionsToAdditiveProvisions(dto.Provisions)
 
 	return additive
 }
@@ -71,31 +60,50 @@ func ConvertToUpdatedAdditiveModels(dto *UpdateAdditiveDTO, additive *data.Addit
 		additive.MachineId = *dto.MachineId
 	}
 
-	var ingredients []data.AdditiveIngredient
-	if dto.Ingredients != nil {
-		for _, ing := range dto.Ingredients {
-			ingredients = append(ingredients, data.AdditiveIngredient{
-				IngredientID: ing.IngredientID,
-				Quantity:     ing.Quantity,
-			})
-		}
-	}
-
-	var provisions []data.AdditiveProvision
-	if dto.Provisions != nil {
-		for _, prov := range dto.Provisions {
-			provisions = append(provisions, data.AdditiveProvision{
-				ProvisionID: prov.ProvisionID,
-				Volume:      prov.Volume,
-			})
-		}
-	}
+	ingredients := mapIngredientsToAdditiveIngredients(dto.Ingredients)
+	provisions := mapProvisionsToAdditiveProvisions(dto.Provisions)
 
 	return &AdditiveModels{
 		Additive:    additive,
 		Ingredients: ingredients,
 		Provisions:  provisions,
 	}, nil
+}
+
+func mapIngredientsToAdditiveIngredients(ingredientsDTO []ingredientTypes.SelectedIngredientDTO) []data.AdditiveIngredient {
+	if ingredientsDTO == nil {
+		return nil
+	}
+
+	ingredients := make([]data.AdditiveIngredient, 0, len(ingredientsDTO))
+
+	for _, dto := range ingredientsDTO {
+		ingredient := data.AdditiveIngredient{
+			IngredientID: dto.IngredientID,
+			Quantity:     dto.Quantity,
+		}
+		ingredients = append(ingredients, ingredient)
+	}
+
+	return ingredients
+}
+
+func mapProvisionsToAdditiveProvisions(provisionsDTO []provisionsTypes.SelectedProvisionDTO) []data.AdditiveProvision {
+	if provisionsDTO == nil {
+		return nil
+	}
+
+	provisions := make([]data.AdditiveProvision, 0, len(provisionsDTO))
+
+	for _, dto := range provisionsDTO {
+		provision := data.AdditiveProvision{
+			ProvisionID: dto.ProvisionID,
+			Volume:      dto.Volume,
+		}
+		provisions = append(provisions, provision)
+	}
+
+	return provisions
 }
 
 func ConvertToAdditiveCategoryModel(dto *CreateAdditiveCategoryDTO) *data.AdditiveCategory {

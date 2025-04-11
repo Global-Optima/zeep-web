@@ -28,6 +28,8 @@ type ProductRepository interface {
 	GetProductSizeDetailsByID(productSizeID uint) (*data.ProductSize, error)
 	UpdateProductSizeWithAssociations(id uint, updateModels *types.ProductSizeModels) error
 	DeleteProductSize(productID uint) error
+
+	CloneWithTransaction(tx *gorm.DB) ProductRepository
 }
 
 type productRepository struct {
@@ -36,6 +38,10 @@ type productRepository struct {
 
 func NewProductRepository(db *gorm.DB) ProductRepository {
 	return &productRepository{db: db}
+}
+
+func (r *productRepository) CloneWithTransaction(tx *gorm.DB) ProductRepository {
+	return &productRepository{db: tx}
 }
 
 func (r *productRepository) CheckProductExists(productName string) (bool, error) {
@@ -219,48 +225,6 @@ func (r *productRepository) UpdateProductSizeWithAssociations(id uint, updateMod
 
 		return nil
 	})
-}
-
-func (r *productRepository) GetProductSizeIngredients(productSizeID uint) ([]uint, error) {
-	var productSizeIngredients []data.ProductSizeIngredient
-
-	err := r.db.Where("product_size_id = ?", productSizeID).
-		Find(&productSizeIngredients).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, types.ErrProductSizeIngredientsNotFound
-		}
-		return nil, err
-	}
-
-	ids := make([]uint, 0, len(productSizeIngredients))
-
-	for _, productSizeIngredient := range productSizeIngredients {
-		ids = append(ids, productSizeIngredient.IngredientID)
-	}
-
-	return ids, nil
-}
-
-func (r *productRepository) GetProductSizeAdditives(productSizeID uint) ([]uint, error) {
-	var productSizeAdditives []data.ProductSizeAdditive
-
-	err := r.db.Where("product_size_id = ?", productSizeID).
-		Find(&productSizeAdditives).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, types.ErrProductSizeDefaultAdditivesNotFound
-		}
-		return nil, err
-	}
-
-	ids := make([]uint, 0, len(productSizeAdditives))
-
-	for _, productSizeAdditive := range productSizeAdditives {
-		ids = append(ids, productSizeAdditive.AdditiveID)
-	}
-
-	return ids, nil
 }
 
 func (r *productRepository) updateProductSize(tx *gorm.DB, id uint, productSize *data.ProductSize, additivesUpdated, provisionsUpdated bool) error {

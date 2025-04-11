@@ -1,6 +1,7 @@
 package storeProvisions
 
 import (
+	storeStocksTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks/types"
 	"net/http"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -61,6 +62,9 @@ func (h *StoreProvisionHandler) CreateStoreProvision(c *gin.Context) {
 			return
 		case errors.Is(err, types.ErrStoreProvisionDailyLimitReached):
 			localization.SendLocalizedResponseWithKey(c, types.Response409StoreProvisionLimit)
+			return
+		case errors.Is(err, types.ErrInvalidStoreProvisionIngredientsVolume):
+			localization.SendLocalizedResponseWithKey(c, types.Response400StoreProvision)
 			return
 		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500StoreProvisionCreate)
@@ -159,9 +163,14 @@ func (h *StoreProvisionHandler) CompleteStoreProvisionByID(c *gin.Context) {
 		case errors.Is(err, types.ErrStoreProvisionNotFound):
 			localization.SendLocalizedResponseWithKey(c, types.Response404StoreProvision)
 			return
+		case errors.Is(err, types.ErrProvisionCompleted):
+			localization.SendLocalizedResponseWithKey(c, types.Response409StoreProvisionCompleted)
+			return
+		case errors.Is(err, storeStocksTypes.ErrInsufficientStock):
+			localization.SendLocalizedResponseWithKey(c, types.Response409StoreProvisionInsufficientStock)
+			return
 		}
-		localization.SendLocalizedResponseWithKey(c, types.Response409StoreProvisionCompleted)
-		return
+
 	}
 
 	action := types.UpdateStoreProvisionAuditFactory(

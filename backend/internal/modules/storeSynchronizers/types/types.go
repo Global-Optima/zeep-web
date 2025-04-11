@@ -4,6 +4,7 @@ type UnsyncData struct {
 	ProductSizeIDs []uint
 	AdditiveIDs    []uint
 	IngredientIDs  []uint
+	ProvisionIDs   []uint
 }
 
 type SynchronizationStatus struct {

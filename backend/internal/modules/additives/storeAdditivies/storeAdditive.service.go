@@ -2,6 +2,7 @@ package storeAdditives
 
 import (
 	"fmt"
+	storeInventoryManagersTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers/types"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 
@@ -23,6 +24,12 @@ type StoreAdditiveService interface {
 	GetStoreAdditiveCategoriesByProductSize(storeID, productSizeID uint, filter *types.StoreAdditiveCategoriesFilter) ([]types.StoreAdditiveCategoryDTO, error)
 	GetStoreAdditiveByID(storeAdditiveID uint, filter *contexts.StoreContextFilter) (*types.StoreAdditiveDetailsDTO, error)
 	DeleteStoreAdditive(storeID, storeAdditiveID uint) error
+
+	CheckSufficientStoreAdditiveByID(
+		storeID,
+		storeAdditiveID uint,
+		frozenInventory *storeInventoryManagersTypes.FrozenInventory,
+	) error
 }
 
 type storeAdditiveService struct {
@@ -141,7 +148,7 @@ func (s *storeAdditiveService) GetStoreAdditivesByIDs(storeID uint, IDs []uint) 
 }
 
 func (s *storeAdditiveService) GetStoreAdditiveByID(storeAdditiveID uint, filter *contexts.StoreContextFilter) (*types.StoreAdditiveDetailsDTO, error) {
-	storeAdditive, err := s.repo.GetStoreAdditiveByID(storeAdditiveID, filter)
+	storeAdditive, err := s.repo.GetStoreAdditiveWithDetailsByID(storeAdditiveID, filter)
 	if err != nil {
 		wrappedError := utils.WrapError("failed to retrieve store additive", err)
 		s.logger.Error(wrappedError)
@@ -186,4 +193,12 @@ func (s *storeAdditiveService) formAddStockDTOsFromAdditives(additiveIDs []uint)
 		ingredientIDs[i] = ingredient.ID
 	}
 	return ingredientIDs, nil
+}
+
+func (s *storeAdditiveService) CheckSufficientStoreAdditiveByID(
+	storeID,
+	storeAdditiveID uint,
+	frozenInventory *storeInventoryManagersTypes.FrozenInventory,
+) error {
+	return s.transactionManager.CheckSufficientInventoryByStoreAdditiveID(storeID, storeAdditiveID, frozenInventory)
 }

@@ -2437,3 +2437,39 @@ VALUES
     (4, 3, 8.0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
 
 -- Chocolate
+
+INSERT INTO
+    provisions (
+        name,
+        absolute_volume,
+        net_cost,
+        unit_id,
+        preparation_in_minutes,
+        default_expiration_in_minutes,
+        limit_per_day
+    )
+VALUES
+    ('Заготовка черного чая', 1.8, 700, 3, 35, 850, 3),
+    ('Заготовка зеленого чая', 1.8, 750, 3, 35, 850, 3),
+    ('Фруктовый микс', 3150, 1200, 4, 5, 600, 10),
+    ('Чай с чабрецом', 2500, 1300, 4, 7, 700, 8);
+
+INSERT INTO
+    provision_ingredients (
+    provision_id,
+    ingredient_id,
+    quantity
+)
+VALUES
+    (1, 10, 0.4),
+    (1, 8, 5),
+    (2, 1, 0.2),
+    (2, 2, 0.5),
+    (2, 3, 0.07),
+    (3, 4, 0.05),
+    (3, 7, 0.1),
+    (3, 2, 0.05),
+    (4, 1, 0.15),
+    (4, 5, 0.2),
+    (4, 6, 0.05),
+    (4, 9, 0.03);

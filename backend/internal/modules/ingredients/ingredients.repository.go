@@ -2,6 +2,7 @@ package ingredients
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
@@ -19,6 +20,8 @@ type IngredientRepository interface {
 	GetIngredients(filter *types.IngredientFilter) ([]data.Ingredient, error)
 	GetIngredientsForProductSizes(productSizeIDs []uint) ([]data.Ingredient, error)
 	GetIngredientsForAdditives(additiveIDs []uint) ([]data.Ingredient, error)
+	GetIngredientsForProvisions(provisionIDs []uint) ([]data.Ingredient, error)
+	GetIngredientIDsForProvisions(provisionIDs []uint) ([]uint, error)
 }
 
 type ingredientRepository struct {
@@ -131,11 +134,16 @@ func (r *ingredientRepository) GetIngredientsForProductSizes(productSizeIDs []ui
 		Joins("JOIN additive_ingredients ai ON ai.additive_id = product_size_additives.additive_id").
 		Where("product_size_additives.product_size_id IN ?", productSizeIDs)
 
+	subProvision := r.db.Model(&data.ProductSizeProvision{}).
+		Select("pi.ingredient_id").
+		Joins("JOIN provision_ingredients pi ON pi.provision_id = product_size_provisions.provision_id").
+		Where("product_size_provisions.product_size_id IN ?", productSizeIDs)
+
 	query := r.db.Model(&data.Ingredient{}).
 		Select("DISTINCT ingredients.*").
 		Preload("Unit").
 		Preload("IngredientCategory").
-		Where("ingredients.id IN (?) OR ingredients.id IN (?)", subDirect, subAdditive)
+		Where("ingredients.id IN (?) OR ingredients.id IN (?) OR ingredients.id IN (?)", subDirect, subAdditive, subProvision)
 
 	if err := query.Find(&ingredients).Error; err != nil {
 		return nil, err
@@ -145,20 +153,93 @@ func (r *ingredientRepository) GetIngredientsForProductSizes(productSizeIDs []ui
 }
 
 func (r *ingredientRepository) GetIngredientsForAdditives(additiveIDs []uint) ([]data.Ingredient, error) {
+	ingredientIDsDirect, err := r.getIngredientIDsFromAdditiveIngredients(additiveIDs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch ingredients from additive_ingredients: %w", err)
+	}
+
+	ingredientIDsFromProvisions, err := r.getIngredientIDsFromAdditiveProvisions(additiveIDs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch ingredients from additive_provisions: %w", err)
+	}
+
+	return r.fetchIngredientsByIDs(utils.UnionSlices(ingredientIDsDirect, ingredientIDsFromProvisions))
+}
+
+func (r *ingredientRepository) getIngredientIDsFromAdditiveIngredients(additiveIDs []uint) ([]uint, error) {
+	var ids []uint
+	err := r.db.
+		Model(&data.AdditiveIngredient{}).
+		Distinct("ingredient_id").
+		Where("additive_id IN ?", additiveIDs).
+		Pluck("ingredient_id", &ids).Error
+	return ids, err
+}
+
+func (r *ingredientRepository) getIngredientIDsFromAdditiveProvisions(additiveIDs []uint) ([]uint, error) {
+	var ids []uint
+	err := r.db.
+		Model(&data.ProvisionIngredient{}).
+		Distinct("provision_ingredients.ingredient_id").
+		Joins("JOIN additive_provisions ON additive_provisions.provision_id = provision_ingredients.provision_id").
+		Where("additive_provisions.additive_id IN ?", additiveIDs).
+		Pluck("provision_ingredients.ingredient_id", &ids).Error
+	return ids, err
+}
+
+func (r *ingredientRepository) fetchIngredientsByIDs(ingredientIDs []uint) ([]data.Ingredient, error) {
 	var ingredients []data.Ingredient
+	if len(ingredientIDs) == 0 {
+		return ingredients, nil
+	}
+
+	err := r.db.
+		Model(&data.Ingredient{}).
+		Preload("Unit").
+		Preload("IngredientCategory").
+		Where("id IN ?", ingredientIDs).
+		Find(&ingredients).Error
+
+	return ingredients, err
+}
+
+func (r *ingredientRepository) GetIngredientsForProvisions(provisionIDs []uint) ([]data.Ingredient, error) {
+	var ingredients []data.Ingredient
+
+	if len(provisionIDs) == 0 {
+		return ingredients, nil
+	}
+
 	query := r.db.Model(&data.Ingredient{}).
 		Select("DISTINCT ingredients.*").
 		Preload("Unit").
 		Preload("IngredientCategory").
-		Joins("JOIN additive_ingredients ai ON ai.ingredient_id = ingredients.id").
-		Joins("JOIN additives a ON ai.additive_id = a.id").
-		Where("a.id IN ?", additiveIDs)
+		Joins("JOIN provision_ingredients pi ON pi.ingredient_id = ingredients.id").
+		Where("pi.provision_id IN ?", provisionIDs)
 
 	if err := query.Find(&ingredients).Error; err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to fetch ingredients for provisions: %w", err)
 	}
 
 	return ingredients, nil
+}
+
+func (r *ingredientRepository) GetIngredientIDsForProvisions(provisionIDs []uint) ([]uint, error) {
+	var ids []uint
+
+	if len(provisionIDs) == 0 {
+		return ids, nil
+	}
+
+	query := r.db.Model(&data.ProvisionIngredient{}).
+		Distinct("ingredient_id").
+		Where("provision_id IN ?", provisionIDs)
+
+	if err := query.Find(&ids).Error; err != nil {
+		return nil, fmt.Errorf("failed to fetch ingredientIDs for provisions: %w", err)
+	}
+
+	return ids, nil
 }
 
 func (r *ingredientRepository) DeleteIngredient(ingredientID uint) error {
