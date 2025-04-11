@@ -14,19 +14,29 @@ const SAVE_ON_PRINT = import.meta.env.VITE_SAVE_ON_PRINT === 'true'
  * that you can parse out later (the "qrValue").
  */
 export function generateSubOrderQR(sb: SuborderDTO): string {
+	if (!sb.id || !sb.productSize?.machineId) {
+		throw new Error('suborderId or productSizeMachineId is missing')
+	}
+
 	const parts = [
-		sb.id ?? null,
-		sb.productSize?.machineId ?? null,
+		sb.id,
+		sb.productSize.machineId,
 		sb.additives?.length ? sb.additives.map(a => a.additive.machineId).join(',') : null,
 	]
+
 	return parts.filter(Boolean).join('|')
 }
 
 export function parseSubOrderQR(qrString: string) {
 	const [subOrderId, productSizeMachineId, additivesString] = qrString.split('|')
+
+	if (!subOrderId || !productSizeMachineId) {
+		throw new Error('suborderId or productSizeMachineId is missing')
+	}
+
 	return {
-		subOrderId: subOrderId || null,
-		productSizeMachineId: productSizeMachineId || null,
+		subOrderId: subOrderId,
+		productSizeMachineId: productSizeMachineId,
 		additiveMachineIds: additivesString ? additivesString.split(',') : [],
 	}
 }
@@ -58,7 +68,6 @@ export function getSavedBaristaQRSettings(): { width: number; height: number } {
 /**
  * This helper draws text onto an offscreen canvas (so it can handle Cyrillic),
  * then places the rasterized text in a PDF at the correct position.
- * (Unchanged from your original logic.)
  */
 function drawText(
 	doc: jsPDF,
@@ -69,7 +78,7 @@ function drawText(
 	fontSize: number,
 	isBold: boolean = false,
 ): number {
-	// your original text → image logic ...
+	// Text → image logic
 	const scaleFactor = 2
 	const baseCanvas = document.createElement('canvas')
 	const baseCtx = baseCanvas.getContext('2d')!
@@ -145,7 +154,7 @@ function drawText(
 
 export function useOrderGenerateQR() {
 	/**
-	 * Generate the PDF version (unchanged from your original).
+	 * Generate the PDF version.
 	 * This is for normal prints (when SAVE_ON_PRINT = false).
 	 */
 	async function generatePdfFromSuborder(
@@ -232,101 +241,111 @@ export function useOrderGenerateQR() {
 	}
 
 	/**
-	 * Generate a .PRN file with ZPL-like content, forcing UTF-8 with ^CI28,
-	 * and hex-escaped strings via ^FH\ so Cyrillic can print on supported printers.
+	 * Convert text to CP1251 byte representation for ZPL
 	 */
-
 	function textToCP1251Bytes(input: string): number[] {
-		// This is a very simplified example.
 		return Array.from(input).map(char => {
 			const code = char.charCodeAt(0)
 			// If the character is in the Cyrillic block, adjust it.
-			// (A real implementation would need a full CP1251 mapping.)
 			if (code >= 0x0410 && code <= 0x044f) {
-				// CP1251 for Cyrillic (this is illustrative; actual mapping may vary)
-				return code - 0x350 // for example purposes only!
+				// CP1251 for Cyrillic (simplified mapping)
+				return code - 0x350
 			}
 			// For basic ASCII, the byte is the same:
 			return code < 128 ? code : 63 // unknown chars become '?'
 		})
 	}
 
+	/**
+	 * Escape text for ZPL format with CP1251 encoding
+	 */
 	function escapeZplCP1251(input: string): string {
 		const bytes = textToCP1251Bytes(input)
 		return bytes.map(byte => `\\${byte.toString(16).padStart(2, '0')}`).join('')
 	}
 
+	/**
+	 * Improved and simplified PRN generator with better layout
+	 * for different label sizes, especially 60x40mm
+	 */
 	async function generatePrnFromSuborder(
 		order: OrderDTO,
 		suborder: SuborderDTO,
 		index: number,
 		options: QRPrintOptions = {},
 	) {
-		// Default label dimensions in mm (80x80mm)
+		// Default label dimensions in mm
 		const { labelWidthMm = 80, labelHeightMm = 80 } = options
 
 		// Convert mm to dots (8 dots per mm for 203 DPI printers)
 		const labelWidthDots = Math.round(labelWidthMm * 8)
 		const labelHeightDots = Math.round(labelHeightMm * 8)
 
-		// Define margins. The original static FO value was 13 (~2% of 640)
-		const margin = Math.round(labelWidthDots * 0.02)
-		const textAreaWidth = labelWidthDots - margin * 2
+		// Calculate fixed margins - use a percentage of the label dimensions
+		// For smaller labels, we use a smaller percentage to maximize usable space
+		const marginX = Math.round(labelWidthDots * 0.02) // 2% margin
+		const textAreaWidth = labelWidthDots - marginX * 2
 
-		// Set Y coordinates based on the original static positions (converted to percentages):
-		// First line: 32 dots ~ 5% of 640, second line: 110 dots ~17.2% of 640,
-		// QR code: 210 dots ~32.8% of 640.
-		const line1Y = Math.round(labelHeightDots * 0.05) // ~32 dots
-		const line2Y = Math.round(labelHeightDots * 0.172) // ~110 dots (17.2%)
-		const qrY = Math.round(labelHeightDots * 0.328) // ~210 dots (32.8%)
-
-		// Calculate font sizes based on label width.
-		// The static fonts were 51 and 38 which are ~8% and ~6% of 640 respectively.
-		const line1FontSize = Math.max(20, Math.round(labelWidthDots * 0.08))
-		const line2FontSize = Math.max(16, Math.round(labelWidthDots * 0.06))
-
-		// Calculate QR code sizing:
-		// Using a magnification factor that is proportional to the label width.
-		// The static command used a magnification of 16 for an 80mm label.
-		// Here we derive it as 2.5% of the width, with a minimum of 3.
-		const qrMagnification = Math.max(3, Math.round(labelWidthDots * 0.025))
-		// Assume the QR code is roughly 18 modules wide (this value approximates the quiet zone plus data modules).
-		const qrModules = 16
-		// Instead of doubling the magnification, we now use it directly so that:
-		// qrWidthDots = 25 * qrMagnification.
-		const qrWidthDots = qrModules * qrMagnification
-		// Center the QR code horizontally by calculating its x coordinate.
-		const qrX = Math.round((labelWidthDots - qrWidthDots) / 2)
-
+		// Generate the order content
 		const qrValue = generateSubOrderQR(suborder)
-
-		// Build display lines.
 		const line1 = `#${order.displayNumber} ${order.customerName} (${index + 1}/${order.subOrders.length})`
 		const line2 = `${suborder.productSize.productName} ${suborder.productSize.sizeName} (${suborder.productSize.size} ${suborder.productSize.unit.name.toLowerCase()}, ${MACHINE_CATEGORY_FORMATTED[suborder.productSize.machineCategory].toLowerCase()})`
 
-		// Escape text for ZPL encoding (using your custom escape routine for CP1251)
+		// Escape text for ZPL encoding
 		const escapedLine1 = escapeZplCP1251(line1)
 		const escapedLine2 = escapeZplCP1251(line2)
 
-		// Build the ZPL commands using calculated dimensions and positions.
-		const zplCommands = `
-  ^XA
-  ^CI33
-  ^PW${labelWidthDots - 1}
-  ^LL${labelHeightDots - 1}
+		// Calculate font sizes based on label width
+		// For different size labels, fonts should scale proportionally
+		// with minimum sizes to ensure readability
+		const fontScale = Math.min(1, Math.max(0.6, labelWidthMm / 80))
 
-  ^FO${margin},${line1Y}
+		// For 80mm width, we use 38pt for line1 and 29pt for line2
+		// Scale these values for different widths while keeping minimums
+		const line1FontSize = Math.max(20, Math.round(38 * fontScale))
+		const line2FontSize = Math.max(16, Math.round(29 * fontScale))
+
+		// Determine vertical spacing
+		// The original static values seem to work well, so adapt them for different heights
+		// For 80mm height: line1Y = 16, line2Y = 55
+		const heightScale = Math.min(1, Math.max(0.5, labelHeightMm / 80))
+		const line1Y = Math.max(10, Math.round(16 * heightScale))
+		const line2Y = Math.max(line1Y + line1FontSize + 5, Math.round(55 * heightScale))
+
+		// Calculate QR code position and size
+		// For 80mm labels, QR starts at ~144,105
+		// Target about 33% of height down for QR code Y position
+		const qrY = Math.round(labelHeightDots * 0.33)
+
+		// Center the QR code horizontally
+		// For wide layouts (width > height), make QR code about 50% of height
+		// For square/tall layouts, make QR code about a comfortable size
+		const qrSize = Math.round(Math.min(labelWidthDots * 0.4, labelHeightDots * 0.5))
+		const qrX = Math.round((labelWidthDots - qrSize) / 2)
+
+		// QR magnification factor - higher gives larger modules
+		// For 80mm labels, 10 works well. Scale for different sizes.
+		const qrMagMin = labelHeightMm <= 40 ? 6 : 8 // Ensure readability on small labels
+		const qrMagnification = Math.max(qrMagMin, Math.round(qrSize / 30))
+
+		// Build the ZPL commands
+		const zplCommands = `^XA
+  ^CI33
+  ^PW${labelWidthDots}
+  ^LL${labelHeightDots}
+
+  ^FO${marginX},${line1Y}
   ^FB${textAreaWidth},2,0,C,0
   ^A0N,${line1FontSize},${Math.round(line1FontSize * 0.8)}^FH\\
   ^FD${escapedLine1}^FS
 
-  ^FO${margin},${line2Y}
+  ^FO${marginX},${line2Y}
   ^FB${textAreaWidth},3,0,C,0
   ^A0N,${line2FontSize},${Math.round(line2FontSize * 0.8)}^FH\\
   ^FD${escapedLine2}^FS
 
   ^FO${qrX},${qrY}
-  ^BQN,2,10
+  ^BQN,2,${qrMagnification}
   ^FDLA,${qrValue}^FS
 
   ^MMC
