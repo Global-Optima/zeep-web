@@ -21,12 +21,13 @@ func MapToStoreProvisionDTO(sp *data.StoreProvision) *StoreProvisionDTO {
 		Provision:           *provisionsTypes.MapToProvisionDTO(&sp.Provision),
 		ExpirationInMinutes: sp.ExpirationInMinutes,
 		Volume:              sp.Volume,
+		InitialVolume:       sp.InitialVolume,
 		CompletedAt:         sp.CompletedAt,
 		ExpiresAt:           sp.ExpiresAt,
 		CreatedAt:           sp.CreatedAt,
 	}
 
-	if sp.ExpiresAt != nil && sp.ExpiresAt.UTC().Before(time.Now().UTC()) {
+	if sp.Status == data.STORE_PROVISION_STATUS_COMPLETED && sp.ExpiresAt != nil && sp.ExpiresAt.UTC().Before(time.Now().UTC()) {
 		storeProvisionDTO.Status = data.STORE_PROVISION_VISUAL_STATUS_EXPIRED
 	} else {
 		storeProvisionDTO.Status = sp.Status
@@ -60,6 +61,7 @@ func CreateToStoreProvisionModel(storeID uint, dto *CreateStoreProvisionDTO, cen
 	return &data.StoreProvision{
 		ProvisionID:               dto.ProvisionID,
 		Volume:                    dto.Volume,
+		InitialVolume:             dto.Volume,
 		ExpirationInMinutes:       dto.ExpirationInMinutes,
 		Status:                    data.STORE_PROVISION_STATUS_PREPARING,
 		StoreID:                   storeID,
@@ -87,6 +89,7 @@ func UpdateToStoreProvisionModels(storeProvision *data.StoreProvision, dto *Upda
 		}
 		updateModels.StoreProvisionIngredientsMultiplier = &multiplier
 		storeProvision.Volume = *dto.Volume
+		storeProvision.InitialVolume = *dto.Volume
 	}
 
 	if dto.ExpirationInMinutes != nil {

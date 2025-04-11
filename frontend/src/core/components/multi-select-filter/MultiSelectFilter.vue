@@ -115,7 +115,7 @@ import { cn } from '@/core/utils/tailwind.utils'
 import { Check, PlusCircle, type LucideIcon } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 
-interface MultiSelectOption {
+export interface MultiSelectOption {
   label: string
   value: string
   icon?: LucideIcon

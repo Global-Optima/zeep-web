@@ -2,6 +2,7 @@ package storeProvisions
 
 import (
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -58,8 +59,12 @@ func (r *storeProvisionRepository) GetStoreProvisions(storeID uint, filter *type
 		return nil, fmt.Errorf("filter is nil")
 	}
 
-	if filter.Status != nil {
-		query = query.Where("status = ?", *filter.Status)
+	if len(filter.Statuses) > 0 {
+		if slices.Contains(filter.Statuses, data.STORE_PROVISION_VISUAL_STATUS_EXPIRED) {
+			query = query.Where("status IN (?)", filter.Statuses)
+		} else {
+			query = query.Where("status IN (?) AND (expires_at > ? OR expires_at IS NULL)", filter.Statuses, time.Now().UTC())
+		}
 	}
 
 	if filter.MinCompletedAt != nil {
@@ -68,15 +73,6 @@ func (r *storeProvisionRepository) GetStoreProvisions(storeID uint, filter *type
 
 	if filter.MaxCompletedAt != nil {
 		query = query.Where("completed_at <= ?", *filter.MaxCompletedAt)
-	}
-
-	if filter.IsExpired != nil {
-		now := time.Now()
-		if *filter.IsExpired {
-			query = query.Where("expires_at <= ?", now)
-		} else {
-			query = query.Where("expires_at > ?", now)
-		}
 	}
 
 	if filter.Search != nil {

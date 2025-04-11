@@ -3,3 +3,5 @@ ALTER TABLE provisions
 
 ALTER TABLE store_provisions
     ADD CONSTRAINT store_provisions_volume_check CHECK (volume > 0);
+
+ALTER TABLE store_provision DROP COLUMN initial_volume;

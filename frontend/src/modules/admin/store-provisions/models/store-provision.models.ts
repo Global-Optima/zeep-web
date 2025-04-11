@@ -6,16 +6,19 @@ export enum StoreProvisionStatus {
 	PREPARING = 'PREPARING',
 	COMPLETED = 'COMPLETED',
 	EXPIRED = 'EXPIRED',
+  EMPTY = 'EMPTY',
 }
 
 export interface StoreProvisionFilter extends PaginationParams {
 	search?: string
+  statuses?: StoreProvisionStatus[]
 }
 
 export interface StoreProvisionDTO {
 	id: number
 	provision: ProvisionDTO
 	volume: number
+  initialVolume: number
 	expirationInMinutes: number
 	status: StoreProvisionStatus
 	createdAt: Date

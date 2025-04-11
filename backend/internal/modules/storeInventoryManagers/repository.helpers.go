@@ -71,9 +71,15 @@ func deductStoreProvisions(tx *gorm.DB, storeID, provisionID uint, requiredVolum
 		provision.Volume -= deduct
 		remaining -= deduct
 
+		if provision.Volume == 0 {
+			provision.Status = data.STORE_PROVISION_STATUS_EMPTY
+		}
+
 		if err := tx.Save(&provision).Error; err != nil {
 			return nil, fmt.Errorf("failed to update provision volume for ID %d: %w", provision.ID, err)
 		}
+
+		logrus.Infof("deducted: %v", deduct)
 
 		usedProvisions = append(usedProvisions, provision)
 	}
