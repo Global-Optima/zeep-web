@@ -54,7 +54,33 @@ func BuildCentralCatalogUpdateChanges(changes []CentralCatalogChange) (localizat
 		var changeMessages []string
 
 		for _, change := range changes {
-			message, err := localization.Translate(change.Key, change.Params)
+			modifiedParams := make(map[string]interface{})
+			for k, v := range change.Params {
+				if strVal, ok := v.(string); ok && strVal == "" {
+					emptyTranslated, err := localization.Translate("notification.emptyValue", nil)
+					if err != nil {
+						return localization.LocalizedMessage{}, fmt.Errorf("failed to translate empty value for language %s: %w", lang, err)
+					}
+
+					var localizedEmpty string
+					switch lang {
+					case "en":
+						localizedEmpty = emptyTranslated.En
+					case "ru":
+						localizedEmpty = emptyTranslated.Ru
+					case "kk":
+						localizedEmpty = emptyTranslated.Kk
+					default:
+						localizedEmpty = emptyTranslated.Ru
+					}
+					modifiedParams[k] = localizedEmpty
+				} else {
+					modifiedParams[k] = v
+				}
+			}
+
+			// Now translate using the (possibly) modified parameters.
+			message, err := localization.Translate(change.Key, modifiedParams)
 			if err != nil {
 				return localization.LocalizedMessage{}, fmt.Errorf("failed to localize change %s for language %s: %w", change.Key, lang, err)
 			}

@@ -300,8 +300,15 @@ func (r *provisionRepository) DeleteProvision(provisionID uint) (*data.Provision
 	var provision data.Provision
 
 	err := r.db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Where("id = ?", provisionID).
-			Delete(&provision).Error; err != nil {
+		if err := checkProvisionReferences(tx, provisionID); err != nil {
+			return err
+		}
+
+		if err := tx.First(&provision, provisionID).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Delete(&provision).Error; err != nil {
 			return err
 		}
 
@@ -330,4 +337,37 @@ func (r *provisionRepository) DeleteProvision(provisionID uint) (*data.Provision
 	}
 
 	return &provision, nil
+}
+
+func checkProvisionReferences(db *gorm.DB, provisionID uint) error {
+	var count int64
+
+	if err := db.Model(&data.AdditiveProvision{}).
+		Where("provision_id = ?", provisionID).
+		Limit(1).Count(&count).Error; err != nil {
+		return err
+	}
+	if count > 0 {
+		return types.ErrProvisionIsInUse
+	}
+
+	if err := db.Model(&data.ProductSizeProvision{}).
+		Where("provision_id = ?", provisionID).
+		Limit(1).Count(&count).Error; err != nil {
+		return err
+	}
+	if count > 0 {
+		return types.ErrProvisionIsInUse
+	}
+
+	if err := db.Model(&data.StoreProvision{}).
+		Where("provision_id = ? AND status = ?", provisionID, data.PROVISION_STATUS_PREPARING).
+		Limit(1).Count(&count).Error; err != nil {
+		return err
+	}
+	if count > 0 {
+		return types.ErrProvisionIsInUse
+	}
+
+	return nil
 }

@@ -149,15 +149,15 @@ func (h *CategoryHandler) DeleteCategory(c *gin.Context) {
 			localization.SendLocalizedResponseWithKey(c, types.Response404ProductCategory)
 			return
 		}
-		if errors.Is(err, types.ErrCategoryIsInUse) {
-			localization.SendLocalizedResponseWithKey(c, types.Response409ProductCategoryDeleteInUse)
-			return
-		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500ProductCategory)
 		return
 	}
 
 	if err := h.service.DeleteCategory(uint(id)); err != nil {
+		if errors.Is(err, types.ErrCategoryIsInUse) {
+			localization.SendLocalizedResponseWithKey(c, types.Response409ProductCategoryDeleteInUse)
+			return
+		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500ProductCategory)
 		return
 	}

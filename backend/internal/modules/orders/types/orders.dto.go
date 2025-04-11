@@ -120,6 +120,8 @@ type OrderDetailsDTO struct {
 	Suborders       []SuborderDetailsDTO     `json:"suborders"`
 	DeliveryAddress *OrderDeliveryAddressDTO `json:"deliveryAddress,omitempty"`
 	CompletedAt     *time.Time               `json:"completedAt,omitempty"`
+	Transactions    []TransactionDTO         `json:"transactions"`
+	CreatedAt       time.Time                `json:"createdAt"`
 }
 
 type SuborderDetailsDTO struct {

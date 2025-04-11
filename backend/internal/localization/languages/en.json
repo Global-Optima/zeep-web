@@ -166,6 +166,7 @@
     "500-additive-create": "An unexpected error occurred while creating modificator. Please try again later.",
     "500-additive-update": "An unexpected error occurred while updating modificator data. Please try again later.",
     "500-additive-delete": "An unexpected error occurred while deleting modificator data. Please try again later.",
+    "409-additive-delete-inUse": "The modificator cannot be deleted because it is in use.",
     "404-additive": "Modificator not found.",
     "400-additive": "Invalid modificator data provided. Please check and try again.",
     "201-additive": "Modificator successfully created.",
@@ -338,6 +339,7 @@
     "200-unit-delete": "Unit successfully deleted.",
     "400-unit": "Invalid unit data provided. Please check and try again.",
     "404-unit": "Unit not found.",
+    "409-unit-delete-inUse": "The unit cannot be deleted because it is in use. Please remove all dependencies before trying again.",
     "500-unit-create": "An unexpected error occurred while creating the unit. Please try again later.",
     "500-unit-get": "An unexpected error occurred while fetching unit data. Please try again later.",
     "500-unit-update": "An unexpected error occurred while updating the unit. Please try again later.",
@@ -348,7 +350,7 @@
     "500-ingredient-update": "Failed to update raw material.",
     "500-ingredient-delete": "Failed to delete raw material.",
     "404-ingredient": "Raw Material not found.",
-    "409-ingredient-inUse": "The raw material cannot be deleted because it is in use. Please remove all dependencies before trying again.",
+    "409-ingredient-delete-inUse": "The raw material cannot be deleted because it is in use. Please remove all dependencies before trying again.",
     "201-ingredient": "Raw Material successfully created.",
     "200-ingredient-update": "Raw Material successfully updated.",
     "200-ingredient-delete": "Raw Material successfully deleted.",
@@ -408,6 +410,7 @@
     "500-provision-delete": "An unexpected error occurred while deleting the provision. Please try again later.",
     "500-provision-get": "An unexpected error occurred while fetching the provision. Please try again later.",
     "409-provision-create-duplicate": "A provision with the same details already exists.",
+    "409-provision-delete-inUse": "The provision cannot be deleted because it is in use.",
     "404-provision": "Provision not found.",
     "400-provision": "Invalid provision data. Please check and try again.",
     "201-provision": "Provision created successfully.",
@@ -431,6 +434,7 @@
     "500-audit-get": "An unexpected error occurred while fetching audit data. Please try again later."
   },
   "notification": {
+      "emptyValue": "empty value",
       "stockRequestStatusUpdated": "Stock request status has been updated to *{{.RequestStatus}}*.",
       "stockRequestStatus": {
           "created": "Created",
@@ -445,10 +449,10 @@
       "newOrder": "A new order has been placed by *{{.CustomerName}}*.",
       "storeWarehouseRunOut": "The warehouse is running out of *{{.StockItem}}*.",
 
-      "centralCatalogUpdate": "The central catalog was updated.",
+      "centralCatalogUpdate": "The central catalog was updated, changes: {{.Changes}}.",
       "centralCatalogUpdateDetails": {
-        "nameChange": "Name changed from {{.OldName}} to {{.NewName}}",
-        "descriptionChange": "Description updated from {{.OldDescription}} to {{.NewDescription}}",
+        "nameChange": "Name changed from *{{.OldName}}* to *{{.NewName}}*",
+        "descriptionChange": "Description updated from *{{.OldDescription}}* to *{{.NewDescription}}*",
         "imageUrlChange": "Image URL updated from {{.OldImageURL}} to {{.NewImageURL}}",
         "categoryChange": "Category updated from {{.OldCategory}} to {{.NewCategory}}"
       },

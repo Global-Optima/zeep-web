@@ -88,11 +88,8 @@ export function useScannerListener(options: BarcodeScannerOptions) {
 		if (!buffer.length) return
 
 		try {
-			console.debug('Raw buffer:', buffer)
-
 			// Ensure the buffer starts with the required prefix (if specified)
 			if (prefix && !buffer.startsWith(prefix)) {
-				console.debug('Prefix mismatch:', buffer)
 				buffer = ''
 				return
 			}
@@ -107,7 +104,6 @@ export function useScannerListener(options: BarcodeScannerOptions) {
 
 			// Ensure we have a valid barcode to process
 			if (scanned.length > 0) {
-				console.debug('Processed barcode:', scanned)
 				onScan?.(scanned)
 			}
 		} catch (err) {

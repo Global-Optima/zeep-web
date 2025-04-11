@@ -47,6 +47,7 @@ import {
   TableRow,
 } from '@/core/components/ui/table'
 import { toast } from '@/core/components/ui/toast'
+import { useAxiosLocaleToast, type AxiosLocalizedError } from '@/core/hooks/use-axios-locale-toast.hooks'
 import type { IngredientCategoryDTO } from '@/modules/admin/ingredients/models/ingredients.model'
 import { ingredientsService } from '@/modules/admin/ingredients/services/ingredients.service'
 import { useMutation, useQueryClient } from '@tanstack/vue-query'
@@ -57,6 +58,7 @@ const {ingredientCategories} = defineProps<{ingredientCategories: IngredientCate
 
 const router = useRouter();
 const queryClient = useQueryClient()
+const { toastLocalizedError } = useAxiosLocaleToast()
 
 const { mutate: deleteMutation } = useMutation({
 	mutationFn: (id: number) => ingredientsService.deleteIngredientCategory(id),
@@ -64,8 +66,8 @@ const { mutate: deleteMutation } = useMutation({
 		toast({ title: 'Успешное удаление' })
 		queryClient.invalidateQueries({ queryKey: ['admin-ingredient-categories'] })
 	},
-	onError: () => {
-		toast({ title: 'Произошла ошибка при удалении' })
+	onError: (error: AxiosLocalizedError) => {
+		toastLocalizedError(error, 'Произошла ошибка при удалении' )
 	},
 })
 

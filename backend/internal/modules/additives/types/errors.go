@@ -7,6 +7,7 @@ import (
 
 var (
 	ErrAdditiveCategoryIsInUse     = moduleErrors.NewModuleError(errors.New("additive category is in use"))
+	ErrAdditiveInUse               = moduleErrors.NewModuleError(errors.New("additive is in use"))
 	ErrAdditiveAlreadyExists       = moduleErrors.NewModuleError(errors.New("additive already exists"))
 	ErrAdditiveNotFound            = moduleErrors.NewModuleError(errors.New("additive not found"))
 	ErrAdditiveIngredientsNotFound = moduleErrors.NewModuleError(errors.New("additive ingredients not found"))
