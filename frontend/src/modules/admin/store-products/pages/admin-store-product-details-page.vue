@@ -13,6 +13,7 @@
 
 <script lang="ts" setup>
 import { useToast } from '@/core/components/ui/toast/use-toast'
+import { useAxiosLocaleToast, type AxiosLocalizedError } from '@/core/hooks/use-axios-locale-toast.hooks'
 import { useHasRole } from '@/core/hooks/use-has-roles.hook'
 import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import AdminStoreProductDetailsForm from '@/modules/admin/store-products/components/details/admin-store-product-details-form.vue'
@@ -27,6 +28,8 @@ const route = useRoute()
 const router = useRouter()
 const queryClient = useQueryClient()
 const { toast } = useToast()
+const { toastLocalizedError } = useAxiosLocaleToast()
+
 
 const storeProductId = route.params.id as string
 
@@ -58,16 +61,15 @@ const updateMutation = useMutation({
 		queryClient.invalidateQueries({ queryKey: ['admin-store-product-details', storeProductId] })
 		toast({
 			title: 'Успех!',
-variant: 'success',
+			variant: 'success',
 			description: 'Данные продукта кафе успешно обновлены.',
 		})
 	},
-	onError: () => {
-		toast({
-			title: 'Ошибка',
-			description: 'Произошла ошибка при обновлении данных продукта кафе.',
-			variant: 'destructive',
-		})
+	onError: (error: AxiosLocalizedError) => {
+		toastLocalizedError(
+			error, 
+			'Произошла ошибка при обновлении данных продукта кафе.',
+		)
 	},
 })
 
