@@ -335,10 +335,13 @@ func (h *StoreProductHandler) UpdateStoreProduct(c *gin.Context) {
 
 	err = h.service.UpdateStoreProduct(storeID, uint(storeProductID), &dto)
 	if err != nil {
+		if errors.Is(err, types.ErrStoreProductSizeIsInUse) {
+			localization.SendLocalizedResponseWithKey(c, types.Response409StoreProductInUseUpdate)
+			return
+		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500StoreProduct)
 		return
 	}
-
 	action := types.UpdateStoreProductAuditFactory(
 		&data.BaseDetails{
 			ID:   uint(storeProductID),
@@ -388,6 +391,10 @@ func (h *StoreProductHandler) DeleteStoreProduct(c *gin.Context) {
 
 	err = h.service.DeleteStoreProduct(storeID, uint(storeProductID))
 	if err != nil {
+		if errors.Is(err, types.ErrStoreProductIsInUse) {
+			localization.SendLocalizedResponseWithKey(c, types.Response409StoreProductInUse)
+			return
+		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500StoreProduct)
 		return
 	}
