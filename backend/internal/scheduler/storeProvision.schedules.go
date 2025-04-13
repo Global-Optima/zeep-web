@@ -1,6 +1,8 @@
 package scheduler
 
 import (
+	"time"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications/details"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/storeProvisions"
@@ -8,7 +10,6 @@ import (
 	storeInventoryManagersTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
 	"go.uber.org/zap"
-	"time"
 )
 
 type StoreProvisionCronTasks struct {
@@ -26,7 +27,8 @@ func NewStoreProvisionCronTasks(
 	storeInventoryManagerRepo storeInventoryManagers.StoreInventoryManagerRepository,
 	storeService stores.StoreService,
 	notificationService notifications.NotificationService,
-	logger *zap.SugaredLogger) *StoreProvisionCronTasks {
+	logger *zap.SugaredLogger,
+) *StoreProvisionCronTasks {
 	return &StoreProvisionCronTasks{
 		storeProvisionService:     storeProvisionService,
 		storeProvisionRepo:        storeProvisionRepo,
@@ -58,7 +60,7 @@ func (tasks *StoreProvisionCronTasks) CheckStoreProvisionNotifications() {
 		provisionIDsToRecalculate := make(map[uint]struct{})
 		for _, storeProvision := range storeProvisionList {
 			if storeProvision.ExpiresAt != nil && storeProvision.ExpiresAt.UTC().Before(time.Now().UTC()) {
-				//write unique provisionIDs for recalculation
+				// write unique provisionIDs for recalculation
 				if _, exists := provisionIDsToRecalculate[storeProvision.ProvisionID]; exists {
 					provisionIDsToRecalculate[storeProvision.ProvisionID] = struct{}{}
 				}

@@ -2,6 +2,8 @@ package storeProvisions
 
 import (
 	"fmt"
+	"time"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
@@ -11,7 +13,6 @@ import (
 	storeInventoryManagersTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"go.uber.org/zap"
-	"time"
 )
 
 type StoreProvisionService interface {
@@ -168,7 +169,7 @@ func (s *storeProvisionService) CompleteStoreProvision(storeID, storeProvisionID
 		return nil, wrapped
 	}
 
-	//filter storeStocks to recalculate: only keep stocks below or equal to lowStockThreshold
+	// filter storeStocks to recalculate: only keep stocks below or equal to lowStockThreshold
 	ingredientsToRecalculate := make([]uint, len(deductedStocks))
 	for i, stock := range deductedStocks {
 		ingredientsToRecalculate[i] = stock.IngredientID

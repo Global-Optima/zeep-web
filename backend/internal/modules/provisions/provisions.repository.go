@@ -330,9 +330,12 @@ func (r *provisionRepository) DeleteProvision(provisionID uint) (*data.Provision
 			return err
 		}
 
+		subQuery := tx.Model(&data.StoreProvision{}).
+			Select("store_provisions.id").
+			Where("store_provisions.provision_id = ?", provisionID)
+
 		if err := tx.Unscoped().
-			Joins("JOIN store_provisions ON store_provisions.id = store_provision_ingredients.store_provision_id").
-			Where("store_provisions.provision_id = ?", provisionID).
+			Where("store_provision_id IN (?)", subQuery).
 			Delete(&data.StoreProvisionIngredient{}).Error; err != nil {
 			return err
 		}

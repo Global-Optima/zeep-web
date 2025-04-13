@@ -1,8 +1,9 @@
 package storeProvisions
 
 import (
-	storeStocksTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks/types"
 	"net/http"
+
+	storeStocksTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks/types"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
@@ -170,7 +171,6 @@ func (h *StoreProvisionHandler) CompleteStoreProvisionByID(c *gin.Context) {
 			localization.SendLocalizedResponseWithKey(c, types.Response409StoreProvisionInsufficientStock)
 			return
 		}
-
 	}
 
 	action := types.UpdateStoreProvisionAuditFactory(

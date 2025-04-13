@@ -2,6 +2,9 @@ package storeInventoryManagers
 
 import (
 	"fmt"
+	"slices"
+	"time"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	storeProvisionsTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/storeProvisions/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers/types"
@@ -10,8 +13,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
-	"slices"
-	"time"
 )
 
 func deductStoreStock(tx *gorm.DB, storeID, ingredientID uint, requiredQuantity float64) (*data.StoreStock, error) {
@@ -420,6 +421,7 @@ func getIngredientUsageRowsForStoreProducts(tx *gorm.DB, storeProductIDs []uint)
 	}
 	return ingredientRows, nil
 }
+
 func getProvisionUsageRowsForStoreProducts(tx *gorm.DB, storeProductIDs []uint) ([]types.ProvisionUsageRow, error) {
 	var provisionRows []types.ProvisionUsageRow
 	err := tx.Model(&data.StoreProductSize{}).

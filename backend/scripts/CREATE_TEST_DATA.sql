@@ -304,3 +304,57 @@ VALUES (1, 1);
 -- 49. Insert into supplier_prices
 INSERT INTO supplier_prices (supplier_material_id, base_price)
 VALUES (1, 1.50);
+
+-- 50. Insert into provisions
+INSERT INTO
+    provisions (
+    name,
+    absolute_volume,
+    net_cost,
+    unit_id,
+    preparation_in_minutes,
+    default_expiration_in_minutes,
+    limit_per_day
+)
+VALUES
+    ('Test Заготовка черного чая', 1.8, 700, 1, 35, 850, 3),
+    ('Test Фруктовый микс', 3150, 1200, 2, 5, 600, 10),
+    ('Test Unused provision', 1.8, 700, 1, 35, 850, 3);
+
+-- 51. Insert into provision_ingredients
+INSERT INTO
+    provision_ingredients (
+    provision_id,
+    ingredient_id,
+    quantity
+)
+VALUES
+    (1, 1, 0.4),
+    (1, 2, 5),
+    (2, 1, 0.2),
+    (2, 2, 0.5),
+    (2, 3, 0.07);
+
+-- 52. Insert into product_size_provisions
+INSERT INTO
+    product_size_provisions (
+    product_size_id,
+    provision_id,
+    volume
+)
+VALUES
+    (1, 1, 10);
+
+INSERT INTO store_provisions(
+    store_id,
+    provision_id,
+    expiration_in_minutes,
+    status,
+    volume,
+    initial_volume
+)
+VALUES
+    (1, 1, 100, 'PREPARING', 2.1, 2.1),
+    (1, 2, 100, 'PREPARING', 3.0, 3.0),
+    (1, 1, 100, 'COMPLETED', 2.1, 2.1),
+    (1, 2, 100, 'COMPLETED', 1.7, 3.0);

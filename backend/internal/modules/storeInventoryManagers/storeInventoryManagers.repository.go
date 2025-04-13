@@ -2,6 +2,7 @@ package storeInventoryManagers
 
 import (
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	storeProvisionsTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/storeProvisions/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers/types"
@@ -138,7 +139,7 @@ func (r *storeInventoryManagerRepository) DeductStoreInventoryByAdditive(storeID
 		}
 
 		for _, provision := range additiveProvisions {
-			//TODO delete or change status for updated storeProvisions
+			// TODO delete or change status for updated storeProvisions
 			updatedProvisions, err := deductStoreProvisions(tx, storeID, provision.ProvisionID, provision.Volume)
 			if err != nil {
 				return err

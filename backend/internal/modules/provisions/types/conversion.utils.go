@@ -86,6 +86,9 @@ func UpdateToProvisionModels(provision *data.Provision, dto *UpdateProvisionDTO)
 	if dto.DefaultExpirationInMinutes != nil {
 		provision.DefaultExpirationInMinutes = *dto.DefaultExpirationInMinutes
 	}
+	if dto.UnitID != nil {
+		provision.UnitID = *dto.UnitID
+	}
 	if dto.LimitPerDay != nil {
 		provision.LimitPerDay = *dto.LimitPerDay
 	}
