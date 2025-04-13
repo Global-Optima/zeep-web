@@ -465,30 +465,48 @@ func (r *orderRepository) GetOrderDetails(orderID uint, filter *contexts.StoreCo
 
 func (r *orderRepository) GetOrdersForExport(filter *types.OrdersExportFilterQuery) ([]data.Order, error) {
 	var orders []data.Order
-	query := r.db.Preload("Suborders.StoreProductSize.ProductSize.Product").
+
+	query := r.db.
+		Preload("Suborders.StoreProductSize.ProductSize.Product").
 		Preload("Suborders.SuborderAdditives.StoreAdditive.Additive").
 		Preload("Store").
 		Preload("DeliveryAddress")
 
+	clientLoc := time.Local
+	if filter.TimeZoneLocation != nil && *filter.TimeZoneLocation != "" {
+		if loc, err := time.LoadLocation(*filter.TimeZoneLocation); err == nil {
+			clientLoc = loc
+		}
+	}
+
 	if filter.StartDate != nil {
-		query = query.Where("created_at >= ?", filter.StartDate.UTC())
+		startLocal := time.Date(
+			filter.StartDate.Year(),
+			filter.StartDate.Month(),
+			filter.StartDate.Day(),
+			0, 0, 0, 0,
+			clientLoc,
+		)
+		query = query.Where("created_at >= ?", startLocal.UTC())
 	}
+
 	if filter.EndDate != nil {
-		query = query.Where("created_at <= ?", filter.EndDate.UTC())
+		endLocal := time.Date(
+			filter.EndDate.Year(),
+			filter.EndDate.Month(),
+			filter.EndDate.Day(),
+			23, 59, 59, 999999999,
+			clientLoc,
+		)
+		query = query.Where("created_at <= ?", endLocal.UTC())
 	}
+
 	if filter.StoreID != nil {
 		query = query.Where("store_id = ?", *filter.StoreID)
 	}
 
 	if err := query.Find(&orders).Error; err != nil {
 		return nil, err
-	}
-
-	clientLoc := time.Local // Default to the system's local timezone.
-	if filter.TimeZoneLocation != nil && *filter.TimeZoneLocation != "" {
-		if loc, err := time.LoadLocation(*filter.TimeZoneLocation); err == nil {
-			clientLoc = loc
-		}
 	}
 
 	orders = convertOrdersToLocalTime(orders, clientLoc)
@@ -498,10 +516,8 @@ func (r *orderRepository) GetOrdersForExport(filter *types.OrdersExportFilterQue
 
 func convertOrdersToLocalTime(orders []data.Order, loc *time.Location) []data.Order {
 	for i, order := range orders {
-		orders[i].CreatedAt = order.CreatedAt.In(loc)
 		if !order.CreatedAt.IsZero() {
-			createdAt := order.CreatedAt.In(loc)
-			orders[i].CreatedAt = createdAt
+			orders[i].CreatedAt = order.CreatedAt.In(loc)
 		}
 	}
 	return orders
