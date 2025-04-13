@@ -285,6 +285,10 @@ func (h *ProductHandler) DeleteProduct(c *gin.Context) {
 
 	existingProduct, err := h.service.DeleteProduct(productID)
 	if err != nil {
+		if errors.Is(err, types.ErrProductIsInUse) {
+			localization.SendLocalizedResponseWithKey(c, types.Response409ProductInUseDelete)
+			return
+		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500ProductDelete)
 		return
 	}
@@ -318,6 +322,10 @@ func (h *ProductHandler) DeleteProductSize(c *gin.Context) {
 
 	err = h.service.DeleteProductSize(productSizeID)
 	if err != nil {
+		if errors.Is(err, types.ErrProductSizeIsInUse) {
+			localization.SendLocalizedResponseWithKey(c, types.Response409ProductSizeInUseDelete)
+			return
+		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500ProductSizeDelete)
 		return
 	}

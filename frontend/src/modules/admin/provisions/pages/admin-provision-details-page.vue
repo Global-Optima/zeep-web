@@ -48,7 +48,7 @@ const updateMutation = useMutation({
 		queryClient.invalidateQueries({ queryKey: ['admin-provision-details', provisionId] })
 		toast({
 			title: 'Успех!',
-      variant: 'success',
+      		variant: 'success',
 			description: 'Данные сырья успешно обновлены.',
 		})
 	},

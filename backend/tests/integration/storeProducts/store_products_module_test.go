@@ -182,11 +182,11 @@ func TestStoreProductEndpoints(t *testing.T) {
 	t.Run("Delete Store Product", func(t *testing.T) {
 		testCases := []utils.TestCase{
 			{
-				Description:  "Admin should delete store product",
+				Description:  "Admin should not delete store product in use",
 				Method:       http.MethodDelete,
 				URL:          "/api/test/store-products/1?storeId=1",
 				AuthRole:     data.RoleAdmin,
-				ExpectedCode: http.StatusOK,
+				ExpectedCode: http.StatusConflict,
 			},
 			{
 				Description:  "Should return 404 for non-existent product",
