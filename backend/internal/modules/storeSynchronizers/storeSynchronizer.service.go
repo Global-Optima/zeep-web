@@ -2,7 +2,9 @@ package storeSynchronizers
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeSynchronizers/types"
+	"github.com/sirupsen/logrus"
 	"go.uber.org/zap"
+	"time"
 )
 
 type StoreSynchronizeService interface {
@@ -29,11 +31,13 @@ func NewStoreSynchronizeService(
 }
 
 func (s *storeSynchronizeService) SynchronizeStoreInventory(storeID uint) error {
+	start := time.Now()
 	err := s.transactionManager.SynchronizeStoreInventory(storeID)
 	if err != nil {
 		s.logger.Error("Error synchronizing store inventory", zap.Error(err))
 		return err
 	}
+	logrus.Info("finished synchronizing store inventory in ", time.Since(start))
 	return nil
 }
 

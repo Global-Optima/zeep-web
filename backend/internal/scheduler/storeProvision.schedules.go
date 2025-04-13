@@ -1,13 +1,14 @@
 package scheduler
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	storeInventoryManagersTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers/types"
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications/details"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/storeProvisions"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers"
-	storeInventoryManagersTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
 	"go.uber.org/zap"
 )
@@ -57,13 +58,21 @@ func (tasks *StoreProvisionCronTasks) CheckStoreProvisionNotifications() {
 			continue
 		}
 
+		var expiredStoreProvisionIDs []uint
+
 		provisionIDsToRecalculate := make(map[uint]struct{})
 		for _, storeProvision := range storeProvisionList {
-			if storeProvision.ExpiresAt != nil && storeProvision.ExpiresAt.UTC().Before(time.Now().UTC()) {
+			if storeProvision.Status == data.STORE_PROVISION_STATUS_COMPLETED &&
+				storeProvision.ExpiresAt != nil &&
+				storeProvision.ExpiresAt.UTC().Before(time.Now().UTC()) {
+
 				// write unique provisionIDs for recalculation
 				if _, exists := provisionIDsToRecalculate[storeProvision.ProvisionID]; exists {
 					provisionIDsToRecalculate[storeProvision.ProvisionID] = struct{}{}
 				}
+
+				//write expired storeProvisionIDs
+				expiredStoreProvisionIDs = append(expiredStoreProvisionIDs, storeProvision.ID)
 
 				spDetails := &details.StoreProvisionExpirationDetails{
 					BaseNotificationDetails: details.BaseNotificationDetails{
@@ -71,7 +80,7 @@ func (tasks *StoreProvisionCronTasks) CheckStoreProvisionNotifications() {
 						FacilityName: storeProvision.Store.Name,
 					},
 					ItemName:       storeProvision.Provision.Name,
-					ExpirationDate: storeProvision.ExpiresAt.Format("2006-01-02 15:04"),
+					CompletionDate: storeProvision.CompletedAt.Format("2006-01-02 15:04"),
 				}
 
 				if err := tasks.notificationService.NotifyStoreProvisionExpiration(spDetails); err != nil {
@@ -82,14 +91,25 @@ func (tasks *StoreProvisionCronTasks) CheckStoreProvisionNotifications() {
 			processedProvisions[storeProvision.ID] = true
 		}
 
-		provisionIDs := make([]uint, 0, len(provisionIDsToRecalculate))
-		for id := range provisionIDsToRecalculate {
-			provisionIDs = append(provisionIDs, id)
+		if len(expiredStoreProvisionIDs) > 0 {
+			if err := tasks.storeProvisionRepo.ExpireStoreProvisions(expiredStoreProvisionIDs); err != nil {
+				tasks.logger.Errorf("failed to expire store provisions: %v", err)
+			}
 		}
 
-		err = tasks.storeInventoryManagerRepo.RecalculateStoreInventory(store.ID, &storeInventoryManagersTypes.RecalculateInput{
-			ProvisionIDs: provisionIDs,
-		})
+		if len(provisionIDsToRecalculate) > 0 {
+			provisionIDs := make([]uint, 0, len(provisionIDsToRecalculate))
+			for id := range provisionIDsToRecalculate {
+				provisionIDs = append(provisionIDs, id)
+			}
+
+			err = tasks.storeInventoryManagerRepo.RecalculateStoreInventory(store.ID, &storeInventoryManagersTypes.RecalculateInput{
+				ProvisionIDs: provisionIDs,
+			})
+			if err != nil {
+				tasks.logger.Errorf("failed to recalculate inventory for expiredProvisions provision ID count: %v", err)
+			}
+		}
 	}
 
 	tasks.logger.Info("Check Store Provision Notifications completed.")

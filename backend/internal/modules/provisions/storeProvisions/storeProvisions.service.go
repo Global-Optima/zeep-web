@@ -6,7 +6,6 @@ import (
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/provisions"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/storeProvisions/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers"
@@ -29,7 +28,6 @@ type storeProvisionService struct {
 	ingredientsRepo           ingredients.IngredientRepository
 	provisionRepo             provisions.ProvisionRepository
 	storeInventoryManagerRepo storeInventoryManagers.StoreInventoryManagerRepository
-	notificationService       notifications.NotificationService
 	transactionManager        TransactionManager
 	logger                    *zap.SugaredLogger
 }
@@ -39,7 +37,6 @@ func NewStoreProvisionService(
 	ingredientsRepo ingredients.IngredientRepository,
 	provisionRepo provisions.ProvisionRepository,
 	storeInventoryManagerRepo storeInventoryManagers.StoreInventoryManagerRepository,
-	notificationService notifications.NotificationService,
 	transactionManager TransactionManager,
 	logger *zap.SugaredLogger,
 ) StoreProvisionService {
@@ -48,7 +45,6 @@ func NewStoreProvisionService(
 		ingredientsRepo:           ingredientsRepo,
 		provisionRepo:             provisionRepo,
 		storeInventoryManagerRepo: storeInventoryManagerRepo,
-		notificationService:       notificationService,
 		transactionManager:        transactionManager,
 		logger:                    logger,
 	}

@@ -96,17 +96,17 @@ func (m *transactionManager) SynchronizeStoreInventory(storeID uint) error {
 			return err
 		}
 
+		provisionIDs, err := m.getNotSynchronizedProvisions(storeID, store.LastInventorySyncAt)
+		if err != nil {
+			return err
+		}
+
 		additiveIDs, err := m.synchronizeAdditives(tx, storeID, store.LastInventorySyncAt)
 		if err != nil {
 			return err
 		}
 
 		ingredientIDs, err := m.synchronizeIngredients(tx, storeID, store.LastInventorySyncAt)
-		if err != nil {
-			return err
-		}
-
-		provisionIDs, err := m.synchronizeProvisions(tx, storeID, store.LastInventorySyncAt)
 		if err != nil {
 			return err
 		}
@@ -148,7 +148,7 @@ func (m *transactionManager) fetchUnsynchronizedData(storeID uint, lastSyncAt ti
 
 	g.Go(func() error {
 		var err error
-		provisionIDsFromProductSizes, err = m.repo.GetNotSynchronizedProductSizesProvisionsIDs(storeID, lastSyncAt)
+		provisionIDsFromProductSizes, err = m.repo.GetNotSynchronizedProductSizesProvisionIDs(storeID, lastSyncAt)
 		if err != nil {
 			return err
 		}
@@ -293,11 +293,11 @@ func (m *transactionManager) synchronizeIngredients(tx *gorm.DB, storeID uint, l
 	return mergedIngredientIDs, nil
 }
 
-func (m *transactionManager) synchronizeProvisions(tx *gorm.DB, storeID uint, lastSyncAt time.Time) ([]uint, error) {
+func (m *transactionManager) getNotSynchronizedProvisions(storeID uint, lastSyncAt time.Time) ([]uint, error) {
 	var productSizeProvisionIDs, additiveProvisionIDs []uint
 
 	var err error
-	productSizeProvisionIDs, err = m.repo.GetNotSynchronizedProductSizesProvisionsIDs(
+	productSizeProvisionIDs, err = m.repo.GetNotSynchronizedProductSizesProvisionIDs(
 		storeID, lastSyncAt,
 	)
 	if err != nil {
@@ -311,35 +311,5 @@ func (m *transactionManager) synchronizeProvisions(tx *gorm.DB, storeID uint, la
 		return nil, fmt.Errorf("failed to fetch additive-based ingredients: %w", err)
 	}
 
-	mergedProvisionIDs := utils.UnionSlices(productSizeProvisionIDs, additiveProvisionIDs)
-
-	ingredientIDs, err := m.ingredientRepo.GetIngredientIDsForProvisions(mergedProvisionIDs)
-
-	missingIngredientIDs, err := m.storeStockRepo.FilterMissingIngredientsIDs(storeID, ingredientIDs)
-	if err != nil {
-		return nil, fmt.Errorf("failed to filter missing store_stocks: %w", err)
-	}
-
-	if len(missingIngredientIDs) > 0 {
-		missingIngredients, err := m.ingredientRepo.GetIngredientsWithDetailsByIDs(missingIngredientIDs)
-		if err != nil {
-			return nil, err
-		}
-
-		newStoreStocks := make([]data.StoreStock, len(missingIngredients))
-		for i, ingredient := range missingIngredients {
-			newStock, err := storeStocksTypes.DefaultStockFromIngredient(storeID, &ingredient)
-			if err != nil {
-				return nil, err
-			}
-			newStoreStocks[i] = *newStock
-		}
-
-		storeStockRepoTx := m.storeStockRepo.CloneWithTransaction(tx)
-		_, err = storeStockRepoTx.AddMultipleStocks(newStoreStocks)
-		if err != nil {
-			return nil, fmt.Errorf("failed to add store_stocks: %w", err)
-		}
-	}
-	return mergedProvisionIDs, nil
+	return utils.UnionSlices(productSizeProvisionIDs, additiveProvisionIDs), nil
 }

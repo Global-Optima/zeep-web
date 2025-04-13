@@ -458,7 +458,7 @@
       },
 
       "storeStockExpiration": "*{{.ItemName}}* is expiring on *{{.ExpirationDate}}*.",
-      "storeProvisionExpiration": "*{{.ItemName}}* cafe provision has expired on *{{.ExpirationDate}}*.",
+      "storeProvisionExpiration": "The provision *{{.ItemName}}*, prepared on *{{.CompletionDate}}* has expired.",
       "warehouseStockExpiration": "*{{.ItemName}}* is expiring on *{{.ExpirationDate}}*.",
       "warehouseOutOfStock": "*{{.ItemName}}* is running out of stock.",
       "newStockRequest": "A new stock request was submitted by *{{.RequesterName}}*.",

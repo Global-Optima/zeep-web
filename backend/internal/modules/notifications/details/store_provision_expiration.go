@@ -11,7 +11,7 @@ import (
 type StoreProvisionExpirationDetails struct {
 	BaseNotificationDetails
 	ItemName       string `json:"itemName"`
-	ExpirationDate string `json:"expirationDate"`
+	CompletionDate string `json:"completionDate"`
 }
 
 func (s *StoreProvisionExpirationDetails) ToDetails() ([]byte, error) {
@@ -32,7 +32,7 @@ func BuildStoreProvisionExpirationMessage(details *StoreProvisionExpirationDetai
 		"FacilityName":   details.FacilityName,
 		"ID":             details.ID,
 		"ItemName":       details.ItemName,
-		"ExpirationDate": details.ExpirationDate,
+		"CompletionDate": details.CompletionDate,
 	})
 	if err != nil {
 		return localization.LocalizedMessage{}, fmt.Errorf("failed to build StoreProvisionExpiration message: %w", err)

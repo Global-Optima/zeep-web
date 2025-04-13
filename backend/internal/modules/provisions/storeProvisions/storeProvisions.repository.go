@@ -23,6 +23,7 @@ type StoreProvisionRepository interface {
 	CountStoreProvisionsToday(storeID, provisionID uint) (uint, error)
 	SaveStoreProvision(storeProvision *data.StoreProvision) error
 	DeleteStoreProvision(storeProvisionID uint) error
+	ExpireStoreProvisions(storeProvisionIDs []uint) error
 
 	CloneWithTransaction(tx *gorm.DB) StoreProvisionRepository
 }
@@ -63,11 +64,11 @@ func (r *storeProvisionRepository) GetStoreProvisions(storeID uint, filter *type
 	if len(filter.Statuses) > 0 {
 		now := time.Now().UTC()
 
-		hasExpired := slices.Contains(filter.Statuses, data.STORE_PROVISION_VISUAL_STATUS_EXPIRED)
+		hasExpired := slices.Contains(filter.Statuses, data.STORE_PROVISION_STATUS_EXPIRED)
 
 		var realStatuses []data.StoreProvisionStatus
 		for _, status := range filter.Statuses {
-			if status != data.STORE_PROVISION_VISUAL_STATUS_EXPIRED {
+			if status != data.STORE_PROVISION_STATUS_EXPIRED {
 				realStatuses = append(realStatuses, status)
 			}
 		}
@@ -76,9 +77,17 @@ func (r *storeProvisionRepository) GetStoreProvisions(storeID uint, filter *type
 			query = query.Where(`
 			status IN ? 
 			OR (status = ? AND expires_at <= ?)
-		`, realStatuses, data.STORE_PROVISION_STATUS_COMPLETED, now)
+			OR status = ?
+		`, realStatuses,
+				data.STORE_PROVISION_STATUS_COMPLETED, now,
+				data.STORE_PROVISION_STATUS_EXPIRED)
 		} else if hasExpired {
-			query = query.Where("status = ? AND expires_at <= ?", data.STORE_PROVISION_STATUS_COMPLETED, now)
+			query = query.Where(`
+			(status = ? AND expires_at <= ?) 
+			OR status = ?
+		`,
+				data.STORE_PROVISION_STATUS_COMPLETED, now,
+				data.STORE_PROVISION_STATUS_EXPIRED)
 		} else {
 			query = query.Where("status IN ? AND (expires_at > ? OR expires_at IS NULL)", realStatuses, now)
 		}
@@ -190,6 +199,16 @@ func (r *storeProvisionRepository) SaveStoreProvision(storeProvision *data.Store
 	}
 
 	return nil
+}
+
+func (r *storeProvisionRepository) ExpireStoreProvisions(storeProvisionIDs []uint) error {
+	if len(storeProvisionIDs) == 0 {
+		return fmt.Errorf("empty storeProvisionIDs input array")
+	}
+
+	return r.db.Model(&data.StoreProvision{}).
+		Where("id IN ?", storeProvisionIDs).
+		Update("status", data.STORE_PROVISION_STATUS_EXPIRED).Error
 }
 
 func (r *storeProvisionRepository) DeleteStoreProvision(storeProvisionID uint) error {

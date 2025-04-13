@@ -28,7 +28,7 @@ func MapToStoreProvisionDTO(sp *data.StoreProvision) *StoreProvisionDTO {
 	}
 
 	if sp.Status == data.STORE_PROVISION_STATUS_COMPLETED && sp.ExpiresAt != nil && sp.ExpiresAt.UTC().Before(time.Now().UTC()) {
-		storeProvisionDTO.Status = data.STORE_PROVISION_VISUAL_STATUS_EXPIRED
+		storeProvisionDTO.Status = data.STORE_PROVISION_STATUS_EXPIRED
 	} else {
 		storeProvisionDTO.Status = sp.Status
 	}

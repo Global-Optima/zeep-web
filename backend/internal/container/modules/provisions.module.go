@@ -85,7 +85,6 @@ func NewStoreProvisionsModule(
 		ingredientRepo,
 		provisionRepo,
 		storeInventoryManagerRepo,
-		notificationService,
 		storeProvisions.NewTransactionManager(base.DB, repo, storeStockRepo, ingredientRepo, storeInventoryManagerRepo),
 		base.Logger,
 	)
@@ -101,6 +100,7 @@ func NewStoreProvisionsModule(
 		notificationService,
 		base.Logger,
 	)
+	//if schedule is changed, must also change in CheckStoreProvisionNotifications() cronTasks
 	err := cronManager.RegisterJob(scheduler.HalfHourlyJob, func() {
 		storeProvisionCronTasks.CheckStoreProvisionNotifications()
 	})

@@ -14,7 +14,7 @@ type StoreSynchronizeRepository interface {
 	GetNotSynchronizedProductSizeIngredientsIDs(storeID uint, lastSync time.Time) ([]uint, error)
 	GetNotSynchronizedProductSizesAdditivesIDs(storeID uint, lastSync time.Time) ([]uint, error)
 	GetNotSynchronizedAdditivesIDs(storeID uint, lastSync time.Time) ([]uint, error)
-	GetNotSynchronizedProductSizesProvisionsIDs(storeID uint, lastSync time.Time) ([]uint, error)
+	GetNotSynchronizedProductSizesProvisionIDs(storeID uint, lastSync time.Time) ([]uint, error)
 	GetNotSynchronizedAdditiveProvisionIDs(storeID uint, lastSync time.Time) ([]uint, error)
 }
 
@@ -98,7 +98,7 @@ func (r *storeSynchronizeRepository) GetNotSynchronizedProductSizesAdditivesIDs(
 	return notSynchronizedProductSizesAdditivesIDs, nil
 }
 
-func (r *storeSynchronizeRepository) GetNotSynchronizedProductSizesProvisionsIDs(storeID uint, lastSync time.Time) ([]uint, error) {
+func (r *storeSynchronizeRepository) GetNotSynchronizedProductSizesProvisionIDs(storeID uint, lastSync time.Time) ([]uint, error) {
 	var notSynchronizedProductSizesProvisionsIDs []uint
 	err := r.db.Model(&data.ProductSizeProvision{}).
 		Distinct("product_size_provisions.provision_id").

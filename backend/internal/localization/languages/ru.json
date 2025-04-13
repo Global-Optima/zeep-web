@@ -456,7 +456,7 @@
 		},
 
 		"storeStockExpiration": "*{{.ItemName}}* срок годности истекает *{{.ExpirationDate}}*.",
-		"storeProvisionExpiration": "*{{.ItemName}}* срок годности заготовки кафе истек *{{.ExpirationDate}}*.",
+		"storeProvisionExpiration": "Срок годности заготовки *{{.ItemName}}*, приготовленной *{{.CompletionDate}}*, истёк.",
 		"warehouseStockExpiration": "*{{.ItemName}}* срок годности истекает *{{.ExpirationDate}}*.",
 		"warehouseOutOfStock": "*{{.ItemName}}* заканчивается на складе.",
 		"newStockRequest": "Новый запрос на запас был отправлен от *{{.RequesterName}}*.",

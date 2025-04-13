@@ -458,7 +458,7 @@
     },
 
     "storeStockExpiration": "*{{.ItemName}}* жарамдылық мерзімі *{{.ExpirationDate}}* аяқталады.",
-    "storeProvisionExpiration": "*{{.ItemName}}* кафе үшін заготовканы жарамдылық мерзімі *{{.ExpirationDate}}* аяқталды.",
+    "storeProvisionExpiration": "*{{.CompletionDate}}* уақытта дайындалған *{{.ItemName}}* заготовкасының жарамдылық мерзімі аяқталды.",
     "warehouseStockExpiration": "*{{.ItemName}}* жарамдылық мерзімі *{{.ExpirationDate}}* аяқталады.",
     "warehouseOutOfStock": "*{{.ItemName}}* қоймада аз қалды.",
     "newStockRequest": "Жаңа қор сұранысын *{{.RequesterName}}* ұсынды.",
