@@ -146,11 +146,11 @@ func TestProductEndpoints(t *testing.T) {
 	t.Run("Delete a Product Size", func(t *testing.T) {
 		testCases := []utils.TestCase{
 			{
-				Description:  "Admin should delete a product size",
+				Description:  "Admin should not delete a product size in use",
 				Method:       http.MethodDelete,
 				URL:          "/api/test/products/sizes/1",
 				AuthRole:     data.RoleAdmin,
-				ExpectedCode: http.StatusOK,
+				ExpectedCode: http.StatusConflict,
 			},
 			{
 				Description:  "Barista should NOT be able to delete a product size",
