@@ -24,7 +24,7 @@
 
 			<div>
 				<p class="font-medium text-xl">
-					{{ suborder.productSize.productName }} "{{ suborder.productSize.sizeName }}" ({{suborder.productSize.size}}
+					{{ suborder.productSize.productName }} {{ suborder.productSize.sizeName }} ({{suborder.productSize.size}}
 					{{ suborder.productSize.unit.name.toLowerCase() }})
 				</p>
 				<!-- Toppings List -->

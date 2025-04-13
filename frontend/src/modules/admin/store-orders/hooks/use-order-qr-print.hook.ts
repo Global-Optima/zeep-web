@@ -241,30 +241,6 @@ export function useOrderGenerateQR() {
 	}
 
 	/**
-	 * Convert text to CP1251 byte representation for ZPL
-	 */
-	function textToCP1251Bytes(input: string): number[] {
-		return Array.from(input).map(char => {
-			const code = char.charCodeAt(0)
-			// If the character is in the Cyrillic block, adjust it.
-			if (code >= 0x0410 && code <= 0x044f) {
-				// CP1251 for Cyrillic (simplified mapping)
-				return code - 0x350
-			}
-			// For basic ASCII, the byte is the same:
-			return code < 128 ? code : 63 // unknown chars become '?'
-		})
-	}
-
-	/**
-	 * Escape text for ZPL format with CP1251 encoding
-	 */
-	function escapeZplCP1251(input: string): string {
-		const bytes = textToCP1251Bytes(input)
-		return bytes.map(byte => `\\${byte.toString(16).padStart(2, '0')}`).join('')
-	}
-
-	/**
 	 * Improved and simplified PRN generator with better layout
 	 * for different label sizes, especially 60x40mm
 	 */
@@ -291,10 +267,6 @@ export function useOrderGenerateQR() {
 		const line1 = `#${order.displayNumber} ${order.customerName} (${index + 1}/${order.subOrders.length})`
 		const line2 = `${suborder.productSize.productName} ${suborder.productSize.sizeName} (${suborder.productSize.size} ${suborder.productSize.unit.name.toLowerCase()}, ${MACHINE_CATEGORY_FORMATTED[suborder.productSize.machineCategory].toLowerCase()})`
 
-		// Escape text for ZPL encoding
-		const escapedLine1 = escapeZplCP1251(line1)
-		const escapedLine2 = escapeZplCP1251(line2)
-
 		// Calculate font sizes based on label width
 		// For different size labels, fonts should scale proportionally
 		// with minimum sizes to ensure readability
@@ -302,8 +274,8 @@ export function useOrderGenerateQR() {
 
 		// For 80mm width, we use 38pt for line1 and 29pt for line2
 		// Scale these values for different widths while keeping minimums
-		const line1FontSize = Math.max(20, Math.round(38 * fontScale))
-		const line2FontSize = Math.max(16, Math.round(29 * fontScale))
+		const line1FontSize = Math.max(20, Math.round(29 * fontScale))
+		const line2FontSize = Math.max(20, Math.round(29 * fontScale))
 
 		// Determine vertical spacing
 		// The original static values seem to work well, so adapt them for different heights
@@ -315,7 +287,7 @@ export function useOrderGenerateQR() {
 		// Calculate QR code position and size
 		// For 80mm labels, QR starts at ~144,105
 		// Target about 33% of height down for QR code Y position
-		const qrY = Math.round(labelHeightDots * 0.33)
+		const qrY = Math.round(labelHeightDots * 0.25)
 
 		// Center the QR code horizontally
 		// For wide layouts (width > height), make QR code about 50% of height
@@ -325,24 +297,26 @@ export function useOrderGenerateQR() {
 
 		// QR magnification factor - higher gives larger modules
 		// For 80mm labels, 10 works well. Scale for different sizes.
-		const qrMagMin = labelHeightMm <= 40 ? 6 : 8 // Ensure readability on small labels
+		const qrMagMin = labelHeightMm <= 40 ? 4 : 6 // Ensure readability on small labels
 		const qrMagnification = Math.max(qrMagMin, Math.round(qrSize / 30))
 
 		// Build the ZPL commands
-		const zplCommands = `^XA
-  ^CI33
+		const zplCommands = `
+	^XA
+  ^CI28
+  ^CWZ,E:zeep.TTF
   ^PW${labelWidthDots}
   ^LL${labelHeightDots}
 
   ^FO${marginX},${line1Y}
   ^FB${textAreaWidth},2,0,C,0
   ^A0N,${line1FontSize},${Math.round(line1FontSize * 0.8)}^FH\\
-  ^FD${escapedLine1}^FS
+  ^FD${line1}^FS
 
   ^FO${marginX},${line2Y}
   ^FB${textAreaWidth},3,0,C,0
   ^A0N,${line2FontSize},${Math.round(line2FontSize * 0.8)}^FH\\
-  ^FD${escapedLine2}^FS
+  ^FD${line2}^FS
 
   ^FO${qrX},${qrY}
   ^BQN,2,${qrMagnification}
