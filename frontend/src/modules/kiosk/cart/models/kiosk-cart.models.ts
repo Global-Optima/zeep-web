@@ -14,6 +14,6 @@ export enum PaymentMethod {
 
 export interface PaymentOption {
 	id: PaymentMethod
-	label: string
+	localizationLabel: string
 	icon: LucideIcon
 }

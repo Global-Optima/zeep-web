@@ -13,9 +13,15 @@
 			</div>
 
 			<!-- Header -->
-			<h1 class="mb-4 font-bold text-gray-800 text-3xl">Заказ подтвержден</h1>
+			<h1 class="mb-4 font-bold text-gray-800 text-3xl">
+				{{
+          $t('KIOSK.PAYMENT.SUCCESS.TITLE')
+				}}
+			</h1>
 			<p class="mb-8 text-gray-600 text-lg">
-				Спасибо за покупку! Ваш заказ принят и обрабатывается.
+				{{
+          $t('KIOSK.PAYMENT.SUCCESS.DESCRIPTION')
+				}}
 			</p>
 
 			<!-- Order Display Number -->
@@ -23,7 +29,11 @@
 				<p class="font-extrabold text-emerald-600 text-7xl">
 					{{ order.displayNumber }}
 				</p>
-				<p class="mt-4 text-gray-500 text-lg">Номер заказа</p>
+				<p class="mt-4 text-gray-500 text-lg">
+					{{
+          $t('KIOSK.PAYMENT.SUCCESS.DISPLAY_NUMBER')
+					}}
+				</p>
 			</div>
 
 			<!-- Footer Button -->
@@ -31,7 +41,9 @@
 				@click="handleProceed"
 				class="px-6 rounded-2xl h-12 font-normal text-white text-xl"
 			>
-				Вернуться в меню
+				{{
+          $t('KIOSK.PAYMENT.SUCCESS.PROCEED')
+				}}
 			</Button>
 		</div>
 	</div>

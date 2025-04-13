@@ -117,7 +117,7 @@ const handleUpdate = (size: StoreProductSizeDetailsDTO, additives: StoreAdditive
 		>
 			<DialogHeader class="p-8 pb-0">
 				<div class="flex justify-between items-start gap-4">
-					<DialogTitle class="text-4xl">Детали заказа</DialogTitle>
+					<DialogTitle class="text-4xl">{{ $t('KIOSK.CART.TITLE') }}</DialogTitle>
 					<Button
 						variant="ghost"
 						size="icon"
@@ -153,7 +153,7 @@ const handleUpdate = (size: StoreProductSizeDetailsDTO, additives: StoreAdditive
 						v-model="customerName"
 						class="bg-white shadow-none px-6 py-8 rounded-xl w-full text-2xl"
 						maxLength="20"
-						placeholder="Введите ваше имя"
+						:placeholder="$t('KIOSK.CART.NAME_PLACEHOLDER')"
 					/>
 					<p
 						v-if="errorMessage"
@@ -167,7 +167,7 @@ const handleUpdate = (size: StoreProductSizeDetailsDTO, additives: StoreAdditive
 							class="text-blue-500 text-2xl"
 							@click="generateUniqueName"
 						>
-							Сгенерировать имя
+							{{ $t('KIOSK.CART.GENERATE_NAME') }}
 						</Button>
 					</div>
 				</div>
@@ -176,10 +176,10 @@ const handleUpdate = (size: StoreProductSizeDetailsDTO, additives: StoreAdditive
 					<p class="font-semibold text-primary text-4xl">{{ formatPrice(totalPrice) }}</p>
 					<Button
 						size="lg"
-						class="py-6 text-2xl"
+						class="py-6 rounded-3xl h-16 text-2xl"
 						@click="handleProceed"
 					>
-						Оплатить
+						{{ $t('KIOSK.CART.PAY') }}
 					</Button>
 				</div>
 			</DialogFooter>

@@ -33,7 +33,7 @@ const orderId = route.params.orderId as string
 
 // Payment configuration
 const paymentOptions: PaymentOption[] = [
-  { id: PaymentMethod.KASPI, label: 'Kaspi QR', icon: TabletSmartphone },
+  { id: PaymentMethod.KASPI, localizationLabel: 'KIOSK.PAYMENT.INITIAL.METHODS.QR', icon: TabletSmartphone },
 ]
 
 // Constants
@@ -127,7 +127,7 @@ const successOrderPaymentMutation = useMutation({
 const failPaymentMutation = useMutation({
   mutationFn: (orderId: number) => ordersService.failOrderPayment(orderId),
   onSuccess: () => {
-    paymentState.errorMessage = 'Платеж не завершен вовремя. Попробуйте снова.'
+    paymentState.errorMessage = 'KIOSK.PAYMENT.WAITING.ERRORS.TIMEOUT'
     resetPaymentFlow(false)
   }
 })
@@ -220,7 +220,7 @@ const handleBack = async () => {
 
 const selectMethod = (method: PaymentMethod) => {
   if (!order.value) {
-    paymentState.errorMessage = 'Номер заказа отсутствует'
+    paymentState.errorMessage = 'KIOSK.PAYMENT.WAITING.ERRORS.MISSING_ID'
     return
   }
   paymentState.selectedMethod = method
@@ -230,7 +230,7 @@ const selectMethod = (method: PaymentMethod) => {
 
 const startPaymentProcess = async () => {
   if (!order.value || !paymentState.selectedMethod) {
-    paymentState.errorMessage = 'Номер заказа или способ оплаты отсутствуют'
+    paymentState.errorMessage = 'KIOSK.PAYMENT.WAITING.ERRORS.START'
     return
   }
   // Re-initialize timer from scratch
@@ -289,13 +289,13 @@ onBeforeUnmount(() => {
 					v-if="!paymentState.isPaying"
 					class="font-medium text-5xl"
 				>
-					Выберите способ оплаты
+					{{ $t('KIOSK.PAYMENT.INITIAL.TITLE') }}
 				</h1>
 				<h1
 					v-else
 					class="font-medium text-5xl"
 				>
-					Идет обработка платежа
+					{{ $t('KIOSK.PAYMENT.WAITING.TITLE') }}
 				</h1>
 			</div>
 
@@ -318,7 +318,7 @@ onBeforeUnmount(() => {
 						class="size-16"
 						stroke-width="1.6"
 					/>
-					<p class="mt-6 font-medium text-3xl">{{ option.label }}</p>
+					<p class="mt-6 font-medium text-3xl">{{ $t(option.localizationLabel) }}</p>
 				</div>
 			</div>
 
@@ -335,9 +335,7 @@ onBeforeUnmount(() => {
 				</p>
 				<p class="text-3xl">
 					{{
-            paymentState.selectedMethod === PaymentMethod.KASPI
-              ? 'Откройте приложение Kaspi и просканируйте QR'
-              : 'Идет обработка...'
+            $t('KIOSK.PAYMENT.WAITING.DESCRIPTION')
 					}}
 				</p>
 			</div>
@@ -347,7 +345,7 @@ onBeforeUnmount(() => {
 				v-if="paymentState.errorMessage"
 				class="mt-12 text-red-500 text-3xl text-center"
 			>
-				{{ paymentState.errorMessage }}
+				{{ $t(paymentState.errorMessage) }}
 			</p>
 
 			<!-- Action Buttons -->
@@ -358,7 +356,7 @@ onBeforeUnmount(() => {
 					@click="handleBack"
 					class="hover:bg-slate-200 text-3xl"
 				>
-					Назад
+					{{$t('KIOSK.PAYMENT.INITIAL.BACK')}}
 				</Button>
 			</div>
 		</div>
