@@ -85,7 +85,7 @@ const router = useRouter()
 const showBottomButtons = computed(() => currentEmployee?.role ? [EmployeeRole.BARISTA, EmployeeRole.STORE_MANAGER].includes(currentEmployee.role) : false )
 
 const onKioskClick = () => {
-	router.replace({name: getRouteName('KIOSK_HOME')})
+	router.replace({name: getRouteName("KIOSK_LANDING")})
 }
 
 const onBaristaClick = () => {

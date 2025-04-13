@@ -1,3 +1,36 @@
 {
-	"hello": "Hello World"
+	"KIOSK": {
+		"MOVE_TO_CATALOG": "Go to Menu",
+		"CART": {
+			"TITLE": "Order Details",
+			"NAME_PLACEHOLDER": "Your name",
+			"GENERATE_NAME": "Random name",
+			"PAY": "Pay"
+		},
+		"PAYMENT": {
+			"INITIAL": {
+				"TITLE": "Select Payment Method",
+				"BACK": "Back",
+				"METHODS": {
+					"CARD": "Bank Card",
+					"QR": "Kaspi QR"
+				}
+			},
+			"WAITING": {
+				"TITLE": "Awaiting Payment",
+				"DESCRIPTION": "Please complete your payment within the given time",
+				"ERRORS": {
+					"TIMEOUT": "Payment was not completed in time. Please try again.",
+					"MISSING_ID": "Order is missing",
+					"START": "Order or payment method missing"
+				}
+			},
+			"SUCCESS": {
+				"TITLE": "Order Accepted",
+				"DESCRIPTION": "Thank you for your purchase! Your order is now being processed",
+				"DISPLAY_NUMBER": "Order number",
+				"PROCEED": "Return to menu"
+			}
+		}
+	}
 }
