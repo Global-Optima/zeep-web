@@ -1,4 +1,11 @@
 services:
+  face_service:
+    container_name: face_service
+    build:
+      context: .././face_service
+    ports:
+      - "8000:8000"
+
   postgres:
     container_name: zeep-postgres
     image: postgres

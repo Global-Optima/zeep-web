@@ -1,6 +1,7 @@
 package employees
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils/media"
 	"net/http"
 	"strconv"
 
@@ -32,12 +33,18 @@ func NewAdminEmployeeHandler(service AdminEmployeeService, employeeService emplo
 
 func (h *AdminEmployeeHandler) CreateAdminEmployee(c *gin.Context) {
 	var input employeesTypes.CreateEmployeeDTO
-	if err := c.ShouldBindJSON(&input); err != nil {
+	if err := c.ShouldBind(&input); err != nil {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
 
-	id, err := h.service.CreateAdminEmployee(&input)
+	img, err := media.GetImageWithFormFile(c)
+	if err != nil {
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageGettingImage)
+		return
+	}
+
+	id, err := h.service.CreateAdminEmployee(&input, img)
 	if err != nil {
 		switch {
 		case errors.Is(err, moduleErrors.ErrAlreadyExists):

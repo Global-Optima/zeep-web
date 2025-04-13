@@ -6,14 +6,15 @@ import (
 )
 
 type CreateEmployeeDTO struct {
-	FirstName string                      `json:"firstName" binding:"required"`
-	LastName  string                      `json:"lastName" binding:"required"`
-	Phone     string                      `json:"phone"`
-	Email     string                      `json:"email" binding:"required"`
-	Role      data.EmployeeRole           `json:"role" binding:"required"`
-	Password  string                      `json:"password" binding:"required"`
-	IsActive  bool                        `json:"isActive"`
-	Workdays  []CreateOrReplaceWorkdayDTO `json:"workdays" binding:"dive"`
+	FirstName string                      `form:"firstName" binding:"required"`
+	LastName  string                      `form:"lastName" binding:"required"`
+	Phone     string                      `form:"phone"`
+	Email     string                      `form:"email" binding:"required"`
+	Role      data.EmployeeRole           `form:"role" binding:"required"`
+	Password  string                      `form:"password" binding:"required"`
+	IsActive  bool                        `form:"isActive"`
+	Workdays  []CreateOrReplaceWorkdayDTO `form:"workdays" binding:"dive"`
+	Embedding string
 }
 
 type CreateOrReplaceWorkdayDTO struct {

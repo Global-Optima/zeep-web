@@ -14,6 +14,7 @@ const (
 
 type EmployeeClaims struct {
 	jwt.RegisteredClaims
+	MFA        bool `json:"mfa"`
 	EmployeeID uint `json:"employeeId"`
 }
 
@@ -26,12 +27,13 @@ type Token struct {
 	SessionToken string `json:"sessionToken"`
 }
 
-func GenerateEmployeeJWT(employeeID uint) (string, error) {
+func GenerateEmployeeJWT(employeeID uint, mfa bool) (string, error) {
 	cfg := config.GetConfig()
 	ttl := cfg.JWT.EmployeeTokenTTL
 
 	session := EmployeeClaims{
 		EmployeeID: employeeID,
+		MFA:        mfa,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(ttl)),
 			Issuer:    "zeep-web",

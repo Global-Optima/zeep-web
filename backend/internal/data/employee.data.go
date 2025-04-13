@@ -270,6 +270,7 @@ type Employee struct {
 	Email              string              `gorm:"size:255;not null" sort:"email"`
 	HashedPassword     string              `gorm:"size:255;not null"`
 	IsActive           bool                `gorm:"not null" sort:"isActive"`
+	FaceEmbedding      string              `gorm:"type:text"`
 	StoreEmployee      *StoreEmployee      `gorm:"foreignKey:EmployeeID"`
 	WarehouseEmployee  *WarehouseEmployee  `gorm:"foreignKey:EmployeeID"`
 	RegionEmployee     *RegionEmployee     `gorm:"foreignKey:EmployeeID"`

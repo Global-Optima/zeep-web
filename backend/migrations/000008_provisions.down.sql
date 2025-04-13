@@ -15,3 +15,6 @@ DROP TABLE IF EXISTS provision_ingredients;
 -- Then drop the main table
 DROP INDEX IF EXISTS unique_provision_name;
 DROP TABLE IF EXISTS provisions;
+
+ALTER TABLE employees
+    DROP COLUMN face_embedding;

@@ -9,6 +9,7 @@ import (
 type AuthenticationRepository interface {
 	CreateCustomer(customer *data.Customer) (uint, error)
 	GetCustomerByPhone(phone string) (*data.Customer, error)
+	GetEmployeeEmbedding(employeeID uint) (string, error)
 }
 
 type authenticationRepository struct {
@@ -41,4 +42,13 @@ func (r *authenticationRepository) GetCustomerByPhone(phone string) (*data.Custo
 		return nil, nil
 	}
 	return &customer, err
+}
+
+func (r *authenticationRepository) GetEmployeeEmbedding(employeeID uint) (string, error) {
+	var employee data.Employee
+	err := r.db.First(&employee, employeeID).Error
+	if err != nil {
+		return "", err
+	}
+	return employee.FaceEmbedding, nil
 }

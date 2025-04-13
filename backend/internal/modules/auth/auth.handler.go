@@ -1,6 +1,8 @@
 package auth
 
 import (
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils/media"
+	"github.com/sirupsen/logrus"
 	"net/http"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/errors/moduleErrors"
@@ -146,4 +148,37 @@ func (h *AuthenticationHandler) EmployeeLogout(c *gin.Context) {
 
 	utils.ClearCookie(c, types.EMPLOYEE_SESSION_COOKIE_KEY)
 	utils.SendSuccessResponse(c, gin.H{"message": "logout successful"})
+}
+
+func (h *AuthenticationHandler) EmployeeMFAPass(c *gin.Context) {
+
+	_, _, err := types.ExtractEmployeeSessionTokenAndValidate(c)
+	if err != nil {
+		localization.SendLocalizedResponseWithStatus(c, 403)
+		return
+	}
+
+	img, err := media.GetImageWithFormFile(c)
+	if err != nil {
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageGettingImage)
+		return
+	}
+
+	token, err := h.service.EmployeeFaceRecognitionPass(c, img)
+	if err != nil {
+		logrus.Info(err)
+		localization.SendLocalizedResponseWithKey(c, types.Response400IncorrectCredentials)
+		return
+	}
+
+	cfg := config.GetConfig()
+
+	utils.SetCookie(c, types.EMPLOYEE_SESSION_COOKIE_KEY, token.SessionToken, cfg.JWT.EmployeeTokenTTL)
+
+	utils.SendSuccessResponse(c, gin.H{
+		"message": "login successful",
+		"data": gin.H{
+			"sessionToken": token.SessionToken,
+		},
+	})
 }

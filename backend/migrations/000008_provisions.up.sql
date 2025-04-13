@@ -81,3 +81,6 @@ ALTER TABLE additives
 
 ALTER TABLE product_sizes
     ADD COLUMN provisions_updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP;
+
+ALTER TABLE employees
+    ADD COLUMN face_embedding TEXT;

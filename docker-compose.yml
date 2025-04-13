@@ -1,5 +1,13 @@
 services:
   ########################################################################
+  # 1) faceRecognition - used for two-factor auth
+  ########################################################################
+  face_service:
+    build: ./face_service
+    container_name: face_service
+    networks:
+      - app_network
+  ########################################################################
   # 1) Traefik - Reverse Proxy for Automatic HTTPS via Let's Encrypt
   ########################################################################
   traefik:

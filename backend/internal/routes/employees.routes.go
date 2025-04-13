@@ -50,23 +50,23 @@ func (r *Router) RegisterAuditRoutes(handler *audit.AuditHandler) {
 func (r *Router) RegisterFranchiseeRoutes(handler *franchisees.FranchiseeHandler) {
 	router := r.EmployeeRoutes.Group("/franchisees")
 	{
-		router.GET("", middleware.EmployeeRoleMiddleware(data.RoleOwner), handler.GetFranchisees)
-		router.GET("/:id", middleware.EmployeeRoleMiddleware(data.RoleOwner), handler.GetFranchiseeByID)
-		router.GET("/my", middleware.EmployeeRoleMiddleware(data.FranchiseeReadPermissions...), handler.GetMyFranchisee)
-		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateFranchisee)
-		router.PUT("/:id", middleware.EmployeeRoleMiddleware(data.FranchiseeReadPermissions...), handler.UpdateFranchisee)
-		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(data.RoleOwner, data.RoleFranchiseOwner), handler.DeleteFranchisee)
+		router.GET("", middleware.RequireMFA(), middleware.EmployeeRoleMiddleware(data.RoleOwner), handler.GetFranchisees)
+		router.GET("/:id", middleware.RequireMFA(), middleware.EmployeeRoleMiddleware(data.RoleOwner), handler.GetFranchiseeByID)
+		router.GET("/my", middleware.RequireMFA(), middleware.EmployeeRoleMiddleware(data.FranchiseeReadPermissions...), handler.GetMyFranchisee)
+		router.POST("", middleware.RequireMFA(), middleware.EmployeeRoleMiddleware(), handler.CreateFranchisee)
+		router.PUT("/:id", middleware.RequireMFA(), middleware.EmployeeRoleMiddleware(data.FranchiseeReadPermissions...), handler.UpdateFranchisee)
+		router.DELETE("/:id", middleware.RequireMFA(), middleware.EmployeeRoleMiddleware(data.RoleOwner, data.RoleFranchiseOwner), handler.DeleteFranchisee)
 	}
 }
 
 func (r *Router) RegisterRegionRoutes(handler *regions.RegionHandler) {
 	router := r.EmployeeRoutes.Group("/regions")
 	{
-		router.GET("", middleware.EmployeeRoleMiddleware(data.RoleOwner), handler.GetRegions)        // owner
-		router.GET("/:id", middleware.EmployeeRoleMiddleware(data.RoleOwner), handler.GetRegionByID) // owner
-		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateRegion)
-		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateRegion)
-		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteRegion)
+		router.GET("", middleware.RequireMFA(), middleware.EmployeeRoleMiddleware(data.RoleOwner), handler.GetRegions)        // owner
+		router.GET("/:id", middleware.RequireMFA(), middleware.EmployeeRoleMiddleware(data.RoleOwner), handler.GetRegionByID) // owner
+		router.POST("", middleware.RequireMFA(), middleware.EmployeeRoleMiddleware(), handler.CreateRegion)
+		router.PUT("/:id", middleware.RequireMFA(), middleware.EmployeeRoleMiddleware(), handler.UpdateRegion)
+		router.DELETE("/:id", middleware.RequireMFA(), middleware.EmployeeRoleMiddleware(), handler.DeleteRegion)
 	}
 }
 
@@ -84,17 +84,17 @@ func (r *Router) RegisterNotificationsRoutes(handler *notifications.Notification
 func (r *Router) RegisterProductRoutes(handler *product.ProductHandler, productTechMapHandler *productTechnicalMap.TechnicalMapHandler) {
 	router := r.EmployeeRoutes.Group("/products")
 	{
-		router.GET("", handler.GetProducts)
-		router.GET("/:id", handler.GetProductDetails)
-		router.GET(":id/sizes", handler.GetProductSizesByProductID)
-		router.GET("/sizes/:id", handler.GetProductSizeByID)
-		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateProduct)
-		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateProduct)
-		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteProduct)
-		router.DELETE("sizes/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteProductSize)
-		router.POST("/sizes", middleware.EmployeeRoleMiddleware(), handler.CreateProductSize)
-		router.PUT("/sizes/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateProductSize)
-		router.GET("/sizes/:id/technical-map", middleware.EmployeeRoleMiddleware(), productTechMapHandler.GetProductSizeTechnicalMapByID)
+		router.GET("", middleware.RequireMFA(), handler.GetProducts)
+		router.GET("/:id", middleware.RequireMFA(), handler.GetProductDetails)
+		router.GET(":id/sizes", middleware.RequireMFA(), handler.GetProductSizesByProductID)
+		router.GET("/sizes/:id", middleware.RequireMFA(), handler.GetProductSizeByID)
+		router.POST("", middleware.RequireMFA(), middleware.EmployeeRoleMiddleware(), handler.CreateProduct)
+		router.PUT("/:id", middleware.RequireMFA(), middleware.EmployeeRoleMiddleware(), handler.UpdateProduct)
+		router.DELETE("/:id", middleware.RequireMFA(), middleware.EmployeeRoleMiddleware(), handler.DeleteProduct)
+		router.DELETE("sizes/:id", middleware.RequireMFA(), middleware.EmployeeRoleMiddleware(), handler.DeleteProductSize)
+		router.POST("/sizes", middleware.RequireMFA(), middleware.EmployeeRoleMiddleware(), handler.CreateProductSize)
+		router.PUT("/sizes/:id", middleware.RequireMFA(), middleware.EmployeeRoleMiddleware(), handler.UpdateProductSize)
+		router.GET("/sizes/:id/technical-map", middleware.RequireMFA(), middleware.EmployeeRoleMiddleware(), productTechMapHandler.GetProductSizeTechnicalMapByID)
 	}
 }
 

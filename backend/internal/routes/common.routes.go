@@ -27,6 +27,7 @@ func (r *Router) RegisterAuthenticationRoutes(handler *auth.AuthenticationHandle
 		{
 			employeesRoutes.POST("/login", handler.EmployeeLogin)
 			employeesRoutes.POST("/logout", handler.EmployeeLogout)
+			employeesRoutes.POST("/mfa", handler.EmployeeMFAPass)
 		}
 	}
 }

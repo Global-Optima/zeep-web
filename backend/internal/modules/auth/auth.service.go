@@ -1,7 +1,14 @@
 package auth
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
+	"io"
+	"mime/multipart"
+	"net/http"
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
@@ -18,6 +25,7 @@ import (
 
 type AuthenticationService interface {
 	EmployeeLogin(email, password string) (*types.Token, error)
+	EmployeeFaceRecognitionPass(c *gin.Context, image *multipart.FileHeader) (*types.Token, error)
 
 	CustomerRegister(input *types.CustomerRegisterDTO) (uint, error)
 	CustomerLogin(email, password string) (*types.Token, error)
@@ -59,6 +67,113 @@ func (s *authenticationService) EmployeeLogin(email, password string) (*types.To
 	}
 
 	return &types.Token{SessionToken: sessionToken}, nil
+}
+
+func (s *authenticationService) EmployeeFaceRecognitionPass(c *gin.Context, image *multipart.FileHeader) (*types.Token, error) {
+	claims, _, err := types.ExtractEmployeeSessionTokenAndValidate(c)
+	if err != nil {
+		return nil, err
+	}
+
+	embedding, err := s.repo.GetEmployeeEmbedding(claims.EmployeeID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get embedding: %w", err)
+	}
+	if embedding == "" {
+		return nil, errors.New("no face embedding found for this user")
+	}
+
+	fileBytes, err := readFileHeader(image)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read file: %w", err)
+	}
+
+	// 4) Отправить запрос POST /compare к face-сервису
+	match, _, err := callFaceServiceCompare(fileBytes, embedding)
+	if err != nil {
+		return nil, fmt.Errorf("face compare request failed: %w", err)
+	}
+
+	// 5) Если лицо совпало — выдаём новый токен
+	if match {
+		tokenStr, err := types.GenerateEmployeeJWT(claims.EmployeeID, true)
+		if err != nil {
+			return nil, err
+		}
+		return &types.Token{SessionToken: tokenStr}, nil
+	}
+
+	return nil, fmt.Errorf("MFA failed")
+}
+
+// Вспомогательный метод чтения image
+func readFileHeader(fileHeader *multipart.FileHeader) ([]byte, error) {
+	f, err := fileHeader.Open()
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+
+	return io.ReadAll(f)
+}
+
+// Вызов face_service по /compare
+func callFaceServiceCompare(fileBytes []byte, embedding string) (bool, float64, error) {
+	// 1) Создаём multipart/form-data
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+
+	// Поле "image"
+	w, err := writer.CreateFormFile("image", "face.jpg")
+	if err != nil {
+		return false, 0.0, err
+	}
+	_, err = w.Write(fileBytes)
+	if err != nil {
+		return false, 0.0, err
+	}
+
+	// Поле "embedding" (JSON-строка)
+	err = writer.WriteField("embedding", embedding)
+	if err != nil {
+		return false, 0.0, err
+	}
+
+	writer.Close()
+
+	// 2) Отправляем HTTP-запрос
+	faceServiceURL := "http://localhost:8000/compare" // <-- адрес в Docker-сети
+	req, err := http.NewRequest(http.MethodPost, faceServiceURL, body)
+	if err != nil {
+		return false, 0.0, err
+	}
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return false, 0.0, err
+	}
+	defer resp.Body.Close()
+
+	// 3) Разбираем ответ
+	var result struct {
+		Match    bool    `json:"match"`
+		Distance float64 `json:"distance"`
+		Error    string  `json:"error"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return false, 0.0, err
+	}
+
+	logrus.Info(result)
+	if resp.StatusCode != http.StatusOK && !result.Match {
+		// Например, 400/401
+		return false, result.Distance, fmt.Errorf("face compare failed: %s", result.Error)
+	}
+
+	return result.Match, result.Distance, nil
 }
 
 func (s *authenticationService) CustomerRegister(input *types.CustomerRegisterDTO) (uint, error) {
@@ -164,18 +279,18 @@ func (s *authenticationService) handleEmployeeToken(employeeID uint) (string, er
 	}
 
 	if existingToken == nil {
-		return s.createEmployeeToken(employeeID)
+		return s.createEmployeeToken(employeeID, false)
 	}
 
 	if err := s.employeeTokenManager.DeleteTokenByEmployeeID(employeeID); err != nil {
 		return "", fmt.Errorf("failed to delete old/expired token: %w", err)
 	}
 
-	return s.createEmployeeToken(employeeID)
+	return s.createEmployeeToken(employeeID, false)
 }
 
-func (s *authenticationService) createEmployeeToken(employeeID uint) (string, error) {
-	sessionToken, err := types.GenerateEmployeeJWT(employeeID)
+func (s *authenticationService) createEmployeeToken(employeeID uint, mfa bool) (string, error) {
+	sessionToken, err := types.GenerateEmployeeJWT(employeeID, mfa)
 	if err != nil {
 		return "", utils.WrapError("failed to generate session token", err)
 	}
