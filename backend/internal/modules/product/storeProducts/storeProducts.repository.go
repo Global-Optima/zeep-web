@@ -469,38 +469,6 @@ func (r *storeProductRepository) GetSufficientStoreProductSizeById(
 	return &storeProductSize, nil
 }
 
-func (r *storeProductRepository) checkIngredientStock(
-	storeID, ingredientID uint,
-	requiredQty float64,
-	frozenInventory *storeInventoryManagersTypes.FrozenInventory,
-) error {
-	var stock data.StoreStock
-	err := r.db.Model(&data.StoreStock{}).
-		Where("store_id = ? AND ingredient_id = ?", storeID, ingredientID).
-		First(&stock).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return types.ErrStoreStockNotFound
-		}
-		return fmt.Errorf("%w: failed to fetch stock for ingredient ID %d: %w",
-			types.ErrFailedToFetchStoreStock, ingredientID, err)
-	}
-
-	frozen := frozenInventory.Ingredients[ingredientID]
-	if stock.Quantity < frozen {
-		return fmt.Errorf("%w: insufficient stock for ingredient ID %d: already pending %.2f, need %.2f, have %.2f",
-			types.ErrInsufficientStock, ingredientID, frozen, requiredQty, stock.Quantity)
-	}
-
-	effectiveAvailable := stock.Quantity - frozen
-	if effectiveAvailable < requiredQty {
-		return fmt.Errorf("%w: insufficient effective available for ingredient ID %d: need %.2f, have %.2f",
-			types.ErrInsufficientStock, ingredientID, requiredQty, effectiveAvailable)
-	}
-
-	return nil
-}
-
 func (r *storeProductRepository) UpdateProductSize(storeID, productSizeID uint, size *data.StoreProductSize) error {
 	result := r.db.Model(&data.StoreProductSize{}).
 		Where("store_id = ? AND id = ?", storeID, productSizeID).

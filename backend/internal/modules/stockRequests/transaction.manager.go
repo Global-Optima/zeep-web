@@ -190,7 +190,7 @@ func (m *transactionManager) HandleAcceptedWithChange(request *data.StockRequest
 		}
 
 		storeInventoryManagerRepoTx := m.storeInventoryManagerRepo.CloneWithTransaction(tx)
-		err = storeInventoryManagerRepoTx.RecalculateStoreInventory(
+		_ = storeInventoryManagerRepoTx.RecalculateStoreInventory(
 			request.StoreID,
 			&storeInventoryManagersTypes.RecalculateInput{
 				IngredientIDs: ingredientIDs,

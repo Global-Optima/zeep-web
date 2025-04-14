@@ -195,143 +195,179 @@ func (r *storeInventoryManagerRepository) RecalculateStoreInventory(storeID uint
 		return nil
 	}
 
-	var (
-		hasIngredients  = len(input.IngredientIDs) != 0
-		hasProvisions   = len(input.ProvisionIDs) != 0
-		hasProductSizes = len(input.ProductSizeIDs) != 0
-		hasAdditives    = len(input.AdditiveIDs) != 0
-	)
+	ctx := &recalculateContext{
+		hasIngredients:  len(input.IngredientIDs) != 0,
+		hasProvisions:   len(input.ProvisionIDs) != 0,
+		hasProductSizes: len(input.ProductSizeIDs) != 0,
+		hasAdditives:    len(input.AdditiveIDs) != 0,
+	}
 
-	if !hasIngredients && !hasProvisions && !hasProductSizes && !hasAdditives {
+	if !ctx.hasIngredients && !ctx.hasProvisions && !ctx.hasProductSizes && !ctx.hasAdditives {
 		return nil
 	}
 
-	var productSizesIngredientIDs,
-		productSizesProvisionIDs,
-		additiveIngredientIDs,
-		additiveProvisionIDs,
-		storeProductIDsFromPS,
-		storeProductIDsFromIngredients,
-		storeProductIDsFromProvisions,
-		storeAdditiveIDsFromAdditives,
-		storeAdditiveIDsFromIngredients,
-		storeAdditiveIDsFromProvisions,
-		totalIngredientIDs,
-		totalProvisionIDs []uint
-	var err error
-
-	frozenInventory := &types.FrozenInventory{
-		Ingredients: make(map[uint]float64),
-		Provisions:  make(map[uint]float64),
-	}
-
-	if hasProductSizes {
-		storeProductIDsFromPS, err = getStoreProductIDsByProductSizes(r.db, storeID, input.ProductSizeIDs)
-		if err != nil {
-			return err
-		}
-
-		productSizesIngredientIDs, err = getAllIngredientIDsByProductSizes(r.db, input.ProductSizeIDs)
-		if err != nil {
-			return err
-		}
-
-		productSizesProvisionIDs, err = getAllProvisionIDsByProductSizes(r.db, input.ProductSizeIDs)
-		if err != nil {
+	if ctx.hasProductSizes {
+		if err := r.gatherProductSizeData(ctx, storeID, input.ProductSizeIDs); err != nil {
 			return err
 		}
 	}
 
-	if hasAdditives {
-		storeAdditiveIDsFromAdditives, err = getStoreAdditiveIDsByAdditives(r.db, storeID, input.AdditiveIDs)
-		if err != nil {
-			return err
-		}
-
-		additiveIngredientIDs, err = getAllIngredientIDsByAdditives(r.db, input.AdditiveIDs)
-		if err != nil {
-			return err
-		}
-
-		additiveProvisionIDs, err = getAllProvisionIDsByAdditives(r.db, input.AdditiveIDs)
-		if err != nil {
+	if ctx.hasAdditives {
+		if err := r.gatherAdditiveData(ctx, storeID, input.AdditiveIDs); err != nil {
 			return err
 		}
 	}
 
-	totalIngredientIDs = utils.UnionSlices(input.IngredientIDs, productSizesIngredientIDs, additiveIngredientIDs)
-	totalProvisionIDs = utils.UnionSlices(input.ProvisionIDs, productSizesProvisionIDs, additiveProvisionIDs)
+	ctx.totalIngredientIDs = utils.UnionSlices(
+		input.IngredientIDs,
+		ctx.productSizesIngredientIDs,
+		ctx.additiveIngredientIDs,
+	)
+	ctx.totalProvisionIDs = utils.UnionSlices(
+		input.ProvisionIDs,
+		ctx.productSizesProvisionIDs,
+		ctx.additiveProvisionIDs,
+	)
 
-	if len(totalIngredientIDs) > 0 || len(totalProvisionIDs) > 0 {
-		frozenInventoryFilter := &types.FrozenInventoryFilter{
-			IngredientIDs: totalIngredientIDs,
-			ProvisionIDs:  totalProvisionIDs,
-		}
-
-		logrus.Infof("Filter: %v", frozenInventoryFilter)
-		frozenInventory, err = calculateFrozenInventory(r.db, storeID, frozenInventoryFilter)
-		if err != nil {
-			return err
-		}
-		logrus.Infof("FROZEN INVENTORY FETCHED(filtered): %v", frozenInventory)
-		frozenInventory, err = calculateFrozenInventory(r.db, storeID, nil)
-		if err != nil {
-			return err
-		}
-		logrus.Infof("FROZEN INVENTORY FETCHED(all): %v", frozenInventory)
-
+	frozenInventory, err := r.buildFrozenInventory(ctx, storeID)
+	if err != nil {
+		return err
 	}
 
-	if len(totalIngredientIDs) > 0 {
-		storeProductIDsFromIngredients, err = getStoreProductIDsByIngredients(r.db, storeID, totalIngredientIDs)
-		if err != nil {
-			return err
-		}
-
-		storeAdditiveIDsFromIngredients, err = getStoreAdditiveIDsByIngredients(r.db, storeID, totalIngredientIDs)
-		if err != nil {
-			return err
-		}
-	}
-
-	if len(totalProvisionIDs) > 0 {
-		storeProductIDsFromProvisions, err = getStoreProductIDsByProvisions(r.db, storeID, totalProvisionIDs)
-		if err != nil {
-			return err
-		}
-
-		storeAdditiveIDsFromProvisions, err = getStoreAdditiveIDsByProvisions(r.db, storeID, totalProvisionIDs)
-		if err != nil {
-			return err
-		}
+	if err := r.gatherStoreProductAndAdditiveIDsFromResources(ctx, storeID); err != nil {
+		return err
 	}
 
 	return r.db.Transaction(func(tx *gorm.DB) error {
-		if len(storeProductIDsFromPS) > 0 || len(storeProductIDsFromIngredients) > 0 {
-			if err := recalculateStoreProducts(
+		if len(ctx.storeProductIDsFromPS) > 0 || len(ctx.storeProductIDsFromIngredients) > 0 {
+			err := recalculateStoreProducts(
 				tx,
-				utils.UnionSlices(storeProductIDsFromPS, storeProductIDsFromIngredients, storeProductIDsFromProvisions),
+				utils.UnionSlices(
+					ctx.storeProductIDsFromPS,
+					ctx.storeProductIDsFromIngredients,
+					ctx.storeProductIDsFromProvisions,
+				),
 				frozenInventory,
 				storeID,
-			); err != nil {
+			)
+			if err != nil {
 				return err
 			}
 		}
 
-		if len(storeAdditiveIDsFromAdditives) > 0 || len(storeAdditiveIDsFromIngredients) > 0 {
-			if err := recalculateStoreAdditives(
+		if len(ctx.storeAdditiveIDsFromAdditives) > 0 || len(ctx.storeAdditiveIDsFromIngredients) > 0 {
+			err := recalculateStoreAdditives(
 				tx,
-				utils.UnionSlices(storeAdditiveIDsFromAdditives, storeAdditiveIDsFromIngredients, storeAdditiveIDsFromProvisions),
+				utils.UnionSlices(
+					ctx.storeAdditiveIDsFromAdditives,
+					ctx.storeAdditiveIDsFromIngredients,
+					ctx.storeAdditiveIDsFromProvisions,
+				),
 				storeID,
 				frozenInventory,
-			); err != nil {
+			)
+			if err != nil {
 				return err
 			}
 		}
+
 		logrus.Infof("=====================Total time taken is: %v=====================", time.Since(start))
-
 		return nil
 	})
+}
+
+func (r *storeInventoryManagerRepository) gatherProductSizeData(rCtx *recalculateContext, storeID uint, productSizeIDs []uint) error {
+	var err error
+
+	rCtx.storeProductIDsFromPS, err = getStoreProductIDsByProductSizes(r.db, storeID, productSizeIDs)
+	if err != nil {
+		return err
+	}
+
+	rCtx.productSizesIngredientIDs, err = getAllIngredientIDsByProductSizes(r.db, productSizeIDs)
+	if err != nil {
+		return err
+	}
+
+	rCtx.productSizesProvisionIDs, err = getAllProvisionIDsByProductSizes(r.db, productSizeIDs)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *storeInventoryManagerRepository) gatherAdditiveData(rCtx *recalculateContext, storeID uint, additiveIDs []uint) error {
+	var err error
+
+	rCtx.storeAdditiveIDsFromAdditives, err = getStoreAdditiveIDsByAdditives(r.db, storeID, additiveIDs)
+	if err != nil {
+		return err
+	}
+
+	rCtx.additiveIngredientIDs, err = getAllIngredientIDsByAdditives(r.db, additiveIDs)
+	if err != nil {
+		return err
+	}
+
+	rCtx.additiveProvisionIDs, err = getAllProvisionIDsByAdditives(r.db, additiveIDs)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *storeInventoryManagerRepository) buildFrozenInventory(ctx *recalculateContext, storeID uint) (*types.FrozenInventory, error) {
+	if len(ctx.totalIngredientIDs) == 0 && len(ctx.totalProvisionIDs) == 0 {
+		return &types.FrozenInventory{
+			Ingredients: make(map[uint]float64),
+			Provisions:  make(map[uint]float64),
+		}, nil
+	}
+
+	frozenInventoryFilter := &types.FrozenInventoryFilter{
+		IngredientIDs: ctx.totalIngredientIDs,
+		ProvisionIDs:  ctx.totalProvisionIDs,
+	}
+	logrus.Infof("Filter: %v", frozenInventoryFilter)
+
+	frozen, err := calculateFrozenInventory(r.db, storeID, frozenInventoryFilter)
+	if err != nil {
+		return nil, err
+	}
+	logrus.Infof("FROZEN INVENTORY FETCHED(filtered): %v", frozen)
+
+	return frozen, nil
+}
+
+func (r *storeInventoryManagerRepository) gatherStoreProductAndAdditiveIDsFromResources(ctx *recalculateContext, storeID uint) error {
+	var err error
+
+	if len(ctx.totalIngredientIDs) > 0 {
+		ctx.storeProductIDsFromIngredients, err = getStoreProductIDsByIngredients(r.db, storeID, ctx.totalIngredientIDs)
+		if err != nil {
+			return err
+		}
+
+		ctx.storeAdditiveIDsFromIngredients, err = getStoreAdditiveIDsByIngredients(r.db, storeID, ctx.totalIngredientIDs)
+		if err != nil {
+			return err
+		}
+	}
+
+	if len(ctx.totalProvisionIDs) > 0 {
+		ctx.storeProductIDsFromProvisions, err = getStoreProductIDsByProvisions(r.db, storeID, ctx.totalProvisionIDs)
+		if err != nil {
+			return err
+		}
+
+		ctx.storeAdditiveIDsFromProvisions, err = getStoreAdditiveIDsByProvisions(r.db, storeID, ctx.totalProvisionIDs)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (r *storeInventoryManagerRepository) RecalculateStoreAdditives(

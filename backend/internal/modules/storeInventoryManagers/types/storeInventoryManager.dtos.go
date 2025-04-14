@@ -14,18 +14,6 @@ type RecalculateInput struct {
 	AdditiveIDs    []uint
 }
 
-type IngredientUsageRow struct {
-	StoreProductOrAdditiveID uint
-	IngredientID             uint
-	RequiredQuantity         float64
-}
-
-type ProvisionUsageRow struct {
-	StoreProductOrAdditiveID uint
-	ProvisionID              uint
-	RequiredVolume           float64
-}
-
 type FrozenInventory struct {
 	Ingredients map[uint]float64
 	Provisions  map[uint]float64

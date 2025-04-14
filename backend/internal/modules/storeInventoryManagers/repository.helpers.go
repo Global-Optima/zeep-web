@@ -458,48 +458,6 @@ func storeProdSizeToProduct(
 	return sizeIDs, sizeMap, nil
 }
 
-func getStoreProductSizesIDs(tx *gorm.DB, storeProductIDs []uint) ([]uint, map[uint]uint, error) {
-	// Returns:
-	// 1) A slice of all store_product_size IDs that belong to those store_product_ids
-	// 2) A map mapping storeProductSizeID -> storeProductID (to mark entire product out-of-stock if any size fails)
-	if len(storeProductIDs) == 0 {
-		return nil, nil, nil
-	}
-
-	type spSizeRow struct {
-		ID             uint
-		StoreProductID uint
-	}
-	var rows []spSizeRow
-
-	err := tx.Model(&data.StoreProductSize{}).
-		Select("id, store_product_id").
-		Where("store_product_id IN ?", storeProductIDs).
-		Find(&rows).Error
-	if err != nil {
-		return nil, nil, fmt.Errorf("failed to load storeProductSizes: %w", err)
-	}
-
-	var sizeIDs []uint
-	sizeToProduct := make(map[uint]uint, len(rows))
-	for _, r := range rows {
-		sizeIDs = append(sizeIDs, r.ID)
-		sizeToProduct[r.ID] = r.StoreProductID
-	}
-	return sizeIDs, sizeToProduct, nil
-}
-
-type usageKey struct {
-	StoreProductSizeID uint
-	ResourceID         uint // ingredientID or provisionID
-}
-
-// Aggregated usage for each storeProductSize -> resource.
-type aggregatedUsage struct {
-	Ingredient map[usageKey]float64
-	Provision  map[usageKey]float64
-}
-
 // Summation of direct + default-additive usage for each store_product_size
 func getAggregatedUsageForStoreProdSizes(
 	tx *gorm.DB,
@@ -563,18 +521,6 @@ func getAggregatedUsageForStoreProdSizes(
 	}
 
 	return usage, nil
-}
-
-type productSizeIngredientRow struct {
-	StoreProductSizeID uint
-	IngredientID       uint
-	RequiredQuantity   float64
-}
-
-type productSizeProvisionRow struct {
-	StoreProductSizeID uint
-	ProvisionID        uint
-	RequiredVolume     float64
 }
 
 func getDirectIngredientUsage(tx *gorm.DB, storeProdSizeIDs []uint) ([]productSizeIngredientRow, error) {
@@ -666,38 +612,6 @@ func getDefaultAdditiveProvisionUsage(tx *gorm.DB, storeProdSizeIDs []uint) ([]p
 	return rows, err
 }
 
-func getIngredientUsageRowsForStoreProducts(tx *gorm.DB, storeProductIDs []uint) ([]types.IngredientUsageRow, error) {
-	var ingredientRows []types.IngredientUsageRow
-	err := tx.Model(&data.StoreProductSize{}).
-		Select(`DISTINCT store_product_sizes.store_product_id AS store_product_or_additive_id,
-                product_size_ingredients.ingredient_id,
-                product_size_ingredients.quantity AS required_quantity`).
-		Joins(`JOIN store_products ON store_products.id = store_product_sizes.store_product_id`).
-		Joins(`JOIN product_size_ingredients ON product_size_ingredients.product_size_id = store_product_sizes.product_size_id`).
-		Where(`store_products.id IN ?`, storeProductIDs).
-		Scan(&ingredientRows).Error
-	if err != nil {
-		return nil, err
-	}
-	return ingredientRows, nil
-}
-
-func getProvisionUsageRowsForStoreProducts(tx *gorm.DB, storeProductIDs []uint) ([]types.ProvisionUsageRow, error) {
-	var provisionRows []types.ProvisionUsageRow
-	err := tx.Model(&data.StoreProductSize{}).
-		Select(`DISTINCT store_product_sizes.store_product_id AS store_product_or_additive_id,
-                product_size_provisions.provision_id,
-                product_size_provisions.volume AS required_volume`).
-		Joins(`JOIN store_products ON store_products.id = store_product_sizes.store_product_id`).
-		Joins(`JOIN product_size_provisions ON product_size_provisions.product_size_id = store_product_sizes.product_size_id`).
-		Where(`store_products.id IN ?`, storeProductIDs).
-		Scan(&provisionRows).Error
-	if err != nil {
-		return nil, err
-	}
-	return provisionRows, nil
-}
-
 func getOutOfStockStoreAdditiveIDs(
 	tx *gorm.DB,
 	storeAdditiveIDs []uint,
@@ -711,7 +625,7 @@ func getOutOfStockStoreAdditiveIDs(
 		return nil, fmt.Errorf("nil frozen inventory pointer fetched")
 	}
 
-	var ingredientRows []types.IngredientUsageRow
+	var ingredientRows []additiveIngredientUsageRow
 	err := tx.Model(&data.StoreAdditive{}).
 		Select(`DISTINCT store_additives.id AS store_product_or_additive_id,
                 additive_ingredients.ingredient_id,
@@ -724,7 +638,7 @@ func getOutOfStockStoreAdditiveIDs(
 		return nil, err
 	}
 
-	var provisionRows []types.ProvisionUsageRow
+	var provisionRows []additiveProvisionUsageRow
 	err = tx.Model(&data.StoreAdditive{}).
 		Select(`DISTINCT store_additives.id AS store_product_or_additive_id,
                 additive_provisions.provision_id AS provision_id,
@@ -789,14 +703,14 @@ func getOutOfStockStoreAdditiveIDs(
 	for _, row := range ingredientRows {
 		available := stockMap[row.IngredientID]
 		if available < row.RequiredQuantity {
-			outSet[row.StoreProductOrAdditiveID] = struct{}{}
+			outSet[row.StoreAdditiveID] = struct{}{}
 		}
 	}
 
 	for _, row := range provisionRows {
 		available := provisionStockMap[row.ProvisionID]
 		if available < row.RequiredVolume {
-			outSet[row.StoreProductOrAdditiveID] = struct{}{}
+			outSet[row.StoreAdditiveID] = struct{}{}
 		}
 	}
 
