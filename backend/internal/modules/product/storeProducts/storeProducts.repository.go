@@ -297,38 +297,135 @@ func (r *storeProductRepository) CreateMultipleStoreProducts(storeProducts []dat
 	return ids, nil
 }
 
-func (r *storeProductRepository) UpdateStoreProductByID(storeID, storeProductID uint, updateModels *types.StoreProductModels) error {
+func (r *storeProductRepository) UpdateStoreProductByID(
+	storeID, storeProductID uint,
+	updateModels *types.StoreProductModels,
+) error {
 	if updateModels == nil {
 		return types.ErrNoUpdateContext
 	}
 
-	err := r.db.Transaction(func(tx *gorm.DB) error {
-		err := tx.Model(&data.StoreProduct{}).
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&data.StoreProduct{}).
 			Where("store_id = ? AND id = ?", storeID, storeProductID).
-			Update("is_available", &updateModels.StoreProduct.IsAvailable).Error
-		if err != nil {
+			Updates(data.StoreProduct{
+				IsAvailable: updateModels.StoreProduct.IsAvailable,
+			}).Error; err != nil {
 			return err
 		}
 
-		if len(updateModels.StoreProductSizes) > 0 {
-			if err := tx.Where("store_product_id = ?", storeProductID).
-				Delete(&data.StoreProductSize{}).Error; err != nil {
-				return err
-			}
+		var existingSizes []data.StoreProductSize
+		if err := tx.Where("store_product_id = ?", storeProductID).
+			Find(&existingSizes).Error; err != nil {
+			return err
+		}
 
-			for i := range updateModels.StoreProductSizes {
-				updateModels.StoreProductSizes[i].StoreProductID = storeProductID
-			}
+		existingByProductSizeID := make(map[uint]*data.StoreProductSize, len(existingSizes))
+		for i := range existingSizes {
+			sz := &existingSizes[i]
+			existingByProductSizeID[sz.ProductSizeID] = sz
+		}
 
-			if err := tx.Create(&updateModels.StoreProductSizes).Error; err != nil {
+		var newSizeIDs []uint
+		var sizesToInsert []data.StoreProductSize
+
+		for i := range updateModels.StoreProductSizes {
+			dto := updateModels.StoreProductSizes[i]
+			newSizeIDs = append(newSizeIDs, dto.ProductSizeID)
+
+			if existingRow, found := existingByProductSizeID[dto.ProductSizeID]; found {
+				if !isEqualPrice(existingRow.StorePrice, dto.StorePrice) {
+					active, err := checkStoreProductSizeInActiveOrders(tx, existingRow.ID)
+					if err != nil {
+						return err
+					}
+					if active {
+						return types.ErrStoreProductSizeIsInUse
+					}
+				}
+
+				if err := tx.Model(&data.StoreProductSize{}).
+					Where("id = ?", existingRow.ID).
+					Updates(data.StoreProductSize{
+						StorePrice: dto.StorePrice,
+					}).Error; err != nil {
+					return err
+				}
+			} else {
+				sizesToInsert = append(sizesToInsert, data.StoreProductSize{
+					StoreProductID: storeProductID,
+					ProductSizeID:  dto.ProductSizeID,
+					StorePrice:     dto.StorePrice,
+				})
+			}
+		}
+
+		for productSizeID, existingRow := range existingByProductSizeID {
+			if !contains(newSizeIDs, productSizeID) {
+				active, err := checkStoreProductSizeInActiveOrders(tx, existingRow.ID)
+				if err != nil {
+					return err
+				}
+				if active {
+					return types.ErrStoreProductSizeIsInUse
+				}
+			}
+		}
+
+		if err := tx.Where("store_product_id = ? AND product_size_id NOT IN (?)",
+			storeProductID, newSizeIDs).
+			Delete(&data.StoreProductSize{}).Error; err != nil {
+			return err
+		}
+
+		if len(sizesToInsert) > 0 {
+			if err := tx.Create(&sizesToInsert).Error; err != nil {
 				return err
 			}
 		}
 
 		return nil
 	})
+}
 
-	return err
+func contains(ids []uint, candidate uint) bool {
+	for _, id := range ids {
+		if id == candidate {
+			return true
+		}
+	}
+	return false
+}
+
+func isEqualPrice(a, b *float64) bool {
+	switch {
+	case a == nil && b == nil:
+		return true
+	case a == nil || b == nil:
+		return false
+	default:
+		return *a == *b
+	}
+}
+
+func checkStoreProductSizeInActiveOrders(tx *gorm.DB, storeProductSizeID uint) (bool, error) {
+	var exists bool
+
+	query := tx.Table("suborders").
+		Joins("JOIN store_product_sizes ON suborders.store_product_size_id = store_product_sizes.id").
+		Where("store_product_sizes.id = ?", storeProductSizeID).
+		Where("suborders.status IN ?", []string{
+			string(data.SubOrderStatusPending),
+			string(data.SubOrderStatusPreparing),
+		}).
+		Limit(1).
+		Select("1").
+		Scan(&exists)
+
+	if query.Error != nil {
+		return false, query.Error
+	}
+	return exists, nil
 }
 
 func (r *storeProductRepository) DeleteStoreProductWithSizes(storeID, storeProductID uint) error {
