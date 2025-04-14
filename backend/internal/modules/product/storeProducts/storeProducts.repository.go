@@ -336,6 +336,10 @@ func (r *storeProductRepository) UpdateStoreProductByID(storeID, storeProductID 
 
 func (r *storeProductRepository) DeleteStoreProductWithSizes(storeID, storeProductID uint) error {
 	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := checkStoreProductSizesInActiveOrders(tx, storeProductID); err != nil {
+			return err
+		}
+
 		var storeProduct data.StoreProduct
 
 		if err := tx.Where("id = ? AND store_id = ?", storeProductID, storeID).
@@ -357,6 +361,30 @@ func (r *storeProductRepository) DeleteStoreProductWithSizes(storeID, storeProdu
 
 		return nil
 	})
+}
+
+func checkStoreProductSizesInActiveOrders(db *gorm.DB, storeProductID uint) error {
+	var exists bool
+
+	query := db.Table("suborders").
+		Joins("JOIN store_product_sizes ON suborders.store_product_size_id = store_product_sizes.id").
+		Where("store_product_sizes.store_product_id = ?", storeProductID).
+		Where("suborders.status IN ?", []string{
+			string(data.SubOrderStatusPending),
+			string(data.SubOrderStatusPreparing),
+		}).
+		Limit(1).
+		Select("1").Scan(&exists)
+
+	if query.Error != nil {
+		return query.Error
+	}
+
+	if exists {
+		return types.ErrStoreProductIsInUse // Custom error indicating the StoreProduct or its sizes are in use
+	}
+
+	return nil
 }
 
 func (r *storeProductRepository) GetStoreProductSizeWithDetailsByID(storeID, storeProductSizeID uint) (*data.StoreProductSize, error) {

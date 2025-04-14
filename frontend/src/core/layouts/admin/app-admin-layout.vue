@@ -20,7 +20,7 @@ const onDisplayClick = () => {
 }
 
 const onKioskClick = () => {
-	router.replace({name: getRouteName('KIOSK_HOME')})
+	router.replace({name: getRouteName("KIOSK_LANDING")})
 }
 
 const onBaristaClick = () => {

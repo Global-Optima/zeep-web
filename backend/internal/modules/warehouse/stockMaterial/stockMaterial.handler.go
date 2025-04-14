@@ -157,9 +157,14 @@ func (h *StockMaterialHandler) DeleteStockMaterial(c *gin.Context) {
 
 	err = h.service.DeleteStockMaterial(uint(stockMaterialID))
 	if err != nil {
-		if errors.Is(err, types.ErrStockMaterialNotFound) {
+		switch {
+		case errors.Is(err, types.ErrStockMaterialInUse):
+			localization.SendLocalizedResponseWithKey(c, types.Response409StockMaterialDeleteInUse)
+
+		case errors.Is(err, types.ErrStockMaterialNotFound):
 			localization.SendLocalizedResponseWithKey(c, types.Response404StockMaterial)
-		} else {
+
+		default:
 			localization.SendLocalizedResponseWithKey(c, types.Response500StockMaterialDelete)
 		}
 		return

@@ -68,7 +68,7 @@ onMounted(() => {
 
 			<Button
 				v-if="allItemsChecked"
-				@click="router.push({ name: getRouteName('KIOSK_HOME') })"
+				@click="router.replace({name: getRouteName('KIOSK_LANDING')})"
 				class="mt-6 w-full"
 			>
 				Перейти в киоск

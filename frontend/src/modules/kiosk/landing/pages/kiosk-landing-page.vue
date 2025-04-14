@@ -56,7 +56,7 @@
 			class="bottom-20 z-10 absolute flex justify-center items-center gap-3 w-full text-gray-400 animate-bounce"
 		>
 			<MousePointerClickIcon class="w-6 sm:w-10 h-6 sm:h-10" />
-			<p class="text-base sm:text-3xl">Перейти в каталог</p>
+			<p class="text-base sm:text-3xl">{{ $t("KIOSK.MOVE_TO_CATALOG") }}</p>
 		</div>
 	</div>
 </template>

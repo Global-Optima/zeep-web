@@ -11,6 +11,7 @@ var (
 	Response500StockMaterialCreate          = localization.NewResponseKey(500, data.StockMaterialComponent, data.CreateOperation.ToString())
 	Response500StockMaterialUpdate          = localization.NewResponseKey(500, data.StockMaterialComponent, data.UpdateOperation.ToString())
 	Response500StockMaterialDelete          = localization.NewResponseKey(500, data.StockMaterialComponent, data.DeleteOperation.ToString())
+	Response409StockMaterialDeleteInUse     = localization.NewResponseKey(409, data.StockMaterialComponent, data.DeleteOperation.ToString(), "in-use")
 	Response404StockMaterial                = localization.NewResponseKey(404, data.StockMaterialComponent)
 	Response500StockMaterialDeactivate      = localization.NewResponseKey(500, data.StockMaterialComponent, "deactivate")
 	Response500StockMaterialBarcode         = localization.NewResponseKey(500, data.StockMaterialComponent, "barcode")

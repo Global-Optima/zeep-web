@@ -443,6 +443,10 @@ func (r *productRepository) DeleteProduct(productID uint) (*data.Product, error)
 	var product data.Product
 
 	err := r.db.Transaction(func(tx *gorm.DB) error {
+		if err := checkProductInActiveOrders(tx, productID); err != nil {
+			return err
+		}
+
 		if err := tx.Clauses(clause.Returning{}).
 			Where("id = ?", productID).
 			Delete(&product).Error; err != nil {
@@ -474,6 +478,31 @@ func (r *productRepository) DeleteProduct(productID uint) (*data.Product, error)
 	return &product, nil
 }
 
+func checkProductInActiveOrders(db *gorm.DB, productID uint) error {
+	var exists bool
+
+	query := db.Table("suborders").
+		Joins("JOIN store_product_sizes ON suborders.store_product_size_id = store_product_sizes.id").
+		Joins("JOIN store_products ON store_product_sizes.store_product_id = store_products.id").
+		Where("store_products.product_id = ?", productID).
+		Where("suborders.status IN ?", []string{
+			string(data.SubOrderStatusPending),
+			string(data.SubOrderStatusPreparing),
+		}).
+		Limit(1).
+		Select("1").Scan(&exists)
+
+	if query.Error != nil {
+		return query.Error
+	}
+
+	if exists {
+		return types.ErrProductIsInUse // Custom error indicating the product is in use
+	}
+
+	return nil
+}
+
 func (r *productRepository) GetProductSizesByProductID(productID uint) ([]data.ProductSize, error) {
 	var productSizes []data.ProductSize
 
@@ -495,5 +524,40 @@ func (r *productRepository) GetProductSizesByProductID(productID uint) ([]data.P
 }
 
 func (r *productRepository) DeleteProductSize(productSizeID uint) error {
-	return r.db.Where("id = ?", productSizeID).Delete(&data.ProductSize{}).Error
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		if err := checkProductSizeInActiveOrders(tx, productSizeID); err != nil {
+			return err
+		}
+
+		result := tx.Where("id = ?", productSizeID).Delete(&data.ProductSize{})
+		if result.Error != nil {
+			return result.Error
+		}
+
+		return nil
+	})
+}
+
+func checkProductSizeInActiveOrders(db *gorm.DB, productSizeID uint) error {
+	var exists bool
+
+	query := db.Table("suborders").
+		Joins("JOIN store_product_sizes ON suborders.store_product_size_id = store_product_sizes.id").
+		Where("store_product_sizes.product_size_id = ?", productSizeID).
+		Where("suborders.status IN ?", []string{
+			string(data.SubOrderStatusPending),
+			string(data.SubOrderStatusPreparing),
+		}).
+		Limit(1).
+		Select("1").Scan(&exists)
+
+	if query.Error != nil {
+		return query.Error
+	}
+
+	if exists {
+		return types.ErrProductSizeIsInUse // Custom error indicating the ProductSize is in use
+	}
+
+	return nil
 }

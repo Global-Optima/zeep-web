@@ -225,13 +225,68 @@ func (r *stockMaterialRepository) UpdateStockMaterialFields(stockMaterialID uint
 }
 
 func (r *stockMaterialRepository) DeleteStockMaterial(stockMaterialID uint) error {
-	result := r.db.Delete(&data.StockMaterial{}, stockMaterialID)
-	if result.Error != nil {
-		return result.Error
+	var stockMaterial data.StockMaterial
+
+	if err := r.db.First(&stockMaterial, stockMaterialID).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return types.ErrStockMaterialNotFound
+		}
+		return err
 	}
-	if result.RowsAffected == 0 {
-		return fmt.Errorf("stock material with ID %d not found", stockMaterialID)
+
+	err := r.db.Transaction(func(tx *gorm.DB) error {
+		if err := checkStockMaterialReferences(tx, stockMaterialID); err != nil {
+			return err
+		}
+		if err := tx.Delete(&data.StockMaterial{}, stockMaterialID).Error; err != nil {
+			return err
+		}
+		return nil
+	})
+	if err != nil {
+		return err
 	}
+
+	return nil
+}
+
+func checkStockMaterialReferences(db *gorm.DB, stockMaterialID uint) error {
+	var warehouseStock data.WarehouseStock
+	if err := db.Where("stock_material_id = ?", stockMaterialID).First(&warehouseStock).Error; err != nil {
+		if err != gorm.ErrRecordNotFound {
+			return err
+		}
+	} else {
+		return types.ErrStockMaterialInUse
+	}
+
+	var sri data.StockRequestIngredient
+	if err := db.Where("stock_material_id = ?", stockMaterialID).First(&sri).Error; err != nil {
+		if err != gorm.ErrRecordNotFound {
+			return err
+		}
+	} else {
+		return types.ErrStockMaterialInUse
+	}
+
+	var supplierMaterial data.SupplierMaterial
+	if err := db.Where("stock_material_id = ?", stockMaterialID).First(&supplierMaterial).Error; err != nil {
+		if err != gorm.ErrRecordNotFound {
+			return err
+		}
+	} else {
+		return types.ErrStockMaterialInUse
+	}
+
+	var swdm data.SupplierWarehouseDeliveryMaterial
+	if err := db.Where("stock_material_id = ?", stockMaterialID).First(&swdm).Error; err != nil {
+		if err != gorm.ErrRecordNotFound {
+			return err
+		}
+	} else {
+		return types.ErrStockMaterialInUse
+	}
+
 	return nil
 }
 
