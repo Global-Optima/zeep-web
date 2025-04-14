@@ -301,7 +301,6 @@ func getOutOfStockStoreProductIDs(
 	storeID uint,
 	frozenInventory *types.FrozenInventory,
 ) ([]uint, error) {
-
 	if len(storeProductIDs) == 0 {
 		return nil, nil
 	}
@@ -348,7 +347,7 @@ func getOutOfStockStoreProductIDs(
 	if err != nil {
 		return nil, err
 	}
-	//TODO remove
+	// TODO remove
 	if vol, exists := provisionMap[5]; exists {
 		logrus.Infof("                                      requried: %v  inStock: %v; ", usage.Provision[usageKey{74, 5}], vol)
 	}
@@ -387,7 +386,6 @@ func buildStockMaps(
 	ingredientIDs, provisionIDs []uint,
 	frozen *types.FrozenInventory,
 ) (map[uint]float64, map[uint]float64, error) {
-
 	stockMap := make(map[uint]float64)
 	provisionMap := make(map[uint]float64)
 
@@ -432,7 +430,6 @@ func storeProdSizeToProduct(
 	tx *gorm.DB,
 	storeProductIDs []uint,
 ) ([]uint, map[uint]uint, error) {
-
 	if len(storeProductIDs) == 0 {
 		return nil, nil, nil
 	}
@@ -508,7 +505,6 @@ func getAggregatedUsageForStoreProdSizes(
 	tx *gorm.DB,
 	storeProdSizeIDs []uint,
 ) (*aggregatedUsage, error) {
-
 	usage := &aggregatedUsage{
 		Ingredient: make(map[usageKey]float64),
 		Provision:  make(map[usageKey]float64),

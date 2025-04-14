@@ -194,7 +194,6 @@ func (r *orderRepository) getOrderProductSizeDirectIngredientIDs(orderID uint) (
 		Joins("JOIN suborders ON suborders.store_product_size_id = store_product_sizes.id").
 		Where("suborders.order_id = ?", orderID).
 		Pluck("product_size_ingredients.ingredient_id", &ids).Error
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to get direct product size ingredients: %w", err)
 	}
@@ -212,7 +211,6 @@ func (r *orderRepository) getOrderProductSizeDefaultAdditiveIngredients(orderID 
 		Where("suborders.order_id = ?", orderID).
 		Where("product_size_additives.is_default = TRUE").
 		Pluck("additive_ingredients.ingredient_id", &ids).Error
-
 	if err != nil {
 		return nil, fmt.Errorf("failed to get default additive ingredients: %w", err)
 	}

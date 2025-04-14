@@ -1,10 +1,11 @@
 package scheduler
 
 import (
+	"time"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	storeInventoryManagersTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers/types"
 	"github.com/sirupsen/logrus"
-	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications/details"
@@ -72,7 +73,7 @@ func (tasks *StoreProvisionCronTasks) CheckStoreProvisionNotifications() {
 					provisionIDsToRecalculate[storeProvision.ProvisionID] = struct{}{}
 				}
 
-				//write expired storeProvisionIDs
+				// write expired storeProvisionIDs
 				expiredStoreProvisionIDs = append(expiredStoreProvisionIDs, storeProvision.ID)
 
 				spDetails := &details.StoreProvisionExpirationDetails{

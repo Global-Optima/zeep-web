@@ -1,10 +1,11 @@
 package storeSynchronizers
 
 import (
+	"time"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeSynchronizers/types"
 	"github.com/sirupsen/logrus"
 	"go.uber.org/zap"
-	"time"
 )
 
 type StoreSynchronizeService interface {
