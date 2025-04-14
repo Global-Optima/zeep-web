@@ -54,7 +54,7 @@ func (tasks *StoreProvisionCronTasks) CheckStoreProvisionNotifications() {
 	for _, store := range storesList {
 		processedProvisions := make(map[uint]bool)
 
-		storeProvisionList, err := tasks.storeProvisionRepo.GetAllStoreProvisionList(store.ID)
+		storeProvisionList, err := tasks.storeProvisionRepo.GetAllCompletedStoreProvisionList(store.ID)
 		if err != nil {
 			tasks.logger.Errorf("Failed to fetch stock list for store %d: %v", store.ID, err)
 			continue

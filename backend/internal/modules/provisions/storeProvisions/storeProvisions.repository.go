@@ -17,7 +17,7 @@ type StoreProvisionRepository interface {
 	GetStoreProvisions(storeID uint, filter *types.StoreProvisionFilterDTO) ([]data.StoreProvision, error)
 	GetStoreProvisionByID(storeID uint, storeProvisionID uint) (*data.StoreProvision, error)
 	GetStoreProvisionWithDetailsByID(storeID, storeProvisionID uint) (*data.StoreProvision, error)
-	GetAllStoreProvisionList(storeID uint) ([]data.StoreProvision, error)
+	GetAllCompletedStoreProvisionList(storeID uint) ([]data.StoreProvision, error)
 	SaveStoreProvisionWithAssociations(updateModels *types.StoreProvisionModels) error
 	HardDeleteStoreProvision(storeProvisionID uint) error
 	CountStoreProvisionsToday(storeID, provisionID uint) (uint, error)
@@ -277,7 +277,7 @@ func (r *storeProvisionRepository) CountStoreProvisionsToday(storeID, provisionI
 	return uint(count), nil
 }
 
-func (r *storeProvisionRepository) GetAllStoreProvisionList(storeID uint) ([]data.StoreProvision, error) {
+func (r *storeProvisionRepository) GetAllCompletedStoreProvisionList(storeID uint) ([]data.StoreProvision, error) {
 	if storeID == 0 {
 		return nil, fmt.Errorf("storeId cannot be 0")
 	}
@@ -287,7 +287,7 @@ func (r *storeProvisionRepository) GetAllStoreProvisionList(storeID uint) ([]dat
 	query := r.db.Model(&data.StoreProvision{}).
 		Preload("Provision.Unit").
 		Preload("Store").
-		Where("store_id = ?", storeID)
+		Where("store_id = ? AND status = ?", storeID, data.STORE_PROVISION_STATUS_COMPLETED)
 
 	err := query.Find(&storeProvisionList).Error
 	if err != nil {
