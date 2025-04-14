@@ -243,7 +243,6 @@ func (r *stockMaterialRepository) DeleteStockMaterial(stockMaterialID uint) erro
 		}
 		return nil
 	})
-
 	if err != nil {
 		return err
 	}
