@@ -277,8 +277,13 @@ func TestStockMaterialService_DeleteStockMaterial_WithPreloadedData(t *testing.T
 	}{
 		{
 			name:        "Delete existing stock material",
-			id:          1,
+			id:          3,
 			expectError: false,
+		},
+		{
+			name:        "Delete existing & used stock material",
+			id:          1,
+			expectError: true,
 		},
 		{
 			name:        "Delete non-existing stock material",
