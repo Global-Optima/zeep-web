@@ -386,6 +386,7 @@
     "500-stockMaterial-create": "An unexpected error occurred while creating stock material. Please try again later.",
     "500-stockMaterial-update": "An unexpected error occurred while updating stock material. Please try again later.",
     "500-stockMaterial-delete": "An unexpected error occurred while deleting stock material. Please try again later.",
+    "409-stockMaterial-delete-inUse": "The stock material cannot be deleted because it is in use.",
     "404-stockMaterial": "Stock material not found.",
     "500-stockMaterial-deactivate": "An unexpected error occurred while deactivating stock material. Please try again later.",
     "500-stockMaterial-barcode": "An unexpected error occurred while generating stock material barcode. Please try again later.",
