@@ -172,19 +172,51 @@ func (r *orderRepository) GetOrderInventory(orderID uint) (*storeInventoryManage
 }
 
 func (r *orderRepository) getOrderProductSizeIngredientIDs(orderID uint) ([]uint, error) {
-	var ingredientIDsFromProductSizes []uint
+	directIngrIDs, err := r.getOrderProductSizeDirectIngredientIDs(orderID)
+	if err != nil {
+		return nil, err
+	}
+
+	defaultAdditiveIngrIDs, err := r.getOrderProductSizeDefaultAdditiveIngredients(orderID)
+	if err != nil {
+		return nil, err
+	}
+
+	return utils.UnionSlices(directIngrIDs, defaultAdditiveIngrIDs), nil
+}
+
+func (r *orderRepository) getOrderProductSizeDirectIngredientIDs(orderID uint) ([]uint, error) {
+	var ids []uint
 
 	err := r.db.Model(&data.ProductSizeIngredient{}).
 		Distinct("product_size_ingredients.ingredient_id").
 		Joins("JOIN store_product_sizes ON store_product_sizes.product_size_id = product_size_ingredients.product_size_id").
 		Joins("JOIN suborders ON suborders.store_product_size_id = store_product_sizes.id").
 		Where("suborders.order_id = ?", orderID).
-		Pluck("product_size_ingredients.ingredient_id", &ingredientIDsFromProductSizes).Error
-	if err != nil {
-		return nil, fmt.Errorf("failed to get ingredients from product sizes: %w", err)
-	}
+		Pluck("product_size_ingredients.ingredient_id", &ids).Error
 
-	return ingredientIDsFromProductSizes, nil
+	if err != nil {
+		return nil, fmt.Errorf("failed to get direct product size ingredients: %w", err)
+	}
+	return ids, nil
+}
+
+func (r *orderRepository) getOrderProductSizeDefaultAdditiveIngredients(orderID uint) ([]uint, error) {
+	var ids []uint
+
+	err := r.db.Model(&data.AdditiveIngredient{}).
+		Distinct("additive_ingredients.ingredient_id").
+		Joins("JOIN product_size_additives ON product_size_additives.additive_id = additive_ingredients.additive_id").
+		Joins("JOIN store_product_sizes ON store_product_sizes.product_size_id = product_size_additives.product_size_id").
+		Joins("JOIN suborders ON suborders.store_product_size_id = store_product_sizes.id").
+		Where("suborders.order_id = ?", orderID).
+		Where("product_size_additives.is_default = TRUE").
+		Pluck("additive_ingredients.ingredient_id", &ids).Error
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to get default additive ingredients: %w", err)
+	}
+	return ids, nil
 }
 
 func (r *orderRepository) getOrderAdditiveIngredientIDs(orderID uint) ([]uint, error) {
@@ -555,39 +587,6 @@ func (r *orderRepository) GetSuborderByID(suborderID uint) (*data.Suborder, erro
 		return nil, err
 	}
 	return &suborder, nil
-}
-
-func (r *orderRepository) loadActiveOrders(storeID uint) ([]data.Order, error) {
-	var orders []data.Order
-	err := r.db.
-		Preload("Suborders.SuborderAdditives.StoreAdditive.Additive.Ingredients.Ingredient").
-		Preload("Suborders.StoreProductSize.ProductSize.ProductSizeIngredients.Ingredient").
-		Where("store_id = ?", storeID).
-		Where("status IN ?", []data.OrderStatus{
-			data.OrderStatusWaitingForPayment,
-			data.OrderStatusPending,
-			data.OrderStatusPreparing,
-		}).
-		Find(&orders).Error
-	return orders, err
-}
-
-func isSuborderActive(sub data.Suborder) bool {
-	return sub.Status == data.SubOrderStatusPending || sub.Status == data.SubOrderStatusPreparing
-}
-
-func accumulateProductUsage(frozenStock *map[uint]float64, sub data.Suborder) {
-	for _, usage := range sub.StoreProductSize.ProductSize.ProductSizeIngredients {
-		(*frozenStock)[usage.IngredientID] += usage.Quantity
-	}
-}
-
-func accumulateAdditiveUsage(frozenStock *map[uint]float64, sub data.Suborder) {
-	for _, subAdd := range sub.SuborderAdditives {
-		for _, ingrUsage := range subAdd.StoreAdditive.Additive.Ingredients {
-			(*frozenStock)[ingrUsage.IngredientID] += ingrUsage.Quantity
-		}
-	}
 }
 
 func (r *orderRepository) HandlePaymentSuccess(orderID uint, paymentTransaction *data.Transaction) (*data.Order, error) {

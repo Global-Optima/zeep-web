@@ -3,6 +3,7 @@ package scheduler
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	storeInventoryManagersTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers/types"
+	"github.com/sirupsen/logrus"
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
@@ -110,6 +111,7 @@ func (tasks *StoreProvisionCronTasks) CheckStoreProvisionNotifications() {
 				tasks.logger.Errorf("failed to recalculate inventory for expiredProvisions provision ID count: %v", err)
 			}
 		}
+		logrus.Infof("notification done, added %d records", len(expiredStoreProvisionIDs))
 	}
 
 	tasks.logger.Info("Check Store Provision Notifications completed.")

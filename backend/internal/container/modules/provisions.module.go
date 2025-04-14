@@ -100,7 +100,6 @@ func NewStoreProvisionsModule(
 		notificationService,
 		base.Logger,
 	)
-	//if schedule is changed, must also change in CheckStoreProvisionNotifications() cronTasks
 	err := cronManager.RegisterJob(scheduler.HalfHourlyJob, func() {
 		storeProvisionCronTasks.CheckStoreProvisionNotifications()
 	})

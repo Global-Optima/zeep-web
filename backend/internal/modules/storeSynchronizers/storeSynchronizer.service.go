@@ -32,12 +32,13 @@ func NewStoreSynchronizeService(
 
 func (s *storeSynchronizeService) SynchronizeStoreInventory(storeID uint) error {
 	start := time.Now()
+	logrus.Info("+++++++++++++++++++++SYNCHRONIZATION STARTS++++++++++++++++++++++++")
 	err := s.transactionManager.SynchronizeStoreInventory(storeID)
 	if err != nil {
 		s.logger.Error("Error synchronizing store inventory", zap.Error(err))
 		return err
 	}
-	logrus.Info("finished synchronizing store inventory in ", time.Since(start))
+	logrus.Infof("++++++++++++++++++++SYNCHRONIZATION FINISHED IN %v++++++++++++++++++++", time.Since(start))
 	return nil
 }
 

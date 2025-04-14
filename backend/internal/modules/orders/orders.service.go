@@ -74,6 +74,8 @@ func NewOrderService(
 	storeAdditiveRepo storeAdditives.StoreAdditiveRepository,
 	storeStockRepo storeStocks.StoreStockRepository,
 	storeInventoryManagerRepo storeInventoryManagers.StoreInventoryManagerRepository,
+	storeProductService storeProducts.StoreProductService,
+	storeAdditiveService storeAdditives.StoreAdditiveService,
 	notificationService notifications.NotificationService,
 	transactionManager TransactionManager,
 	logger *zap.SugaredLogger,
@@ -85,6 +87,8 @@ func NewOrderService(
 		storeAdditiveRepo:         storeAdditiveRepo,
 		storeStockRepo:            storeStockRepo,
 		storeInventoryManagerRepo: storeInventoryManagerRepo,
+		storeProductService:       storeProductService,
+		storeAdditiveService:      storeAdditiveService,
 		notificationService:       notificationService,
 		transactionManager:        transactionManager,
 		logger:                    logger,
@@ -153,6 +157,7 @@ func ExpandSuborders(suborders []types.CreateSubOrderDTO) []types.CreateSubOrder
 }
 
 func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrderDTO) (*data.Order, error) {
+	start := time.Now()
 	censorValidator := censor.GetCensorValidator()
 
 	if err := censorValidator.ValidateText(createOrderDTO.CustomerName); err != nil {
@@ -165,17 +170,19 @@ func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrd
 	}
 
 	logrus.Infof("Order: %v", createOrderDTO)
+	logrus.Infof("storeID: %v, createOrderDTO: %v, storeAdditiveRepo: %v", storeID, createOrderDTO, s.storeAdditiveRepo)
 	if err := ValidateMultipleSelect(storeID, *createOrderDTO, s.storeAdditiveRepo); err != nil {
 		s.logger.Error(err)
 		return nil, types.ErrMultipleSelect // TODO: test updates
 	}
 
-	frozenMap, err := s.storeInventoryManagerRepo.CalculateFrozenInventory(storeID, nil)
+	frozenInventory, err := s.storeInventoryManagerRepo.CalculateFrozenInventory(storeID, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to calculate frozen stock: %w", err)
+		return nil, fmt.Errorf("failed to calculate frozen inventory: %w", err)
 	}
 
-	if err := s.CheckAndAccumulateSuborders(storeID, createOrderDTO.Suborders, frozenMap); err != nil {
+	logrus.Infof("Frozen Stock BEFORE creating order: %v", frozenInventory)
+	if err := s.CheckAndAccumulateSuborders(storeID, createOrderDTO.Suborders, frozenInventory); err != nil {
 		return nil, err
 	}
 
@@ -185,7 +192,7 @@ func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrd
 		storeID,
 		storeProductSizeIDs,
 		storeAdditiveIDs,
-		frozenMap,
+		frozenInventory,
 	)
 	if err != nil {
 		s.logger.Error("validation failed: %w", err)
@@ -229,6 +236,7 @@ func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrd
 		return &order, err
 	}
 
+	logrus.Infof("________________order done in %v_________________", time.Since(start))
 	return &order, nil
 }
 
@@ -389,6 +397,7 @@ func (s *orderService) CheckAndAccumulateSuborders(
 	for _, sub := range expanded {
 		// Product Size
 
+		logrus.Infof("storeID: %v, storeProductSizeID: %v, frozenInventory: %v", storeID, sub.StoreProductSizeID, frozenInventory)
 		err := s.storeProductService.CheckSufficientStoreProductSizeByID(storeID, sub.StoreProductSizeID, frozenInventory)
 		if err != nil {
 			s.logger.Error(fmt.Errorf(
@@ -397,6 +406,7 @@ func (s *orderService) CheckAndAccumulateSuborders(
 			))
 			return err
 		}
+		logrus.Infof("Frozen Stock AFTER 1st suborder: %v", frozenInventory)
 
 		// Additives
 		for _, addID := range sub.StoreAdditivesIDs {

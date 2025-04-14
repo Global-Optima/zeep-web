@@ -2,6 +2,7 @@ package storeInventoryManagers
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	storeProvisionsTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/storeProvisions/types"
@@ -139,7 +140,6 @@ func (r *storeInventoryManagerRepository) DeductStoreInventoryByAdditive(storeID
 		}
 
 		for _, provision := range additiveProvisions {
-			// TODO delete or change status for updated storeProvisions
 			updatedProvisions, err := deductStoreProvisions(tx, storeID, provision.ProvisionID, provision.Volume)
 			if err != nil {
 				return err
@@ -185,6 +185,9 @@ func (r *storeInventoryManagerRepository) DeductStoreStocksByStoreProvision(stor
 }
 
 func (r *storeInventoryManagerRepository) RecalculateStoreInventory(storeID uint, input *types.RecalculateInput) error {
+	logrus.Infof("=================RECALCULATION STARTS============================")
+	start := time.Now()
+
 	if storeID == 0 {
 		return errors.New("failed to recalculate with invalid input parameters")
 	}
@@ -265,12 +268,18 @@ func (r *storeInventoryManagerRepository) RecalculateStoreInventory(storeID uint
 			ProvisionIDs:  totalProvisionIDs,
 		}
 
+		logrus.Infof("Filter: %v", frozenInventoryFilter)
 		frozenInventory, err = calculateFrozenInventory(r.db, storeID, frozenInventoryFilter)
 		if err != nil {
 			return err
 		}
+		logrus.Infof("FROZEN INVENTORY FETCHED(filtered): %v", frozenInventory)
+		frozenInventory, err = calculateFrozenInventory(r.db, storeID, nil)
+		if err != nil {
+			return err
+		}
+		logrus.Infof("FROZEN INVENTORY FETCHED(all): %v", frozenInventory)
 
-		logrus.Infof("FROZEN INVENTORY FETCHED: %v", frozenInventory)
 	}
 
 	if len(totalIngredientIDs) > 0 {
@@ -319,6 +328,7 @@ func (r *storeInventoryManagerRepository) RecalculateStoreInventory(storeID uint
 				return err
 			}
 		}
+		logrus.Infof("=====================Total time taken is: %v=====================", time.Since(start))
 
 		return nil
 	})
@@ -374,8 +384,8 @@ func (r *storeInventoryManagerRepository) CheckStoreStocks(
 
 		effectiveAvailable := stock.Quantity - frozen
 		if effectiveAvailable < requiredQty {
-			return fmt.Errorf("%w: insufficient effective available for ingredient ID %d: need %.2f, have %.2f",
-				storeStocksTypes.ErrInsufficientStock, ingredientID, requiredQty, effectiveAvailable)
+			return fmt.Errorf("%w: insufficient effective available for ingredient ID %d: need %.2f more",
+				storeStocksTypes.ErrInsufficientStock, ingredientID, requiredQty)
 		}
 
 		frozenInventory.Ingredients[ingredientID] += requiredQty
@@ -393,43 +403,34 @@ func (r *storeInventoryManagerRepository) CheckStoreProvisions(
 		return nil
 	}
 
-	provisionIDs := make([]uint, 0, len(requiredProvisionVolumeMap))
-	for id := range requiredProvisionVolumeMap {
-		provisionIDs = append(provisionIDs, id)
+	var provisionIDs []uint
+	for provID := range requiredProvisionVolumeMap {
+		provisionIDs = append(provisionIDs, provID)
 	}
 
 	provisions, err := getRelevantStoreProvisions(r.db, storeID, provisionIDs)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to load relevant storeProvisions: %w", err)
 	}
 
-	provisionMap := make(map[uint][]data.StoreProvision)
-	for _, provision := range provisions {
-		provisionMap[provision.ProvisionID] = append(provisionMap[provision.ProvisionID], provision)
+	grouped := make(map[uint]float64)
+	for _, sp := range provisions {
+		grouped[sp.ProvisionID] += sp.Volume
 	}
 
-	for provisionID, requiredVolume := range requiredProvisionVolumeMap {
-		remaining := requiredVolume
-		for _, provision := range provisionMap[provisionID] {
-			frozen := frozenInventory.Provisions[provisionID]
-			effectiveAvailable := provision.Volume - frozen
-			if effectiveAvailable <= 0 {
-				continue
-			}
+	for provID, reqVol := range requiredProvisionVolumeMap {
+		totalVolume := grouped[provID]
+		frozenUsed := frozenInventory.Provisions[provID]
 
-			toUse := min(effectiveAvailable, remaining)
-			remaining -= toUse
-			frozenInventory.Provisions[provisionID] += toUse
-
-			if remaining <= 0 {
-				break
-			}
+		effectiveVolume := totalVolume - frozenUsed
+		if effectiveVolume < reqVol {
+			return fmt.Errorf(
+				"%w: insufficient volume for provisionID=%d, needed=%.2f, have=%.2f (after frozen=%.2f)",
+				storeProvisionsTypes.ErrInsufficientStoreProvision,
+				provID, reqVol, totalVolume, frozenUsed,
+			)
 		}
-
-		if remaining > 0 {
-			return fmt.Errorf("%w: insufficient provision volume for provision ID %d. Need %.2f more",
-				storeProvisionsTypes.ErrInsufficientStoreProvision, provisionID, remaining)
-		}
+		frozenInventory.Provisions[provID] += reqVol
 	}
 
 	return nil
@@ -494,10 +495,10 @@ func (r *storeInventoryManagerRepository) getAdditiveIngredients(additiveID uint
 	return additiveIngredients, nil
 }
 
-func (r *storeInventoryManagerRepository) getAdditiveProvisions(provisionID uint) ([]data.AdditiveProvision, error) {
+func (r *storeInventoryManagerRepository) getAdditiveProvisions(additiveID uint) ([]data.AdditiveProvision, error) {
 	var additiveProvisions []data.AdditiveProvision
 	err := r.db.Preload("Provision.Unit").
-		Where("provision_id = ?", provisionID).
+		Where("additive_id = ?", additiveID).
 		Find(&additiveProvisions).Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch additive provisions: %w", err)

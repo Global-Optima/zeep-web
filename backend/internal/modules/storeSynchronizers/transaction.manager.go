@@ -71,11 +71,13 @@ func (m *transactionManager) GetSynchronizationStatus(storeID uint) (*types.Sync
 	if err != nil {
 		return nil, err
 	}
-	logrus.Info(unsyncData)
 
 	if unsyncData == nil {
 		return nil, fmt.Errorf("could not fetch unsyncData: nil pointer dereference")
 	}
+
+	logrus.Infof("ingredientIDs: %v, productSizeIDs: %v, additiveIDs: %v, provisionIDs: %v",
+		unsyncData.IngredientIDs, unsyncData.ProductSizeIDs, unsyncData.AdditiveIDs, unsyncData.ProvisionIDs)
 
 	if len(unsyncData.AdditiveIDs) > 0 || len(unsyncData.IngredientIDs) > 0 || len(unsyncData.ProductSizeIDs) > 0 || len(unsyncData.ProvisionIDs) > 0 {
 		syncStatus.IsSync = false

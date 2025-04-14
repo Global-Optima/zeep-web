@@ -175,7 +175,7 @@ func (s *notificationService) NotifyStoreProvisionExpiration(details details.Not
 		return err
 	}
 
-	s.createNotificationAsync(data.STORE_PROVISION_EXPIRATION, data.MEDIUM, notificationDetails, details.GetBaseDetails())
+	s.createNotificationAsync(data.STORE_PROVISION_EXPIRATION, data.HIGH, notificationDetails, details.GetBaseDetails())
 	return nil
 }
 

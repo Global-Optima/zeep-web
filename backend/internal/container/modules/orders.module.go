@@ -25,6 +25,8 @@ func NewOrdersModule(
 	additiveRepo storeAdditives.StoreAdditiveRepository,
 	storeStockRepo storeStocks.StoreStockRepository,
 	storeInventoryManagerRepo storeInventoryManagers.StoreInventoryManagerRepository,
+	storeProductService storeProducts.StoreProductService,
+	storeAdditiveService storeAdditives.StoreAdditiveService,
 	notificationService notifications.NotificationService,
 ) *OrdersModule {
 	repo := orders.NewOrderRepository(base.DB)
@@ -35,6 +37,8 @@ func NewOrdersModule(
 		additiveRepo,
 		storeStockRepo,
 		storeInventoryManagerRepo,
+		storeProductService,
+		storeAdditiveService,
 		notificationService,
 		orders.NewTransactionManager(
 			base.DB,

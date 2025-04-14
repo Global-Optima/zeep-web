@@ -3,6 +3,7 @@ package orders
 import (
 	"encoding/json"
 	"fmt"
+	storeProvisionsTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/storeProvisions/types"
 	"log"
 	"net/http"
 	"time"
@@ -128,7 +129,8 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 
 	createdOrder, err := h.service.CreateOrder(storeID, &orderDTO)
 	if err != nil || createdOrder == nil {
-		if errors.Is(err, types.ErrInsufficientStock) {
+		if errors.Is(err, storeStocksTypes.ErrInsufficientStock) ||
+			errors.Is(err, storeProvisionsTypes.ErrInsufficientStoreProvision) {
 			localization.SendLocalizedResponseWithKey(c, types.Response409InsufficientStock)
 			return
 		}

@@ -100,7 +100,7 @@ func (c *Container) mustInit() {
 	c.Provisions = modules.NewProvisionsModule(baseModule, c.Audits.Service, c.Franchisees.Service, c.Stores.Service, c.Notifications.Service, c.Ingredients.Repo, c.StoreStocks.Repo, c.StoreInventoryManager.Repo, cronManager)
 	c.Auth = modules.NewAuthModule(baseModule, c.Customers.Repo, c.Employees.Repo, *c.employeeTokenManager)
 
-	c.Orders = modules.NewOrdersModule(baseModule, c.AsynqManager, c.Products.StoreProductsModule.Repo, c.Additives.StoreAdditivesModule.Repo, c.StoreStocks.Repo, c.StoreInventoryManager.Repo, c.Notifications.Service)
+	c.Orders = modules.NewOrdersModule(baseModule, c.AsynqManager, c.Products.StoreProductsModule.Repo, c.Additives.StoreAdditivesModule.Repo, c.StoreStocks.Repo, c.StoreInventoryManager.Repo, c.Products.StoreProductsModule.Service, c.Additives.StoreAdditivesModule.Service, c.Notifications.Service)
 	c.StockRequests = modules.NewStockRequestsModule(baseModule, c.Franchisees.Service, c.Regions.Service, c.StockMaterials.Repo, c.StoreInventoryManager.Repo, c.Notifications.Service, c.Audits.Service)
 	c.StoreSynchronizer = modules.NewStoreSynchronizerSynchronizerModule(baseModule, c.Stores.Repo, c.Additives.StoreAdditivesModule.Repo, c.StoreStocks.Repo, c.Ingredients.Repo, c.StoreInventoryManager.Repo)
 	c.Analytics = modules.NewAnalyticsModule(baseModule)

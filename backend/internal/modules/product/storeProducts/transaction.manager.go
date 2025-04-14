@@ -2,6 +2,7 @@ package storeProducts
 
 import (
 	"fmt"
+	"github.com/sirupsen/logrus"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	storeAdditives "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies"
@@ -262,6 +263,7 @@ func (m *transactionManager) CheckSufficientStoreProductSizeById(
 	if err := m.checkProductSizeProvisions(storeID, &storeProductSize, frozenInventory); err != nil {
 		return err
 	}
+	logrus.Infof("Final FROZEN STOCK CHECK: %v", frozenInventory)
 
 	return nil
 }
