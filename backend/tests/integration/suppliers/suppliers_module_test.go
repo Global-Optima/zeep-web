@@ -238,5 +238,4 @@ func TestSupplierEndpoints(t *testing.T) {
 		}
 		env.RunTests(t, testCases)
 	})
-
 }
