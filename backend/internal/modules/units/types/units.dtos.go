@@ -8,8 +8,8 @@ type CreateUnitDTO struct {
 }
 
 type UpdateUnitDTO struct {
-	Name             *string  `json:"name,omitempty"`
-	ConversionFactor *float64 `json:"conversionFactor,omitempty"`
+	Name             *string  `json:"name" binding:"min=0,omitempty"`
+	ConversionFactor *float64 `json:"conversionFactor" binding:"omitempty,gt=0"`
 }
 
 type UnitsDTO struct {

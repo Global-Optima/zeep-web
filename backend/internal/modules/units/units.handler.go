@@ -27,7 +27,7 @@ func NewUnitHandler(service UnitService, auditService audit.AuditService) *UnitH
 
 func (h *UnitHandler) CreateUnit(c *gin.Context) {
 	var dto types.CreateUnitDTO
-	if err := c.ShouldBindJSON(&dto); err != nil {
+	if err := utils.ParseRequestBody(c, &dto); err != nil {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
@@ -95,7 +95,7 @@ func (h *UnitHandler) UpdateUnit(c *gin.Context) {
 	}
 
 	var dto types.UpdateUnitDTO
-	if err := c.ShouldBindJSON(&dto); err != nil {
+	if err := utils.ParseRequestBody(c, &dto); err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400Unit)
 		return
 	}
