@@ -289,7 +289,7 @@ func (r *storeProvisionRepository) GetAllCompletedStoreProvisionList(storeID uin
 		Preload("Store").
 		Where("store_id = ?", storeID).
 		Where("status = ?", data.STORE_PROVISION_STATUS_COMPLETED).
-		Where("expires_at <= ?", time.Now())
+		Where("expires_at <= ?", time.Now().UTC())
 
 	err := query.Find(&storeProvisionList).Error
 	if err != nil {
