@@ -115,7 +115,7 @@ func (h *IngredientHandler) DeleteIngredient(c *gin.Context) {
 
 	if err := h.service.DeleteIngredient(uint(ingredientID)); err != nil {
 		if errors.Is(err, types.ErrIngredientIsInUse) {
-			localization.SendLocalizedResponseWithKey(c, types.Response409IngredientInUse)
+			localization.SendLocalizedResponseWithKey(c, types.Response409IngredientDeleteInUse)
 			return
 		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500IngredientDelete)

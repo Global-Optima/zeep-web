@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"time"
 
+	storeProvisionsTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/storeProvisions/types"
+
 	storeStocksTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks/types"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
@@ -128,7 +130,8 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 
 	createdOrder, err := h.service.CreateOrder(storeID, &orderDTO)
 	if err != nil || createdOrder == nil {
-		if errors.Is(err, types.ErrInsufficientStock) {
+		if errors.Is(err, storeStocksTypes.ErrInsufficientStock) ||
+			errors.Is(err, storeProvisionsTypes.ErrInsufficientStoreProvision) {
 			localization.SendLocalizedResponseWithKey(c, types.Response409InsufficientStock)
 			return
 		}
@@ -328,6 +331,11 @@ func (h *OrderHandler) FailOrderPayment(c *gin.Context) {
 
 	err := h.service.FailOrderPayment(orderID)
 	if err != nil {
+		switch {
+		case errors.Is(err, types.ErrOrderNotFound):
+			localization.SendLocalizedResponseWithKey(c, types.Response404Order)
+			return
+		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500OrderPaymentFail)
 		return
 	}

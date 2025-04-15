@@ -17,12 +17,13 @@ type ProvisionModels struct {
 
 func MapToBaseProvisionDTO(provision *data.Provision) *BaseProvisionDTO {
 	return &BaseProvisionDTO{
-		Name:                 provision.Name,
-		AbsoluteVolume:       provision.AbsoluteVolume,
-		NetCost:              provision.NetCost,
-		Unit:                 unitTypes.ToUnitResponse(provision.Unit),
-		PreparationInMinutes: provision.PreparationInMinutes,
-		LimitPerDay:          provision.LimitPerDay,
+		Name:                       provision.Name,
+		AbsoluteVolume:             provision.AbsoluteVolume,
+		NetCost:                    provision.NetCost,
+		Unit:                       unitTypes.ToUnitResponse(provision.Unit),
+		PreparationInMinutes:       provision.PreparationInMinutes,
+		DefaultExpirationInMinutes: provision.DefaultExpirationInMinutes,
+		LimitPerDay:                provision.LimitPerDay,
 	}
 }
 
@@ -50,13 +51,14 @@ func MapToProvisionDetailsDTO(provision *data.Provision) *ProvisionDetailsDTO {
 
 func CreateToProvisionModel(dto *CreateProvisionDTO) *data.Provision {
 	return &data.Provision{
-		Name:                 dto.Name,
-		AbsoluteVolume:       dto.AbsoluteVolume,
-		NetCost:              dto.NetCost,
-		UnitID:               dto.UnitID,
-		PreparationInMinutes: dto.PreparationInMinutes,
-		LimitPerDay:          dto.LimitPerDay,
-		ProvisionIngredients: mapIngredientsToProvisionIngredients(dto.Ingredients),
+		Name:                       dto.Name,
+		AbsoluteVolume:             dto.AbsoluteVolume,
+		NetCost:                    dto.NetCost,
+		UnitID:                     dto.UnitID,
+		PreparationInMinutes:       dto.PreparationInMinutes,
+		DefaultExpirationInMinutes: dto.DefaultExpirationInMinutes,
+		LimitPerDay:                dto.LimitPerDay,
+		ProvisionIngredients:       mapIngredientsToProvisionIngredients(dto.Ingredients),
 	}
 }
 
@@ -80,6 +82,12 @@ func UpdateToProvisionModels(provision *data.Provision, dto *UpdateProvisionDTO)
 	}
 	if dto.PreparationInMinutes != nil {
 		provision.PreparationInMinutes = *dto.PreparationInMinutes
+	}
+	if dto.DefaultExpirationInMinutes != nil {
+		provision.DefaultExpirationInMinutes = *dto.DefaultExpirationInMinutes
+	}
+	if dto.UnitID != nil {
+		provision.UnitID = *dto.UnitID
 	}
 	if dto.LimitPerDay != nil {
 		provision.LimitPerDay = *dto.LimitPerDay

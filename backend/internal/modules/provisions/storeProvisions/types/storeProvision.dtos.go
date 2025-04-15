@@ -14,6 +14,7 @@ type StoreProvisionDTO struct {
 	Provision           types.ProvisionDTO        `json:"provision"`
 	ExpirationInMinutes uint                      `json:"expirationInMinutes"`
 	Volume              float64                   `json:"volume"`
+	InitialVolume       float64                   `json:"initialVolume"`
 	Status              data.StoreProvisionStatus `json:"status"`
 	CompletedAt         *time.Time                `json:"completedAt,omitempty"`
 	ExpiresAt           *time.Time                `json:"expiresAt,omitempty"`
@@ -26,8 +27,9 @@ type StoreProvisionDetailsDTO struct {
 }
 
 type StoreProvisionIngredientDTO struct {
-	Ingredient ingredientTypes.IngredientDTO `json:"ingredient"`
-	Quantity   float64                       `json:"quantity"`
+	Ingredient      ingredientTypes.IngredientDTO `json:"ingredient"`
+	Quantity        float64                       `json:"quantity"`
+	InitialQuantity float64                       `json:"initialQuantity"`
 }
 
 type CreateStoreProvisionDTO struct {
@@ -43,9 +45,9 @@ type UpdateStoreProvisionDTO struct {
 
 type StoreProvisionFilterDTO struct {
 	utils.BaseFilter
-	Search         *string    `form:"search"`
-	MinCompletedAt *time.Time `form:"minCompletedAt"`
-	MaxCompletedAt *time.Time `form:"maxCompletedAt"`
-	IsExpired      *bool      `form:"isExpired"`
-	Status         *string    `form:"status"`
+	Statuses       []data.StoreProvisionStatus `form:"statuses[]"`
+	Search         *string                     `form:"search"`
+	MinCompletedAt *time.Time                  `form:"minCompletedAt"`
+	MaxCompletedAt *time.Time                  `form:"maxCompletedAt"`
+	IsExpired      *bool                       `form:"isExpired"`
 }

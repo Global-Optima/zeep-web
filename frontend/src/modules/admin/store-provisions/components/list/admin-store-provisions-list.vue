@@ -4,6 +4,7 @@
 			<TableRow>
 				<TableHead>Название</TableHead>
 				<TableHead>Обьем</TableHead>
+        <TableHead>Начальный объем</TableHead>
 				<TableHead>Создан</TableHead>
 				<TableHead>Статус</TableHead>
 				<TableHead></TableHead>
@@ -21,6 +22,10 @@
 					>{{ storeProvision.volume }}
 					{{ storeProvision.provision.unit.name.toLowerCase() }}</TableCell
 				>
+        <TableCell
+        >{{ storeProvision.initialVolume }}
+          {{ storeProvision.provision.unit.name.toLowerCase() }}</TableCell
+        >
 				<TableCell>{{ formatCreatedDate(storeProvision.createdAt) }}</TableCell>
 
 				<TableCell>
@@ -99,7 +104,7 @@ const formatCreatedDate = (date: Date) => {
 }
 
 const canDelete = (provision: StoreProvisionDTO) => {
-  return provision.status === StoreProvisionStatus.PREPARING
+  return provision.status != StoreProvisionStatus.COMPLETED
 }
 
 const onProvisionClick = (id: number) => {
@@ -108,13 +113,15 @@ const onProvisionClick = (id: number) => {
 
 const STORE_PROVISION_STATUS_COLOR: Record<StoreProvisionStatus, string> = {
   [StoreProvisionStatus.COMPLETED]: 'bg-green-100 text-green-800',
-  [StoreProvisionStatus.PREPARING]: 'bg-yellow-100 text-yellow-800',
+  [StoreProvisionStatus.PREPARING]: 'bg-blue-100 text-blue-800',
   [StoreProvisionStatus.EXPIRED]: 'bg-red-100 text-red-800',
+  [StoreProvisionStatus.EMPTY]: 'bg-yellow-100 text-yellow-800',
 }
 
 const STORE_PROVISION_STATUS_FORMATTED: Record<StoreProvisionStatus, string> = {
   [StoreProvisionStatus.COMPLETED]: 'Приготовлен',
   [StoreProvisionStatus.PREPARING]: 'Готовится',
   [StoreProvisionStatus.EXPIRED]: 'Просрочен',
+  [StoreProvisionStatus.EMPTY]: 'Пустой',
 }
 </script>

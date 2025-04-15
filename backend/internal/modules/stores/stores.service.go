@@ -94,7 +94,7 @@ func (s *storeService) GetStoreByID(storeID uint) (*types.StoreDTO, error) {
 		return nil, errors.New("store ID cannot be zero")
 	}
 
-	store, err := s.repo.GetStoreByID(storeID)
+	store, err := s.repo.GetStoreWithDetailsByID(storeID)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +117,7 @@ func (s *storeService) GetStores(filter *types.StoreFilter) ([]types.StoreDTO, e
 }
 
 func (s *storeService) UpdateStore(storeID uint, updateStoreDto *types.UpdateStoreDTO) error {
-	store, err := s.repo.GetStoreByID(storeID)
+	store, err := s.repo.GetStoreWithDetailsByID(storeID)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to get store: %w", err)
 		s.logger.Error(wrappedErr)

@@ -4,6 +4,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/container/common"
 	storeAdditives "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeSynchronizers"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
@@ -22,11 +23,12 @@ func NewStoreSynchronizerSynchronizerModule(
 	storeAdditiveRepo storeAdditives.StoreAdditiveRepository,
 	storeStockRepo storeStocks.StoreStockRepository,
 	ingredientRepo ingredients.IngredientRepository,
+	storeInventoryManagerRepo storeInventoryManagers.StoreInventoryManagerRepository,
 ) *StoreSynchronizerModule {
 	repo := storeSynchronizers.NewStoreSynchronizeRepository(base.DB)
 	service := storeSynchronizers.NewStoreSynchronizeService(
 		repo,
-		storeSynchronizers.NewTransactionManager(base.DB, repo, storeRepo, storeAdditiveRepo, storeStockRepo, ingredientRepo),
+		storeSynchronizers.NewTransactionManager(base.DB, repo, storeRepo, storeAdditiveRepo, storeStockRepo, ingredientRepo, storeInventoryManagerRepo),
 		base.Logger,
 	)
 	handler := storeSynchronizers.NewStoreSynchronizeHandler(service)

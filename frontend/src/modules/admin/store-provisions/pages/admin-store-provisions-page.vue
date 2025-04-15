@@ -38,16 +38,22 @@
 <script setup lang="ts">
 import AdminListLoader from '@/core/components/admin-list-loader/AdminListLoader.vue'
 import PaginationWithMeta from '@/core/components/ui/app-pagination/PaginationWithMeta.vue'
-import { Card, CardContent, CardFooter } from '@/core/components/ui/card'
-import { usePaginationFilter } from "@/core/hooks/use-pagination-filter.hook"
+import {Card, CardContent, CardFooter} from '@/core/components/ui/card'
+import {usePaginationFilter} from "@/core/hooks/use-pagination-filter.hook"
 import AdminStoreProvisionsList from '@/modules/admin/store-provisions/components/list/admin-store-provisions-list.vue'
-import AdminStoreProvisionsToolbar from '@/modules/admin/store-provisions/components/list/admin-store-provisions-toolbar.vue'
-import type { StoreProvisionFilter } from '@/modules/admin/store-provisions/models/store-provision.models'
-import { storeProvisionsService } from '@/modules/admin/store-provisions/services/store-provision.service'
-import { useQuery } from '@tanstack/vue-query'
-import { computed } from 'vue'
+import AdminStoreProvisionsToolbar
+  from '@/modules/admin/store-provisions/components/list/admin-store-provisions-toolbar.vue'
+import {
+  type StoreProvisionFilter,
+  StoreProvisionStatus
+} from '@/modules/admin/store-provisions/models/store-provision.models'
+import {storeProvisionsService} from '@/modules/admin/store-provisions/services/store-provision.service'
+import {useQuery} from '@tanstack/vue-query'
+import {computed} from 'vue'
 
-const { filter, updateFilter, updatePage, updatePageSize } = usePaginationFilter<StoreProvisionFilter>({})
+const { filter, updateFilter, updatePage, updatePageSize } = usePaginationFilter<StoreProvisionFilter>({
+  statuses: [StoreProvisionStatus.COMPLETED, StoreProvisionStatus.PREPARING]
+})
 
 // Fetch data using Vue Query
 const { data: provisionsResponse, isPending } = useQuery({

@@ -25,8 +25,9 @@ func NewCronManager(enabled bool, logger *zap.SugaredLogger) *CronManager {
 type CronJob string
 
 const (
-	HourlyJob CronJob = "HOURLY"
-	DailyJob  CronJob = "DAILY"
+	HalfHourlyJob CronJob = "HALF_HOURLY"
+	HourlyJob     CronJob = "HOURLY"
+	DailyJob      CronJob = "DAILY"
 )
 
 func (cm *CronManager) RegisterJob(interval CronJob, task func(), timeUTC ...string) error {
@@ -36,6 +37,11 @@ func (cm *CronManager) RegisterJob(interval CronJob, task func(), timeUTC ...str
 	}
 
 	switch interval {
+	case HalfHourlyJob:
+		_, err := cm.scheduler.Every(30).Minute().Do(task)
+		if err != nil {
+			return err
+		}
 	case HourlyJob:
 		_, err := cm.scheduler.Every(1).Hour().Do(task)
 		if err != nil {

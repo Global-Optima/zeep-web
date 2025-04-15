@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers"
+	storeInventoryManagersTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers/types"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
@@ -30,16 +33,18 @@ type StoreStockService interface {
 }
 
 type storeStockService struct {
-	repo                StoreStockRepository
-	notificationService notifications.NotificationService
-	logger              *zap.SugaredLogger
+	repo                      StoreStockRepository
+	storeInventoryManagerRepo storeInventoryManagers.StoreInventoryManagerRepository
+	notificationService       notifications.NotificationService
+	logger                    *zap.SugaredLogger
 }
 
-func NewStoreStockService(repo StoreStockRepository, notificationService notifications.NotificationService, logger *zap.SugaredLogger) StoreStockService {
+func NewStoreStockService(repo StoreStockRepository, storeInventoryManagerRepo storeInventoryManagers.StoreInventoryManagerRepository, notificationService notifications.NotificationService, logger *zap.SugaredLogger) StoreStockService {
 	return &storeStockService{
-		repo:                repo,
-		notificationService: notificationService,
-		logger:              logger,
+		repo:                      repo,
+		storeInventoryManagerRepo: storeInventoryManagerRepo,
+		notificationService:       notificationService,
+		logger:                    logger,
 	}
 }
 
@@ -47,7 +52,7 @@ func (s *storeStockService) AddMultipleStock(storeId uint, dto *types.AddMultipl
 	var IDs []uint
 
 	// Start a transaction
-	err := s.repo.WithTransaction(func(txRepo storeStockRepository) error {
+	err := s.repo.WithTransaction(func(txRepo StoreStockRepository) error {
 		for _, stock := range dto.IngredientStocks {
 			// Add or update stock for each ingredient
 			id, err := txRepo.AddOrSaveStock(storeId, &stock)
@@ -149,12 +154,23 @@ func (s *storeStockService) UpdateStockById(storeId, stockId uint, input *types.
 		return wrappedErr
 	}
 
-	err = s.repo.SaveStock(storeId, stockId, storeStock)
+	err = s.repo.SaveStock(storeStock)
 	if err != nil {
 		wrappedErr := utils.WrapError("error updating stock", err)
 		s.logger.Error(wrappedErr)
 		return wrappedErr
 	}
+
+	go func() {
+		err = s.storeInventoryManagerRepo.RecalculateStoreInventory(storeId,
+			&storeInventoryManagersTypes.RecalculateInput{
+				IngredientIDs: []uint{storeStock.IngredientID},
+			})
+		if err != nil {
+			wrappedErr := utils.WrapError("error recalculating stock", err)
+			s.logger.Error(wrappedErr)
+		}
+	}()
 
 	err = s.checkStockAndNotify(storeId, stockId)
 	if err != nil {
