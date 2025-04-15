@@ -251,83 +251,70 @@ export function useOrderGenerateQR() {
 		options: QRPrintOptions = {},
 	) {
 		// Default label dimensions in mm
-		const { labelWidthMm = 80, labelHeightMm = 80 } = options
+		const { labelWidthMm = 60, labelHeightMm = 40 } = options
 
 		// Convert mm to dots (8 dots per mm for 203 DPI printers)
 		const labelWidthDots = Math.round(labelWidthMm * 8)
 		const labelHeightDots = Math.round(labelHeightMm * 8)
 
-		// Calculate fixed margins - use a percentage of the label dimensions
-		// For smaller labels, we use a smaller percentage to maximize usable space
-		const marginX = Math.round(labelWidthDots * 0.02) // 2% margin
-		const textAreaWidth = labelWidthDots - marginX * 2
+		// Reference sizes are 320x180 dots (40x22.5mm)
+		const widthScale = labelWidthDots / 320
+		const heightScale = labelHeightDots / 180
+
+		// Calculate margins and positioning based on reference design
+		const marginX = Math.round(6 * widthScale)
+		const textAreaWidth = Math.round(308 * widthScale)
+
+		// Reduce top padding by adjusting the label home position
+		const labelHomeY = Math.round(10 * heightScale) // Reduced from 30
+
+		// Text positions - bring everything up slightly
+		const line1Y = Math.round(15 * heightScale) // Reduced from 20
+		const line2Y = Math.round(45 * heightScale) // Reduced from 50
+
+		// QR code position - reduce space between text and QR
+		const qrY = Math.round(80 * heightScale) // Reduced from 105
+		// Slight adjustment to QR horizontal position
+		const qrX = Math.round(labelWidthDots / 2 - 60 * widthScale)
+
+		// QR code magnification - in reference it's 6
+		const qrMagnification = Math.max(
+			2,
+			Math.min(10, Math.round(5 * Math.min(widthScale, heightScale))),
+		)
 
 		// Generate the order content
 		const qrValue = generateSubOrderQR(suborder)
 		const line1 = `#${order.displayNumber} ${order.customerName} (${index + 1}/${order.subOrders.length})`
 		const line2 = `${suborder.productSize.productName} ${suborder.productSize.sizeName} (${suborder.productSize.size} ${suborder.productSize.unit.name.toLowerCase()}, ${MACHINE_CATEGORY_FORMATTED[suborder.productSize.machineCategory].toLowerCase()})`
 
-		// Calculate font sizes based on label width
-		// For different size labels, fonts should scale proportionally
-		// with minimum sizes to ensure readability
-		const fontScale = Math.min(1, Math.max(0.6, labelWidthMm / 80))
-
-		// For 80mm width, we use 38pt for line1 and 29pt for line2
-		// Scale these values for different widths while keeping minimums
-		const line1FontSize = Math.max(20, Math.round(29 * fontScale))
-		const line2FontSize = Math.max(20, Math.round(29 * fontScale))
-
-		// Determine vertical spacing
-		// The original static values seem to work well, so adapt them for different heights
-		// For 80mm height: line1Y = 16, line2Y = 55
-		const heightScale = Math.min(1, Math.max(0.5, labelHeightMm / 80))
-		const line1Y = Math.max(10, Math.round(16 * heightScale))
-		const line2Y = Math.max(line1Y + line1FontSize + 5, Math.round(55 * heightScale))
-
-		// Calculate QR code position and size
-		// For 80mm labels, QR starts at ~144,105
-		// Target about 33% of height down for QR code Y position
-		const qrY = Math.round(labelHeightDots * 0.25)
-
-		// Center the QR code horizontally
-		// For wide layouts (width > height), make QR code about 50% of height
-		// For square/tall layouts, make QR code about a comfortable size
-		const qrSize = Math.round(Math.min(labelWidthDots * 0.4, labelHeightDots * 0.5))
-		const qrX = Math.round((labelWidthDots - qrSize) / 2)
-
-		// QR magnification factor - higher gives larger modules
-		// For 80mm labels, 10 works well. Scale for different sizes.
-		const qrMagMin = labelHeightMm <= 40 ? 4 : 6 // Ensure readability on small labels
-		const qrMagnification = Math.max(qrMagMin, Math.round(qrSize / 30))
+		// Font sizes - reference uses AZN,20 for both lines
+		const fontSize = Math.max(12, Math.round(20 * Math.min(widthScale, heightScale)))
 
 		// Build the ZPL commands
-		const zplCommands = `
-	^XA
+		const zplCommands = `^XA
   ^CI28
-  ^CWZ,E:zeep.TTF
+  ^CWZ,E:ZEEP.TTF
+  ^MMC
+  ^CN1
+  ^LH0,${labelHomeY}
   ^PW${labelWidthDots}
   ^LL${labelHeightDots}
-
   ^FO${marginX},${line1Y}
   ^FB${textAreaWidth},2,0,C,0
-  ^A0N,${line1FontSize},${Math.round(line1FontSize * 0.8)}^FH\\
+  ^AZN,${fontSize}
   ^FD${line1}^FS
-
   ^FO${marginX},${line2Y}
   ^FB${textAreaWidth},3,0,C,0
-  ^A0N,${line2FontSize},${Math.round(line2FontSize * 0.8)}^FH\\
+  ^AZN,${fontSize}
   ^FD${line2}^FS
-
   ^FO${qrX},${qrY}
   ^BQN,2,${qrMagnification}
   ^FDLA,${qrValue}^FS
-
-  ^MMC
   ^XZ`.trim()
 
 		return new Blob([zplCommands], { type: 'application/octet-stream' })
 	}
-
 	/**
 	 * Decide which type of label to generate (PDF vs. raw spool .prn).
 	 */

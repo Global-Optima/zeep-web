@@ -72,7 +72,8 @@ VALUES
 INSERT INTO additives (name, description, base_price, size, unit_id, additive_category_id, image_key, machine_id)
 VALUES
   ('Extra Milk', 'Additional milk', 0.50, 100, 1, 1, 'http://example.com/milk.png', 'TEST0000111122223333000009901'),
-  ('Vanilla Syrup', 'Sweet vanilla flavor', 0.75, 50, 1, 2, 'http://example.com/vanilla.png', 'TEST0000111122223333000009902');
+  ('Vanilla Syrup', 'Sweet vanilla flavor', 0.75, 50, 1, 2, 'http://example.com/vanilla.png', 'TEST0000111122223333000009902'),
+  ('Caramel Syrup', 'Sweet caramel flavor', 1, 50, 1, 2, 'http://example.com/caramel.png', 'TEST0000111122223333000009905');
 
 -- 11. Insert into franchisees
 INSERT INTO franchisees (name, description)

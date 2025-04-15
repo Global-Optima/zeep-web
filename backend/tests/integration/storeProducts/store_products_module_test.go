@@ -134,7 +134,7 @@ func TestStoreProductEndpoints(t *testing.T) {
 	t.Run("Update Store Product", func(t *testing.T) {
 		testCases := []utils.TestCase{
 			{
-				Description: "Admin should update store product availability",
+				Description: "Admin should not update availability of store product that is in use",
 				Method:      http.MethodPut,
 				URL:         "/api/test/store-products/1?storeId=1",
 				Body: map[string]interface{}{
@@ -145,7 +145,7 @@ func TestStoreProductEndpoints(t *testing.T) {
 					},
 				},
 				AuthRole:     data.RoleAdmin,
-				ExpectedCode: http.StatusOK,
+				ExpectedCode: http.StatusConflict,
 			},
 			{
 				Description: "Should return 400 for invalid product ID",

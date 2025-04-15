@@ -71,9 +71,11 @@ function initStoreProductLocal() {
 
 const hasSizes = computed(() => storeProductLocal.sizes.length > 0);
 
-function removeSize(index: number) {
+function removeSize(sizeId: number) {
   if (props.readonly) return;
-  storeProductLocal.sizes.splice(index, 1);
+  storeProductLocal.sizes = storeProductLocal.sizes.filter(
+    (sz) => sz.id !== sizeId
+  );
 }
 
 function onResetSizes() {
@@ -173,8 +175,8 @@ function onCancel() {
 					<TableBody>
 						<template v-if="hasSizes">
 							<TableRow
-								v-for="(size, i) in sortedSizes"
-								:key="size.id"
+						 		v-for="size in sortedSizes"
+  								:key="size.id"
 							>
 								<TableCell>{{ size.name }}</TableCell>
 								<TableCell>{{ size.basePrice }}</TableCell>
@@ -190,7 +192,7 @@ function onCancel() {
 									<Button
 										variant="ghost"
 										size="icon"
-										@click="removeSize(i)"
+										@click="removeSize(size.id)"
 									>
 										<Trash class="w-5 h-5 text-red-500 hover:text-red-700" />
 									</Button>
