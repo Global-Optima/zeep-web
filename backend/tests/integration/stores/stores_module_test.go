@@ -1,112 +1,192 @@
 package stores_test
 
 import (
+	"net/http"
 	"testing"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/tests/integration/utils"
-	"github.com/stretchr/testify/suite"
 )
 
-type StoresIntegrationTestSuite struct {
-	suite.Suite
-	Env *utils.TestEnvironment
-}
+func TestStoreEndpoints(t *testing.T) {
+	env := utils.NewTestEnvironment(t)
+	defer env.Close()
 
-func (suite *StoresIntegrationTestSuite) SetupSuite() {
-	suite.Env = utils.NewTestEnvironment(suite.T())
-}
+	// --- Test Creating a New Cafe ---
+	t.Run("Create new cafe", func(t *testing.T) {
+		testCases := []utils.TestCase{
+			{
+				Description: "Valid creation of a new cafe",
+				Method:      http.MethodPost,
+				URL:         "/api/test/stores",
+				Body: map[string]interface{}{
+					"name":         "Cafe Central",
+					"franchiseeId": 1, // example franchisee ID
+					"warehouseId":  1,
+					"facilityAddress": map[string]interface{}{
+						"address": "789 Cafe Road",
+					},
+					"isActive":     true,
+					"contactPhone": "+77776667788",
+					"contactEmail": "contact@cafecentral.com",
+					"storeHours":   "08:00-20:00",
+				},
+				AuthRole:     data.RoleAdmin, // Use appropriate role for creation
+				ExpectedCode: http.StatusCreated,
+			},
+			{
+				Description: "Create new cafe with empty name",
+				Method:      http.MethodPost,
+				URL:         "/api/test/stores",
+				Body: map[string]interface{}{
+					"name":         "", // Empty name
+					"franchiseeId": 1,
+					"warehouseId":  1,
+					"facilityAddress": map[string]interface{}{
+						"address": "789 Cafe Road",
+					},
+					"isActive":     true,
+					"contactPhone": "+77776667788",
+					"contactEmail": "contact@cafecentral.com",
+					"storeHours":   "08:00-20:00",
+				},
+				AuthRole:     data.RoleFranchiseManager,
+				ExpectedCode: http.StatusBadRequest,
+			},
+			{
+				Description: "Create new cafe with no contact number",
+				Method:      http.MethodPost,
+				URL:         "/api/test/stores",
+				Body: map[string]interface{}{
+					"name":         "Cafe No Number",
+					"franchiseeId": 1,
+					"warehouseId":  1,
+					"facilityAddress": map[string]interface{}{
+						"address": "789 Cafe Road",
+					},
+					"isActive": true,
+					// "contactPhone" is omitted intentionally
+					"contactEmail": "contact@cafenonumber.com",
+					"storeHours":   "08:00-20:00",
+				},
+				AuthRole:     data.RoleFranchiseManager,
+				ExpectedCode: http.StatusBadRequest,
+			},
+			{
+				Description: "Create new cafe with no facility address",
+				Method:      http.MethodPost,
+				URL:         "/api/test/stores",
+				Body: map[string]interface{}{
+					"name":         "Cafe No Address",
+					"franchiseeId": 1,
+					"warehouseId":  1,
+					// "facilityAddress" is omitted intentionally
+					"isActive":     true,
+					"contactPhone": "+77776667788",
+					"contactEmail": "contact@cafenostreet.com",
+					"storeHours":   "08:00-20:00",
+				},
+				AuthRole:     data.RoleFranchiseManager,
+				ExpectedCode: http.StatusBadRequest,
+			},
+			{
+				Description: "Create new cafe with no email",
+				Method:      http.MethodPost,
+				URL:         "/api/test/stores",
+				Body: map[string]interface{}{
+					"name":         "Cafe No Email",
+					"franchiseeId": 1,
+					"warehouseId":  1,
+					"facilityAddress": map[string]interface{}{
+						"address": "789 Cafe Road",
+					},
+					"isActive":     true,
+					"contactPhone": "+77776667788",
+					// "contactEmail" is omitted intentionally
+					"storeHours": "08:00-20:00",
+				},
+				AuthRole:     data.RoleFranchiseManager,
+				ExpectedCode: http.StatusBadRequest,
+			},
+		}
+		env.RunTests(t, testCases)
+	})
 
-func (suite *StoresIntegrationTestSuite) TearDownSuite() {
-	suite.Env.Close()
-}
+	// --- Test Updating an Existing Cafe ---
+	t.Run("Update cafe", func(t *testing.T) {
+		testCases := []utils.TestCase{
+			{
+				Description: "Valid update of an existing cafe",
+				Method:      http.MethodPut,
+				URL:         "/api/test/stores/1",
+				Body: map[string]interface{}{
+					"name":         "Updated Cafe Central",
+					"contactPhone": "+77776667788",
+					"contactEmail": "updated@cafecentral.com",
+					"facilityAddress": map[string]interface{}{
+						"address": "101 Updated Road",
+					},
+					"storeHours": "09:00-21:00",
+				},
+				AuthRole:     data.RoleFranchiseManager,
+				ExpectedCode: http.StatusOK,
+			},
+		}
+		env.RunTests(t, testCases)
+	})
 
-// Test cases for GetAllStores endpoint
-func (suite *StoresIntegrationTestSuite) TestGetAllStores() {
-	testCases := []utils.TestCase{
-		// {
-		// 	Description:  "Valid request for all stores",
-		// 	Method:       "GET",
-		// 	URL:          "/api/test/stores",
-		// 	ExpectedCode: 200,
-		// 	ExpectedBody: []map[string]interface{}{
-		// 		{
-		// 			"id":          1,
-		// 			"name":        "Downtown Coffee",
-		// 			"isFranchise": true,
-		// 			"facilityAddress": map[string]interface{}{
-		// 				"id":      1,
-		// 				"address": "123 Coffee St",
-		// 			},
-		// 		},
-		// 		{
-		// 			"id":          2,
-		// 			"name":        "Uptown Snacks",
-		// 			"isFranchise": false,
-		// 			"facilityAddress": map[string]interface{}{
-		// 				"id":      2,
-		// 				"address": "456 Snack Ave",
-		// 			},
-		// 		},
-		// 	},
-		// },
-	}
+	// --- Test Deleting a Cafe Store ---
+	t.Run("Delete cafe", func(t *testing.T) {
+		testCases := []utils.TestCase{
+			// {
+			// 	Description:  "Valid deletion of a cafe store",
+			// 	Method:       http.MethodDelete,
+			// 	URL:          "/api/test/stores/1",
+			// 	AuthRole:     data.RoleAdmin,
+			// 	ExpectedCode: http.StatusOK,
+			// },
+			{
+				Description:  "Unauthorized deletion attempt for a cafe store",
+				Method:       http.MethodDelete,
+				URL:          "/api/test/stores/1",
+				AuthRole:     data.RoleBarista, // Assuming Barista role is not permitted to delete
+				ExpectedCode: http.StatusForbidden,
+			},
+		}
+		env.RunTests(t, testCases)
+	})
 
-	suite.Env.RunTests(suite.T(), testCases)
-}
+	// --- Test Fetching a Cafe Store by ID ---
+	t.Run("Get store by ID", func(t *testing.T) {
+		testCases := []utils.TestCase{
+			{
+				Description:  "Fetch cafe store by valid ID",
+				Method:       http.MethodGet,
+				URL:          "/api/test/stores/1",
+				AuthRole:     data.RoleFranchiseManager,
+				ExpectedCode: http.StatusOK,
+			},
+			{
+				Description:  "Fetch cafe store with non-existent ID",
+				Method:       http.MethodGet,
+				URL:          "/api/test/stores/9999",
+				AuthRole:     data.RoleFranchiseManager,
+				ExpectedCode: http.StatusNotFound,
+			},
+		}
+		env.RunTests(t, testCases)
+	})
 
-func (suite *StoresIntegrationTestSuite) TestGetStoreEmployees() {
-	testCases := []utils.TestCase{
-		// {
-		// 	Description:  "Valid request with storeId=1",
-		// 	Method:       "GET",
-		// 	URL:          "/api/test/stores/1/employees",
-		// 	ExpectedCode: 200,
-		// 	ExpectedBody: []map[string]interface{}{
-		// 		{
-		// 			"id":       1,
-		// 			"name":     "Alice Smith",
-		// 			"phone":    "+1234567890",
-		// 			"email":    "alice@example.com",
-		// 			"isActive": true,
-		// 			"role": map[string]interface{}{
-		// 				"id":   1,
-		// 				"name": "Manager",
-		// 			},
-		// 		},
-		// 		{
-		// 			"id":       2,
-		// 			"name":     "Bob Johnson",
-		// 			"phone":    "+0987654321",
-		// 			"email":    "bob@example.com",
-		// 			"isActive": true,
-		// 			"role": map[string]interface{}{
-		// 				"id":   2,
-		// 				"name": "Barista",
-		// 			},
-		// 		},
-		// 	},
-		// },
-		// {
-		// 	Description:  "Non-existent storeId",
-		// 	Method:       "GET",
-		// 	URL:          "/api/test/stores/999/employees",
-		// 	ExpectedCode: 200,
-		// 	ExpectedBody: []map[string]interface{}{}, // Expecting an empty array
-		// },
-		// {
-		// 	Description:  "Invalid storeId format",
-		// 	Method:       "GET",
-		// 	URL:          "/api/test/stores/abc/employees",
-		// 	ExpectedCode: 400,
-		// 	ExpectedBody: map[string]interface{}{
-		// 		"error": "Invalid store ID",
-		// 	},
-		// },
-	}
-
-	suite.Env.RunTests(suite.T(), testCases)
-}
-
-func TestStoresIntegrationTestSuite(t *testing.T) {
-	suite.Run(t, new(StoresIntegrationTestSuite))
+	// --- Test Fetching All Cafe Stores ---
+	t.Run("Get all stores", func(t *testing.T) {
+		testCases := []utils.TestCase{
+			{
+				Description:  "Fetch all cafe stores",
+				Method:       http.MethodGet,
+				URL:          "/api/test/stores/all",
+				ExpectedCode: http.StatusOK,
+			},
+		}
+		env.RunTests(t, testCases)
+	})
 }
