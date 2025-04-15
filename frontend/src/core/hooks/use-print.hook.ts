@@ -105,7 +105,7 @@ export function usePrinter() {
 
 			try {
 				if (saveOnPrint) {
-					const uniqueFileName = `${uuidv4()}.prn`
+					const uniqueFileName = `zeep-qr-${uuidv4()}.prn`
 					console.warn(
 						`[usePrinter] Non-PDF mime type detected: ${blob.type}. Saving file instead of printing.`,
 					)

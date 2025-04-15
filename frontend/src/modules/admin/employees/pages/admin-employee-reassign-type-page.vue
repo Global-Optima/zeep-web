@@ -233,7 +233,7 @@ const onSubmit = handleSubmit((values) => {
 					</FormField>
 					<!-- Role -->
 					<FormField
-					 	:key="selectedType"
+						:key="selectedType"
 						name="role"
 						v-if="selectedType"
 						v-slot="{ componentField }"
