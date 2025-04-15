@@ -201,6 +201,13 @@ func TestAdditiveEndpoints(t *testing.T) {
 	t.Run("Delete an Additive", func(t *testing.T) {
 		testCases := []utils.TestCase{
 			{
+				Description:  "Admin should be able to delete an additive",
+				Method:       http.MethodDelete,
+				URL:          "/api/test/additives/3",
+				AuthRole:     data.RoleAdmin,
+				ExpectedCode: http.StatusOK,
+			},
+			{
 				Description:  "Admin should not be able to delete an additive in use",
 				Method:       http.MethodDelete,
 				URL:          "/api/test/additives/1",

@@ -297,6 +297,7 @@ func (r *storeProductRepository) CreateMultipleStoreProducts(storeProducts []dat
 	return ids, nil
 }
 
+// UpdateStoreProductByID updates the main product fields as well as delta-updates its sizes.
 func (r *storeProductRepository) UpdateStoreProductByID(
 	storeID, storeProductID uint,
 	updateModels *types.StoreProductModels,
@@ -306,75 +307,25 @@ func (r *storeProductRepository) UpdateStoreProductByID(
 	}
 
 	return r.db.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Model(&data.StoreProduct{}).
-			Where("store_id = ? AND id = ?", storeID, storeProductID).
-			Updates(data.StoreProduct{
-				IsAvailable: updateModels.StoreProduct.IsAvailable,
-			}).Error; err != nil {
+		if err := updateStoreProductFields(tx, storeID, storeProductID, *updateModels.StoreProduct); err != nil {
 			return err
 		}
 
-		var existingSizes []data.StoreProductSize
-		if err := tx.Where("store_product_id = ?", storeProductID).
-			Find(&existingSizes).Error; err != nil {
+		existingMap, err := loadExistingStoreProductSizes(tx, storeProductID)
+		if err != nil {
 			return err
 		}
 
-		existingByProductSizeID := make(map[uint]*data.StoreProductSize, len(existingSizes))
-		for i := range existingSizes {
-			sz := &existingSizes[i]
-			existingByProductSizeID[sz.ProductSizeID] = sz
+		newSizeIDs, sizesToInsert, err := processIncomingSizes(tx, storeProductID, updateModels.StoreProductSizes, existingMap)
+		if err != nil {
+			return err
 		}
 
-		var newSizeIDs []uint
-		var sizesToInsert []data.StoreProductSize
-
-		for i := range updateModels.StoreProductSizes {
-			dto := updateModels.StoreProductSizes[i]
-			newSizeIDs = append(newSizeIDs, dto.ProductSizeID)
-
-			if existingRow, found := existingByProductSizeID[dto.ProductSizeID]; found {
-				if !isEqualPrice(existingRow.StorePrice, dto.StorePrice) {
-					active, err := checkStoreProductSizeInActiveOrders(tx, existingRow.ID)
-					if err != nil {
-						return err
-					}
-					if active {
-						return types.ErrStoreProductSizeIsInUse
-					}
-				}
-
-				if err := tx.Model(&data.StoreProductSize{}).
-					Where("id = ?", existingRow.ID).
-					Updates(data.StoreProductSize{
-						StorePrice: dto.StorePrice,
-					}).Error; err != nil {
-					return err
-				}
-			} else {
-				sizesToInsert = append(sizesToInsert, data.StoreProductSize{
-					StoreProductID: storeProductID,
-					ProductSizeID:  dto.ProductSizeID,
-					StorePrice:     dto.StorePrice,
-				})
-			}
+		if err := verifyDeletion(tx, existingMap, newSizeIDs); err != nil {
+			return err
 		}
 
-		for productSizeID, existingRow := range existingByProductSizeID {
-			if !contains(newSizeIDs, productSizeID) {
-				active, err := checkStoreProductSizeInActiveOrders(tx, existingRow.ID)
-				if err != nil {
-					return err
-				}
-				if active {
-					return types.ErrStoreProductSizeIsInUse
-				}
-			}
-		}
-
-		if err := tx.Where("store_product_id = ? AND product_size_id NOT IN (?)",
-			storeProductID, newSizeIDs).
-			Delete(&data.StoreProductSize{}).Error; err != nil {
+		if err := deleteObsoleteSizes(tx, storeProductID, newSizeIDs); err != nil {
 			return err
 		}
 
@@ -388,24 +339,87 @@ func (r *storeProductRepository) UpdateStoreProductByID(
 	})
 }
 
-func contains(ids []uint, candidate uint) bool {
-	for _, id := range ids {
-		if id == candidate {
-			return true
-		}
-	}
-	return false
+func updateStoreProductFields(tx *gorm.DB, storeID, storeProductID uint, sp data.StoreProduct) error {
+	return tx.Model(&data.StoreProduct{}).
+		Where("store_id = ? AND id = ?", storeID, storeProductID).
+		Updates(data.StoreProduct{
+			IsAvailable: sp.IsAvailable,
+		}).Error
 }
 
-func isEqualPrice(a, b *float64) bool {
-	switch {
-	case a == nil && b == nil:
-		return true
-	case a == nil || b == nil:
-		return false
-	default:
-		return *a == *b
+func loadExistingStoreProductSizes(tx *gorm.DB, storeProductID uint) (map[uint]*data.StoreProductSize, error) {
+	var sizes []data.StoreProductSize
+	if err := tx.Where("store_product_id = ?", storeProductID).Find(&sizes).Error; err != nil {
+		return nil, err
 	}
+	existingMap := make(map[uint]*data.StoreProductSize, len(sizes))
+	for i := range sizes {
+		sz := &sizes[i]
+		existingMap[sz.ProductSizeID] = sz
+	}
+	return existingMap, nil
+}
+
+func processIncomingSizes(
+	tx *gorm.DB,
+	storeProductID uint,
+	incoming []data.StoreProductSize,
+	existingMap map[uint]*data.StoreProductSize,
+) (newSizeIDs []uint, sizesToInsert []data.StoreProductSize, err error) {
+	for i := range incoming {
+		dto := incoming[i]
+		newSizeIDs = append(newSizeIDs, dto.ProductSizeID)
+
+		if existingRow, found := existingMap[dto.ProductSizeID]; found {
+			// If the StorePrice changes, check if the record is referenced in active orders.
+			if !utils.IsEqualPrice(existingRow.StorePrice, dto.StorePrice) {
+				active, err := checkStoreProductSizeInActiveOrders(tx, existingRow.ID)
+				if err != nil {
+					return nil, nil, err
+				}
+				if active {
+					return nil, nil, types.ErrStoreProductSizeIsInUse
+				}
+			}
+			// Update using the actual primary key.
+			if err := tx.Model(&data.StoreProductSize{}).
+				Where("id = ?", existingRow.ID).
+				Updates(data.StoreProductSize{
+					StorePrice: dto.StorePrice,
+				}).Error; err != nil {
+				return nil, nil, err
+			}
+		} else {
+			// Prepare a new record for insertion.
+			sizesToInsert = append(sizesToInsert, data.StoreProductSize{
+				StoreProductID: storeProductID,
+				ProductSizeID:  dto.ProductSizeID,
+				StorePrice:     dto.StorePrice,
+			})
+		}
+	}
+	return newSizeIDs, sizesToInsert, nil
+}
+
+func verifyDeletion(tx *gorm.DB, existingMap map[uint]*data.StoreProductSize, newSizeIDs []uint) error {
+	for productSizeID, existingRow := range existingMap {
+		if !utils.Contains(newSizeIDs, productSizeID) {
+			active, err := checkStoreProductSizeInActiveOrders(tx, existingRow.ID)
+			if err != nil {
+				return err
+			}
+			if active {
+				return types.ErrStoreProductSizeIsInUse
+			}
+		}
+	}
+	return nil
+}
+
+func deleteObsoleteSizes(tx *gorm.DB, storeProductID uint, newSizeIDs []uint) error {
+	return tx.Where("store_product_id = ? AND product_size_id NOT IN (?)",
+		storeProductID, newSizeIDs).
+		Delete(&data.StoreProductSize{}).Error
 }
 
 func checkStoreProductSizeInActiveOrders(tx *gorm.DB, storeProductSizeID uint) (bool, error) {
