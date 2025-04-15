@@ -144,6 +144,28 @@ func TestFranchiseeEndpoints(t *testing.T) {
 				AuthRole:     data.RoleFranchiseManager,
 				ExpectedCode: http.StatusOK,
 			},
+			{
+				Description: "Admin should NOT update a franchisee with an empty name",
+				Method:      http.MethodPut,
+				URL:         "/api/test/franchisees/1",
+				Body: map[string]interface{}{
+					"name":        " ",                 // Empty name
+					"description": "Valid description", // Valid description provided
+				},
+				AuthRole:     data.RoleAdmin,
+				ExpectedCode: http.StatusBadRequest, // Expected failure due to empty name
+			},
+			{
+				Description: "Admin should update a franchisee with an empty description",
+				Method:      http.MethodPut,
+				URL:         "/api/test/franchisees/1",
+				Body: map[string]interface{}{
+					"name":        "Valid Franchisee Name", // Valid name provided
+					"description": " ",                     // Empty description
+				},
+				AuthRole:     data.RoleAdmin,
+				ExpectedCode: http.StatusOK, // Expected failure due to empty description
+			},
 		}
 		env.RunTests(t, testCases)
 	})

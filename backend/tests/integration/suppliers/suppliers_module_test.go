@@ -42,6 +42,48 @@ func TestSupplierEndpoints(t *testing.T) {
 				AuthRole:     data.RoleBarista, // Not allowed to create
 				ExpectedCode: http.StatusForbidden,
 			},
+			{
+				Description: "Fail to create supplier with an empty name",
+				Method:      http.MethodPost,
+				URL:         "/api/test/suppliers",
+				Body: map[string]interface{}{
+					"name":         "",
+					"contactEmail": "valid@example.com",
+					"contactPhone": "+1234567890",
+					"city":         "New York",
+					"address":      "123 Supplier St",
+				},
+				AuthRole:     data.RoleAdmin,
+				ExpectedCode: http.StatusBadRequest,
+			},
+			{
+				Description: "Fail to create supplier with no contact number",
+				Method:      http.MethodPost,
+				URL:         "/api/test/suppliers",
+				Body: map[string]interface{}{
+					"name":         "Supplier B",
+					"contactEmail": "valid@example.com",
+					// "contactPhone" is omitted intentionally
+					"city":    "New York",
+					"address": "123 Supplier St",
+				},
+				AuthRole:     data.RoleAdmin,
+				ExpectedCode: http.StatusBadRequest,
+			},
+			{
+				Description: "Fail to create supplier with no email",
+				Method:      http.MethodPost,
+				URL:         "/api/test/suppliers",
+				Body: map[string]interface{}{
+					"name": "Supplier D",
+					// "contactEmail" is omitted intentionally
+					"contactPhone": "+1234567890",
+					"city":         "New York",
+					"address":      "123 Supplier St",
+				},
+				AuthRole:     data.RoleAdmin,
+				ExpectedCode: http.StatusBadRequest,
+			},
 		}
 		env.RunTests(t, testCases)
 	})
@@ -59,6 +101,26 @@ func TestSupplierEndpoints(t *testing.T) {
 				Description:  "Store Manager shouldn't fetch all suppliers",
 				Method:       http.MethodGet,
 				URL:          "/api/test/suppliers",
+				AuthRole:     data.RoleStoreManager, // Allowed to read suppliers
+				ExpectedCode: http.StatusForbidden,
+			},
+		}
+		env.RunTests(t, testCases)
+	})
+
+	t.Run("Fetch all Supplier Materials", func(t *testing.T) {
+		testCases := []utils.TestCase{
+			{
+				Description:  "Admin should fetch all suppliers",
+				Method:       http.MethodGet,
+				URL:          "/api/test/suppliers/1/materials",
+				AuthRole:     data.RoleAdmin, // Admin access
+				ExpectedCode: http.StatusOK,
+			},
+			{
+				Description:  "Store Manager shouldn't fetch all suppliers",
+				Method:       http.MethodGet,
+				URL:          "/api/test/suppliers/1/materials",
 				AuthRole:     data.RoleStoreManager, // Allowed to read suppliers
 				ExpectedCode: http.StatusForbidden,
 			},
@@ -88,6 +150,42 @@ func TestSupplierEndpoints(t *testing.T) {
 				URL:          "/api/test/suppliers/9999",
 				AuthRole:     data.RoleAdmin,
 				ExpectedCode: http.StatusNotFound,
+			},
+		}
+		env.RunTests(t, testCases)
+	})
+
+	t.Run("Update Supplier Materials", func(t *testing.T) {
+		testCases := []utils.TestCase{
+			{
+				Description: "Admin should update supplier materials",
+				Method:      http.MethodPut,
+				URL:         "/api/test/suppliers/1",
+				Body: map[string]interface{}{
+					"materials": []map[string]interface{}{
+						{
+							"stockMaterialId": 1,
+							"basePrice":       10.0,
+						},
+						{
+							"stockMaterialId": 2,
+							"basePrice":       20.0,
+						},
+					},
+				},
+				AuthRole:     data.RoleAdmin, // Only Admin can update
+				ExpectedCode: http.StatusOK,
+			},
+			{
+				Description: "Store Manager should NOT be able to update supplier materials",
+				Method:      http.MethodPut,
+				URL:         "/api/test/suppliers/1",
+				Body: map[string]interface{}{
+					"name": "Updated Supplier A",
+					"city": "Los Angeles",
+				},
+				AuthRole:     data.RoleStoreManager, // Not permitted to update
+				ExpectedCode: http.StatusForbidden,
 			},
 		}
 		env.RunTests(t, testCases)
@@ -140,4 +238,5 @@ func TestSupplierEndpoints(t *testing.T) {
 		}
 		env.RunTests(t, testCases)
 	})
+
 }
