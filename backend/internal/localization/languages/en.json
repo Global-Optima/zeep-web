@@ -201,7 +201,7 @@
 
     "500-storeProduct": "An unexpected error occurred with the cafe product. Please try again later.",
     "409-storeProduct-delete-inUse": "Cafe product cannot be deleted because it is in use.",
-    "409-storeProduct-update-inUse": "Cafe product cannot be updated because it is in use.",
+    "409-storeProduct-update-inUse": "Cafe product cannot be updated because there is active usage in order.",
     "404-storeProduct": "Cafe product not found.",
     "400-storeProduct": "Invalid cafe product data provided. Please check and try again.",
     "201-storeProduct": "Product successfully added to the cafe .",
