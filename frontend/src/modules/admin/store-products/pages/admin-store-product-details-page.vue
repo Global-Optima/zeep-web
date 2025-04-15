@@ -67,7 +67,7 @@ const updateMutation = useMutation({
 	},
 	onError: (error: AxiosLocalizedError) => {
 		toastLocalizedError(
-			error, 
+			error,
 			'Произошла ошибка при обновлении данных продукта кафе.',
 		)
 	},
