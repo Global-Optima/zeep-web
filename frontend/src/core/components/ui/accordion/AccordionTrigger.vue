@@ -31,7 +31,7 @@ const delegatedProps = computed(() => {
 			<slot />
 			<slot name="icon">
 				<ChevronDownIcon
-					class="w-8 h-8 text-muted-foreground transition-transform duration-200 shrink-0"
+					class="size-5 text-muted-foreground transition-transform duration-200 shrink-0"
 				/>
 			</slot>
 		</AccordionTrigger>

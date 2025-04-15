@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/cor
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
 import { Textarea } from '@/core/components/ui/textarea'
+import AdminProductsTranslationsDialog from '@/modules/admin/products/components/admin-products-translations-dialog.vue'
 import type { ProductCategoryDTO, ProductDetailsDTO, UpdateProductDTO } from '@/modules/kiosk/products/models/product.model'
 import { toTypedSchema } from '@vee-validate/zod'
 import {Camera, ChevronLeft, Video, X} from 'lucide-vue-next'
@@ -162,10 +163,13 @@ const triggerVideoInput = () => videoInputRef.value?.click();
 			<h1 class="flex-1 sm:grow-0 font-semibold text-xl tracking-tight whitespace-nowrap shrink-0">
 				{{ productDetails.name }}
 			</h1>
+
 			<div
 				class="hidden md:flex items-center gap-2 md:ml-auto"
 				v-if="!readonly"
 			>
+        <AdminProductsTranslationsDialog/>
+
 				<Button
 					variant="outline"
 					type="button"
