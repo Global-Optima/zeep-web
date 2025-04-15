@@ -84,7 +84,6 @@ func (tasks *StoreProvisionCronTasks) CheckStoreProvisionNotifications() {
 func (tasks *StoreProvisionCronTasks) formExpirationDetailsAndNotify(
 	storeProvisionList []data.StoreProvision,
 ) (expiredProvisionIDs []uint, provisionIDs []uint, err error) {
-
 	provisionIDSet := make(map[uint]struct{})
 
 	for _, storeProvision := range storeProvisionList {
