@@ -66,6 +66,13 @@ func TestProvisionEndpoints(t *testing.T) {
 				AuthRole:     data.RoleAdmin,
 				ExpectedCode: http.StatusOK,
 			},
+			{
+				Description:  "Admin searches provisions",
+				Method:       http.MethodGet,
+				URL:          "/api/test/provisions?search=Test",
+				AuthRole:     data.RoleAdmin,
+				ExpectedCode: http.StatusOK,
+			},
 		}
 		env.RunTests(t, testCases)
 	})
