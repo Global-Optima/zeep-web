@@ -229,9 +229,13 @@ func (r *storeInventoryManagerRepository) RecalculateStoreInventory(storeID uint
 		ctx.additiveProvisionIDs,
 	)
 
-	frozenInventory, err := r.buildFrozenInventory(ctx, storeID)
-	if err != nil {
-		return err
+	frozenInventory := input.FrozenInventory
+	if frozenInventory == nil {
+		var err error
+		frozenInventory, err = r.buildFrozenInventory(ctx, storeID)
+		if err != nil {
+			return err
+		}
 	}
 
 	if err := r.gatherStoreProductAndAdditiveIDsFromResources(ctx, storeID); err != nil {

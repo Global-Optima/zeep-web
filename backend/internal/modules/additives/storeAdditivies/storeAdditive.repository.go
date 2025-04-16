@@ -15,12 +15,21 @@ import (
 	"gorm.io/gorm"
 )
 
+type psAddKey struct {
+	ProductSizeID uint
+	AdditiveID    uint
+}
+
 type StoreAdditiveRepository interface {
 	GetMissingStoreAdditiveIDsForProductSizes(storeID uint, productSizeIDs []uint) ([]uint, error)
 	FilterMissingStoreAdditiveIDs(storeID uint, additivesIDs []uint) ([]uint, error)
 	CreateStoreAdditive(storeID uint, dto *types.CreateStoreAdditiveDTO) (uint, error)
 	CreateStoreAdditives(storeAdditives []data.StoreAdditive) ([]uint, error)
 	GetStoreAdditiveWithDetailsByID(storeAdditiveID uint, filter *contexts.StoreContextFilter) (*data.StoreAdditive, error)
+	GetStoreAdditivesWithCategoryByIDs(
+		storeID uint,
+		additiveIDs []uint,
+	) (map[uint]*data.StoreAdditive, error)
 	GetStoreAdditiveByID(storeAdditiveID uint) (*data.StoreAdditive, error)
 	GetAvailableAdditivesToAdd(storeID uint, filter *additiveTypes.AdditiveFilterQuery) ([]data.Additive, error)
 	GetStoreAdditives(storeID uint, filter *additiveTypes.AdditiveFilterQuery) ([]data.StoreAdditive, error)
@@ -33,6 +42,9 @@ type StoreAdditiveRepository interface {
 		storeProductSizeID uint,
 		storeAdditiveID uint,
 	) (*data.StoreAdditive, *data.ProductSizeAdditive, error)
+	GetPSAByProductSizeAndAdditive(
+		keys []types.StorePSAdditiveKey,
+	) (map[types.StorePSAdditiveKey]*data.ProductSizeAdditive, error)
 
 	CloneWithTransaction(tx *gorm.DB) StoreAdditiveRepository
 }
@@ -328,6 +340,30 @@ func (r *storeAdditiveRepository) GetStoreAdditiveWithDetailsByID(storeAdditiveI
 	return storeAdditive, nil
 }
 
+// TODO refactor and use ([]data.StoreAdditive, error) and turn it into map in service logic
+func (r *storeAdditiveRepository) GetStoreAdditivesWithCategoryByIDs(
+	storeID uint,
+	additiveIDs []uint,
+) (map[uint]*data.StoreAdditive, error) {
+	var storeAdditives []data.StoreAdditive
+
+	err := r.db.Model(&data.StoreAdditive{}).
+		Preload("Additive.Category").
+		Where("store_id = ? AND id IN ?", storeID, additiveIDs).
+		Find(&storeAdditives).Error
+	if err != nil {
+		return nil, err
+	}
+
+	out := make(map[uint]*data.StoreAdditive, len(storeAdditives))
+	for i := range storeAdditives {
+		sa := &storeAdditives[i]
+		out[sa.ID] = sa
+	}
+
+	return out, nil
+}
+
 func (r *storeAdditiveRepository) GetStoreAdditiveByID(storeAdditiveID uint) (*data.StoreAdditive, error) {
 	var storeAdditive *data.StoreAdditive
 
@@ -512,4 +548,130 @@ func (r *storeAdditiveRepository) DeleteStoreAdditive(storeID, storeAdditiveID u
 	}
 
 	return nil
+}
+
+func (r *storeAdditiveRepository) GetPSAByProductSizeAndAdditive(
+	keys []types.StorePSAdditiveKey,
+) (map[types.StorePSAdditiveKey]*data.ProductSizeAdditive, error) {
+	if len(keys) == 0 {
+		return make(map[types.StorePSAdditiveKey]*data.ProductSizeAdditive), nil
+	}
+
+	// 1) Gather unique store_product_size IDs and store_additive IDs from keys.
+	spsIDSet := make(map[uint]struct{})
+	storeAddIDSet := make(map[uint]struct{})
+	for _, k := range keys {
+		spsIDSet[k.StoreProductSizeID] = struct{}{}
+		storeAddIDSet[k.StoreAdditiveID] = struct{}{}
+	}
+
+	var spsIDs []uint
+	for id := range spsIDSet {
+		spsIDs = append(spsIDs, id)
+	}
+	var storeAddIDs []uint
+	for id := range storeAddIDSet {
+		storeAddIDs = append(storeAddIDs, id)
+	}
+
+	// 2) Query store_product_sizes to get mapping: store_product_size_id → product_size_id.
+	var storePSList []data.StoreProductSize
+	err := r.db.
+		Model(&data.StoreProductSize{}).
+		Select("id, product_size_id").
+		Where("id IN ?", spsIDs).
+		Find(&storePSList).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to load store_product_sizes: %w", err)
+	}
+	spsToPs := make(map[uint]uint, len(storePSList))
+	for _, sps := range storePSList {
+		spsToPs[sps.ID] = sps.ProductSizeID
+	}
+
+	// 3) Query store_additives to get mapping: store_additive_id → additive_id.
+	var storeAdditives []data.StoreAdditive
+	err = r.db.
+		Model(&data.StoreAdditive{}).
+		Select("id, additive_id").
+		Where("id IN ?", storeAddIDs).
+		Find(&storeAdditives).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to load store_additives: %w", err)
+	}
+	storeAddToAdd := make(map[uint]uint, len(storeAdditives))
+	for _, sa := range storeAdditives {
+		storeAddToAdd[sa.ID] = sa.AdditiveID
+	}
+
+	// 4) Build a set of (ProductSizeID, AdditiveID) pairs from the original keys.
+	// Define a local type for the pair.
+	type psAddPair struct {
+		ProductSizeID uint
+		AdditiveID    uint
+	}
+	// keyMapping will store for each pair all the original keys that translate to that pair.
+	keyMapping := make(map[psAddPair][]types.StorePSAdditiveKey)
+	for _, k := range keys {
+		psID, ok1 := spsToPs[k.StoreProductSizeID]
+		addID, ok2 := storeAddToAdd[k.StoreAdditiveID]
+		if !ok1 || !ok2 {
+			// Skip keys that cannot be translated.
+			continue
+		}
+		pair := psAddPair{ProductSizeID: psID, AdditiveID: addID}
+		keyMapping[pair] = append(keyMapping[pair], k)
+	}
+
+	// If no valid keys remain, return an empty map.
+	if len(keyMapping) == 0 {
+		return make(map[types.StorePSAdditiveKey]*data.ProductSizeAdditive), nil
+	}
+
+	// 5) Convert the set of pairs to a slice of tuple pairs for querying.
+	var tuples [][2]uint
+	for pair := range keyMapping {
+		tuples = append(tuples, [2]uint{pair.ProductSizeID, pair.AdditiveID})
+	}
+
+	// 6) Query product_size_additives using the tuple pairs.
+	var psas []data.ProductSizeAdditive
+	err = r.db.
+		Model(&data.ProductSizeAdditive{}).
+		Preload("Additive").
+		Where("(product_size_id, additive_id) IN ?", tuples).
+		Find(&psas).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to load product_size_additives: %w", err)
+	}
+
+	// 7) Build a lookup: (ProductSizeID, AdditiveID) pair -> *ProductSizeAdditive.
+	psaLookup := make(map[psAddPair]*data.ProductSizeAdditive, len(psas))
+	for i := range psas {
+		psa := &psas[i]
+		pair := psAddPair{ProductSizeID: psa.ProductSizeID, AdditiveID: psa.AdditiveID}
+		psaLookup[pair] = psa
+	}
+
+	// 8) Finally, map each original key to its corresponding ProductSizeAdditive via the translated pair.
+	result := make(map[types.StorePSAdditiveKey]*data.ProductSizeAdditive)
+	for pair, keysSlice := range keyMapping {
+		psa, exists := psaLookup[pair]
+		if !exists {
+			continue
+		}
+		for _, originalKey := range keysSlice {
+			result[originalKey] = psa
+		}
+	}
+
+	return result, nil
+}
+
+func toTuplePairs(arr []psAddKey) [][2]uint {
+	tuples := make([][2]uint, 0, len(arr))
+	for _, x := range arr {
+		tuples = append(tuples, [2]uint{x.ProductSizeID, x.AdditiveID})
+	}
+	return tuples
 }

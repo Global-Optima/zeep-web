@@ -30,6 +30,7 @@ type StoreProductRepository interface {
 
 	GetStoreProductSizeByID(storeProductSizeID uint) (*data.StoreProductSize, error)
 	GetStoreProductSizeWithDetailsByID(storeID, storeProductSizeID uint) (*data.StoreProductSize, error)
+	GetStoreProductSizesWithDetailsByIDs(storeID uint, storeProductSizeIDs []uint) ([]data.StoreProductSize, error)
 	GetSufficientStoreProductSizeById(storeID, storeProductSizeID uint, frozenInventory *storeInventoryManagersTypes.FrozenInventory) (*data.StoreProductSize, error)
 	UpdateProductSize(storeID, productSizeID uint, size *data.StoreProductSize) error
 	DeleteStoreProductSize(storeID, productSizeID uint) error
@@ -604,4 +605,30 @@ func (r *storeProductRepository) DeleteStoreProductSize(storeID, productSizeID u
 		return gorm.ErrRecordNotFound
 	}
 	return nil
+}
+
+func (r *storeProductRepository) GetStoreProductSizesWithDetailsByIDs(
+	storeID uint,
+	storeProductSizeIDs []uint,
+) ([]data.StoreProductSize, error) {
+
+	if len(storeProductSizeIDs) == 0 {
+		return []data.StoreProductSize{}, nil
+	}
+
+	var storePSList []data.StoreProductSize
+
+	err := r.db.Model(&data.StoreProductSize{}).
+		Joins("JOIN store_products sp ON sp.id = store_product_sizes.store_product_id").
+		Where("sp.store_id = ? AND store_product_sizes.id IN ?", storeID, storeProductSizeIDs).
+		Preload("ProductSize.Unit").
+		Preload("ProductSize.Product").
+		Preload("StoreProduct.Product").
+		Find(&storePSList).Error
+
+	if err != nil {
+		return nil, fmt.Errorf("failed to batch load storeProductSizes: %w", err)
+	}
+
+	return storePSList, nil
 }

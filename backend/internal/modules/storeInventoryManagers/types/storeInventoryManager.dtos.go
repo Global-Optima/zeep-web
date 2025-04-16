@@ -8,10 +8,11 @@ type DeductedStoreInventory struct {
 }
 
 type RecalculateInput struct {
-	IngredientIDs  []uint
-	ProvisionIDs   []uint
-	ProductSizeIDs []uint
-	AdditiveIDs    []uint
+	IngredientIDs   []uint
+	ProvisionIDs    []uint
+	ProductSizeIDs  []uint
+	AdditiveIDs     []uint
+	FrozenInventory *FrozenInventory //optional
 }
 
 type FrozenInventory struct {
