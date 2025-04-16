@@ -25,6 +25,7 @@ import type { StockRequestStockMaterialDTO } from '@/modules/admin/stock-request
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 import AdminSelectAvailableToAddStockMaterialsDialog from '@/modules/admin/warehouse-stocks/components/admin-select-available-to-add-stock-materials-dialog.vue'
 import { ref } from 'vue'
+import { getRouteName } from "@/core/config/routes.config"
 
 interface CreateStockRequestItemForm {
 	stockMaterialId: number
@@ -148,7 +149,15 @@ function cancelForm() {
 							v-for="(item, index) in stockRequestItemsForm"
 							:key="index"
 						>
-							<TableCell>{{ item.name }}</TableCell>
+							<TableCell>
+								<RouterLink
+									:to="{name: getRouteName('ADMIN_STOCK_MATERIAL_DETAILS'), params: {id: item.stockMaterialId}}"
+									target="_blank"
+									class="hover:text-primary underline transition-colors duration-300 underline-offset-4"
+								>
+									{{ item.name }}
+								</RouterLink>
+							</TableCell>
 							<TableCell>{{ item.size }} {{ item.unit.name }}</TableCell>
 							<TableCell>
 								<Input

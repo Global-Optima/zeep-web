@@ -22,7 +22,7 @@
 			<Table>
 				<TableHeader>
 					<TableRow>
-						<TableHead>Продукт</TableHead>
+						<TableHead>Название</TableHead>
 						<TableHead>Упаковка</TableHead>
 						<TableHead>Количество</TableHead>
 					</TableRow>
@@ -32,7 +32,15 @@
 						v-for="(item, index) in stockRequest.stockMaterials"
 						:key="index"
 					>
-						<TableCell>{{ item.stockMaterial.name }}</TableCell>
+						<TableCell class="py-3">
+							<RouterLink
+								:to="{name: getRouteName('ADMIN_STOCK_MATERIAL_DETAILS'), params: {id: item.stockMaterial.id}}"
+								target="_blank"
+								class="hover:text-primary underline transition-colors duration-300 underline-offset-4"
+							>
+								{{ item.stockMaterial.name }}
+							</RouterLink>
+						</TableCell>
 						<TableCell
 							>{{ item.stockMaterial.size }}
 							{{ item.stockMaterial.unit.name.toLowerCase() }}</TableCell
@@ -62,6 +70,7 @@ import {
   TableHeader,
   TableRow
 } from '@/core/components/ui/table'
+import { getRouteName } from "@/core/config/routes.config"
 import { useHasRole } from '@/core/hooks/use-has-roles.hook'
 import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import { type StockRequestResponse, StockRequestStatus } from '@/modules/admin/stock-requests/models/stock-requests.model'

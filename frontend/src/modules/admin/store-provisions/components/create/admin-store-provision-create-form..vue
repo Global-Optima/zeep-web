@@ -18,6 +18,7 @@ import type { ProvisionDTO, ProvisionDetailsDTO } from '@/modules/admin/provisio
 import type { CreateStoreProvisionDTO } from '@/modules/admin/store-provisions/models/store-provision.models'
 
 import { provisionsService } from '@/modules/admin/provisions/services/provisions.service'
+import { getRouteName } from "@/core/config/routes.config"
 
 // Emits definition
 const emits = defineEmits<{
@@ -215,7 +216,7 @@ const onCancel = () => {
 
 		<Card v-if="selectedProvision">
 			<CardHeader>
-				<CardTitle>Сырье</CardTitle>
+				<CardTitle>Технологическая карта</CardTitle>
 				<CardDescription> Технологическая карта на заданный обьем </CardDescription>
 			</CardHeader>
 			<CardContent>
@@ -233,7 +234,15 @@ const onCancel = () => {
 							v-for="ingredient in scaledTechnicalMap"
 							:key="ingredient.ingredientId"
 						>
-							<TableCell>{{ ingredient.name }}</TableCell>
+							<TableCell>
+								<RouterLink
+									:to="{name: getRouteName('ADMIN_INGREDIENTS_DETAILS'), params: {id: ingredient.ingredientId}}"
+									target="_blank"
+									class="hover:text-primary underline transition-colors duration-300 underline-offset-4"
+								>
+									{{ ingredient.name }}
+								</RouterLink>
+							</TableCell>
 							<TableCell>{{ ingredient.category.name }}</TableCell>
 							<TableCell>{{ ingredient.quantity }} {{ ingredient.unit.toLowerCase() }}</TableCell>
 							<TableCell class="font-semibold">

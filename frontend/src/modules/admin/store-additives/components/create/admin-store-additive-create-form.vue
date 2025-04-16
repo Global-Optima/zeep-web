@@ -25,6 +25,7 @@ import type { AdditiveDTO } from '@/modules/admin/additives/models/additives.mod
 import AdminSelectAvailableToAddAdditiveDialog from '@/modules/admin/store-additives/components/admin-select-available-to-add-additive-dialog.vue'
 import type { CreateStoreAdditiveDTO } from '@/modules/admin/store-additives/models/store-additves.model'
 import { ChevronLeft, Trash } from 'lucide-vue-next'
+import { getRouteName } from "@/core/config/routes.config"
 
 
 // Props & Emits
@@ -120,7 +121,7 @@ function removeAdditive(index: number) {
 						variant="outline"
 						@click="openAdditiveDialog = true"
 					>
-						Добавить модификатор
+						Добавить
 					</Button>
 				</div>
 				<CardDescription class="mt-1"> Список добавленных модификаторов и их цены </CardDescription>
@@ -142,7 +143,15 @@ function removeAdditive(index: number) {
 								v-for="(additive, index) in additivesList"
 								:key="additive.id"
 							>
-								<TableCell>{{ additive.name }}</TableCell>
+								<TableCell>
+									<RouterLink
+										:to="{name: getRouteName('ADMIN_ADDITIVE_DETAILS'), params: {id: additive.id}}"
+										target="_blank"
+										class="hover:text-primary underline transition-colors duration-300 underline-offset-4"
+									>
+										{{ additive.name }}
+									</RouterLink>
+								</TableCell>
 								<TableCell>{{ additive.basePrice }}</TableCell>
 								<TableCell>
 									<Input

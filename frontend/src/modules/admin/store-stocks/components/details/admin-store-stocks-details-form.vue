@@ -10,9 +10,19 @@
 				<ChevronLeft class="w-5 h-5" />
 				<span class="sr-only">Назад</span>
 			</Button>
-			<h1 class="flex-1 sm:grow-0 font-semibold text-xl tracking-tight whitespace-nowrap shrink-0">
-				{{ initialData.name }}
-			</h1>
+
+			<div class="flex items-center gap-3">
+				<h1 class="font-semibold text-xl tracking-tight shrink-0">
+					{{ initialData.name }}
+				</h1>
+				<RouterLink
+					:to="{name: getRouteName('ADMIN_INGREDIENTS_DETAILS'), params: {id: initialData.ingredient.id}}"
+					target="_blank"
+					class="hover:text-primary transition-colors duration-300"
+				>
+					<ExternalLink class="size-5 -mt-1" />
+				</RouterLink>
+			</div>
 
 			<div
 				class="hidden md:flex items-center gap-2 md:ml-auto"
@@ -132,9 +142,10 @@ import {
   FormMessage
 } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
+import { getRouteName } from "@/core/config/routes.config"
 import type { StoreWarehouseStockDTO, UpdateStoreWarehouseStockDTO } from '@/modules/admin/store-stocks/models/store-stock.model'
 import { toTypedSchema } from '@vee-validate/zod'
-import { ChevronLeft } from 'lucide-vue-next'
+import { ChevronLeft, ExternalLink } from 'lucide-vue-next'
 import { useForm } from 'vee-validate'
 import * as z from 'zod'
 // Props

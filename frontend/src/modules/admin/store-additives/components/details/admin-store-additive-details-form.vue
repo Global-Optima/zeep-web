@@ -9,7 +9,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/cor
 import { FormControl, FormField, FormItem, FormLabel } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
 import type { StoreAdditiveDTO, UpdateStoreAdditiveDTO } from '@/modules/admin/store-additives/models/store-additves.model'
-import { ChevronLeft } from 'lucide-vue-next'
+import { ChevronLeft, ExternalLink } from 'lucide-vue-next'
+import { getRouteName } from "@/core/config/routes.config"
 
 
 const emits = defineEmits<{
@@ -65,9 +66,20 @@ const onCancel = () => {
 				<ChevronLeft class="w-5 h-5" />
 				<span class="sr-only">Назад</span>
 			</Button>
-			<h1 class="font-semibold text-xl tracking-tight shrink-0">
-				{{ initialAdditive.name }}
-			</h1>
+
+			<div class="flex items-center gap-3">
+				<h1 class="font-semibold text-xl tracking-tight shrink-0">
+					{{ initialAdditive.name }}
+				</h1>
+				<RouterLink
+					:to="{name: getRouteName('ADMIN_ADDITIVE_DETAILS'), params: {id: initialAdditive.additiveId}}"
+					target="_blank"
+					class="hover:text-primary transition-colors duration-300"
+				>
+					<ExternalLink class="size-5 -mt-1" />
+				</RouterLink>
+			</div>
+
 			<div
 				v-if="!readonly"
 				class="md:flex items-center gap-2 hidden md:ml-auto"
