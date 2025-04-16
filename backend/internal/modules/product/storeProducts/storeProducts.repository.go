@@ -623,10 +623,16 @@ func (r *storeProductRepository) GetStoreProductSizesWithDetailsByIDs(
 		Where("sp.store_id = ? AND store_product_sizes.id IN ?", storeID, storeProductSizeIDs).
 		Preload("ProductSize.Unit").
 		Preload("ProductSize.Product").
-		Preload("StoreProduct.Product").
+		Preload("ProductSize.ProductSizeIngredients").
+		Preload("ProductSize.ProductSizeProvisions").
+		Preload("ProductSize.Additives.Additive.Ingredients").
+		Preload("ProductSize.Additives.Additive.AdditiveProvisions").
 		Find(&storePSList).Error
 
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, fmt.Errorf("failed to batch load storeProductSizes: %w", types.ErrStoreProductSizeNotFound)
+		}
 		return nil, fmt.Errorf("failed to batch load storeProductSizes: %w", err)
 	}
 

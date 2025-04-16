@@ -26,6 +26,7 @@ type StoreAdditiveRepository interface {
 	CreateStoreAdditive(storeID uint, dto *types.CreateStoreAdditiveDTO) (uint, error)
 	CreateStoreAdditives(storeAdditives []data.StoreAdditive) ([]uint, error)
 	GetStoreAdditiveWithDetailsByID(storeAdditiveID uint, filter *contexts.StoreContextFilter) (*data.StoreAdditive, error)
+
 	GetStoreAdditivesWithCategoryByIDs(
 		storeID uint,
 		additiveIDs []uint,
@@ -34,7 +35,9 @@ type StoreAdditiveRepository interface {
 	GetAvailableAdditivesToAdd(storeID uint, filter *additiveTypes.AdditiveFilterQuery) ([]data.Additive, error)
 	GetStoreAdditives(storeID uint, filter *additiveTypes.AdditiveFilterQuery) ([]data.StoreAdditive, error)
 	GetStoreAdditivesByIDs(storeID uint, IDs []uint) ([]data.StoreAdditive, error)
+	GetStoreAdditivesWithDetailsByIDs(storeID uint, IDs []uint) ([]data.StoreAdditive, error)
 	GetStoreAdditiveCategories(storeID, storeProductSizeID uint, filter *types.StoreAdditiveCategoriesFilter) ([]data.AdditiveCategory, error)
+
 	UpdateStoreAdditive(storeID, storeAdditiveID uint, input *data.StoreAdditive) error
 	DeleteStoreAdditive(storeID, storeAdditiveID uint) error
 	GetStoreAdditiveWithProductSizeAdditive(
@@ -485,6 +488,24 @@ func (r *storeAdditiveRepository) GetStoreAdditivesByIDs(storeID uint, IDs []uin
 		Where("store_id = ?", storeID).
 		Preload("Additive.Category").
 		Preload("Additive.Unit").
+		Where("id IN (?)", IDs)
+
+	if err := query.Find(&storeAdditives).Error; err != nil {
+		return nil, err
+	}
+
+	return storeAdditives, nil
+}
+
+func (r *storeAdditiveRepository) GetStoreAdditivesWithDetailsByIDs(storeID uint, IDs []uint) ([]data.StoreAdditive, error) {
+	var storeAdditives []data.StoreAdditive
+
+	query := r.db.Model(&data.StoreAdditive{}).
+		Where("store_id = ?", storeID).
+		Preload("Additive.Category").
+		Preload("Additive.Unit").
+		Preload("Additive.Ingredients").
+		Preload("Additive.AdditiveProvisions").
 		Where("id IN (?)", IDs)
 
 	if err := query.Find(&storeAdditives).Error; err != nil {

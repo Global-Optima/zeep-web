@@ -42,7 +42,7 @@ type OrderStatusesCountDTO struct {
 
 type CreateSubOrderDTO struct {
 	StoreProductSizeID uint   `json:"storeProductSizeId"`
-	Quantity           int    `json:"quantity"`
+	Quantity           uint   `json:"quantity"`
 	StoreAdditivesIDs  []uint `json:"storeAdditivesIds"`
 }
 

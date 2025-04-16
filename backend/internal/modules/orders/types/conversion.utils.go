@@ -10,7 +10,7 @@ func ConvertCreateOrderDTOToOrder(createOrderDTO *CreateOrderDTO, productPrices 
 	var suborders []data.Suborder
 
 	for _, productDTO := range createOrderDTO.Suborders {
-		for i := 0; i < productDTO.Quantity; i++ {
+		for i := 0; i < int(productDTO.Quantity); i++ {
 			var storeAdditives []data.SuborderAdditive
 			suborderTotal := productPrices[productDTO.StoreProductSizeID]
 
