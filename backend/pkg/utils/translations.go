@@ -5,6 +5,13 @@ import (
 	"gorm.io/gorm"
 )
 
+func FirstTranslation(tr []data.AppTranslations) string {
+	if len(tr) > 0 {
+		return tr[0].TranslatedText
+	}
+	return ""
+}
+
 func WithLocalePreloads(locale data.LanguageCode, relations ...string) func(*gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		for _, rel := range relations {

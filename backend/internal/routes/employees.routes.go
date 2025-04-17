@@ -130,22 +130,24 @@ func (r *Router) RegisterStoreProductRoutes(handler *storeProducts.StoreProductH
 func (r *Router) RegisterIngredientRoutes(handler *ingredients.IngredientHandler) {
 	router := r.EmployeeRoutes.Group("/ingredients")
 	{
-		router.GET("/:id", handler.GetIngredientByID)
-		router.GET("", handler.GetIngredients)
+		router.GET("/:id", middleware.LocaleMiddleware(), handler.GetIngredientByID)
+		router.GET("", middleware.LocaleMiddleware(), handler.GetIngredients)
 		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateIngredient)
 		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateIngredient)
 		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteIngredient)
+		router.POST("/:id/translations", middleware.EmployeeRoleMiddleware(), handler.CreateOrUpdateIngredientTranslation)
 	}
 }
 
 func (r *Router) RegisterIngredientCategoriesRoutes(handler *ingredientCategories.IngredientCategoryHandler) {
 	router := r.EmployeeRoutes.Group("/ingredient-categories")
 	{
-		router.GET("", handler.GetAll)
-		router.GET("/:id", handler.GetByID)
+		router.GET("", middleware.LocaleMiddleware(), handler.GetAll)
+		router.GET("/:id", middleware.LocaleMiddleware(), handler.GetByID)
 		router.POST("", middleware.EmployeeRoleMiddleware(), handler.Create)
 		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.Update)
 		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.Delete)
+		router.POST("/:id/translations", middleware.EmployeeRoleMiddleware(), handler.CreateOrUpdateIngredientCategoryTranslation)
 	}
 }
 

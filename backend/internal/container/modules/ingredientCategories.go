@@ -16,7 +16,8 @@ type IngredientCategoriesModule struct {
 
 func NewIngredientCategoriesModule(base *common.BaseModule, auditService audit.AuditService, translationManager translations.TranslationManager) *IngredientCategoriesModule {
 	repo := ingredientCategories.NewIngredientCategoryRepository(base.DB)
-	service := ingredientCategories.NewIngredientCategoryService(repo)
+	transactionManager := ingredientCategories.NewTransactionManager(base.DB, repo, translationManager)
+	service := ingredientCategories.NewIngredientCategoryService(repo, transactionManager)
 	handler := ingredientCategories.NewIngredientCategoryHandler(service, auditService)
 
 	base.Router.RegisterIngredientCategoriesRoutes(handler)

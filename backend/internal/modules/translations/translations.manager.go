@@ -21,7 +21,7 @@ type TranslationManager interface {
 	UpdateAdditiveCategoryTranslationIDs(additiveCategoryID, nameGroupID, descGroupID uint) error
 	UpdateProductTranslationIDs(productID, nameGroupID, descGroupID uint) error
 	UpdateProductCategoryTranslationIDs(productCategoryID, nameGroupID, descGroupID uint) error
-	UpdateIngredientTranslationIDs(ingredientID, nameGroupID, descGroupID uint) error
+	UpdateIngredientTranslationIDs(ingredientID, nameGroupID uint) error
 	UpdateIngredientCategoryTranslationIDs(ingredientCategoryID, nameGroupID, descGroupID uint) error
 
 	CloneWithTransaction(tx *gorm.DB) TranslationManager
@@ -225,7 +225,7 @@ func (r *translationManager) UpdateProductCategoryTranslationIDs(productCategory
 	return nil
 }
 
-func (r *translationManager) UpdateIngredientTranslationIDs(ingredientID, nameGroupID, descGroupID uint) error {
+func (r *translationManager) UpdateIngredientTranslationIDs(ingredientID, nameGroupID uint) error {
 	updates := &data.Ingredient{
 		NameTranslationID: &nameGroupID,
 	}

@@ -16,4 +16,7 @@ var (
 	Response200IngredientCategoryUpdate      = localization.NewResponseKey(200, data.IngredientCategoryComponent, data.UpdateOperation.ToString())
 	Response200IngredientCategoryDelete      = localization.NewResponseKey(200, data.IngredientCategoryComponent, data.DeleteOperation.ToString())
 	Response201IngredientCategory            = localization.NewResponseKey(201, data.IngredientCategoryComponent)
+
+	Response500IngredientCategoryTranslationsUpdate = localization.NewResponseKey(500, data.IngredientCategoryComponent, data.UpdateOperation.ToString(), "TRANSLATIONS")
+	Response200IngredientCategoryTranslationsUpdate = localization.NewResponseKey(200, data.IngredientCategoryComponent, data.UpdateOperation.ToString(), "TRANSLATIONS")
 )
