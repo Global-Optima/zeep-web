@@ -24,7 +24,6 @@ export const signupPasswordValidationSchema = z
 
 export const loginPasswordValidationSchema = z
 	.string()
-	.min(8, 'Пароль должен содержать не менее 8 символов')
 	.regex(
 		LATIN_AND_SPECIAL_CHARS_REGEX,
 		'Пароль должен содержать только латинские символы и разрешенные специальные символы',
