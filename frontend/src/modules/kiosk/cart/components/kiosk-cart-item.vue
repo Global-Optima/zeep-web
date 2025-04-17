@@ -100,7 +100,7 @@ const itemTotalPrice = computed(() => {
 
 // Computed property for additives list as a comma-separated string
 const itemDescription = computed(() => {
-  const itemSize = `${props.item.size.size} ${props.item.size.unit.name}`
+  const itemSize = `${props.item.size.size} ${props.item.size.unit.name.toLowerCase()}`
   if (props.item.additives.length > 0) {
     return `${itemSize}, ${props.item.additives.map(additive => additive.name).join(", ")}`.toLowerCase()
   }

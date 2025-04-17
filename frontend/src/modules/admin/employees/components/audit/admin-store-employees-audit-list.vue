@@ -79,9 +79,8 @@ const formattedOperationType = (operationType: EmployeeAuditOperationType): stri
 
 // Function to format the date
 const formatDate = (date: Date): string => {
-  return format(new Date(date), 'dd MMM yyyy, HH:mm', { locale: ru })
+  return format(new Date(date), 'd MMMM yyyy, HH:mm', { locale: ru })
 }
-
 
 // Function to filter and format the details object
 const formatDetails = (details: Record<string, unknown>): string => {

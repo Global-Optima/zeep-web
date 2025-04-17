@@ -13,15 +13,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ChevronLeft } from 'lucide-vue-next'
 
 // Types
-import type { ProvisionDetailsDTO } from '@/modules/admin/provisions/models/provision.models'
-import type { StoreProvisionDTO, UpdateStoreProvisionDTO } from '@/modules/admin/store-provisions/models/store-provision.models'
+import type {
+  StoreProvisionDetailsDTO,
+  UpdateStoreProvisionDTO
+} from '@/modules/admin/store-provisions/models/store-provision.models'
 
 // Props:
 // - storeProvision: current store provision (with volume and expirationInMinutes values)
 // - provision: the template provision with full details including ingredients.
 const props = defineProps<{
-  storeProvision: StoreProvisionDTO
-  provision: ProvisionDetailsDTO
+  storeProvision: StoreProvisionDetailsDTO
 }>()
 
 // Emits: onSubmit and onCancel events.
@@ -51,9 +52,9 @@ const { handleSubmit, resetForm, values } = useForm({
 // Compute the technical map scaled to the updated store provision’s volume.
 // The scaling ratio is: newVolume / templateAbsoluteVolume.
 const scaledTechnicalMap = computed(() => {
-  if (!props.provision || !values.volume) return []
-  const ratio = values.volume / props.provision.absoluteVolume
-  return props.provision.ingredients.map(item => ({
+  if (!props.storeProvision || !values.volume) return []
+  const ratio = values.volume / props.storeProvision.provision.absoluteVolume
+  return props.storeProvision.ingredients.map(item => ({
     ingredientId: item.ingredient.id,
     name: item.ingredient.name,
     category: item.ingredient.category,

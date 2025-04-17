@@ -3,7 +3,7 @@
 		<TableHeader>
 			<TableRow>
 				<TableHead>Название</TableHead>
-				<TableHead>Обьем</TableHead>
+				<TableHead>Доступный обьем</TableHead>
 				<TableHead>Создан</TableHead>
 				<TableHead>Статус</TableHead>
 				<TableHead></TableHead>
@@ -95,11 +95,11 @@ const onDeleteClick = (e: Event, id: number) => {
 }
 
 const formatCreatedDate = (date: Date) => {
-  return format(date, "dd.MM.yyyy hh:mm", {locale: ru})
+  return format(date, "d MMMM yyyy, HH:mm", {locale: ru})
 }
 
 const canDelete = (provision: StoreProvisionDTO) => {
-  return provision.status === StoreProvisionStatus.PREPARING
+  return provision.status != StoreProvisionStatus.COMPLETED
 }
 
 const onProvisionClick = (id: number) => {
@@ -108,13 +108,15 @@ const onProvisionClick = (id: number) => {
 
 const STORE_PROVISION_STATUS_COLOR: Record<StoreProvisionStatus, string> = {
   [StoreProvisionStatus.COMPLETED]: 'bg-green-100 text-green-800',
-  [StoreProvisionStatus.PREPARING]: 'bg-yellow-100 text-yellow-800',
+  [StoreProvisionStatus.PREPARING]: 'bg-blue-100 text-blue-800',
   [StoreProvisionStatus.EXPIRED]: 'bg-red-100 text-red-800',
+  [StoreProvisionStatus.EMPTY]: 'bg-yellow-100 text-yellow-800',
 }
 
 const STORE_PROVISION_STATUS_FORMATTED: Record<StoreProvisionStatus, string> = {
   [StoreProvisionStatus.COMPLETED]: 'Приготовлен',
   [StoreProvisionStatus.PREPARING]: 'Готовится',
   [StoreProvisionStatus.EXPIRED]: 'Просрочен',
+  [StoreProvisionStatus.EMPTY]: 'Пустой',
 }
 </script>

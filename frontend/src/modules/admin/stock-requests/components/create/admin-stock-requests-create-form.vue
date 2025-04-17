@@ -20,6 +20,7 @@ import {
 import { Trash } from 'lucide-vue-next'
 
 import { useToast } from '@/core/components/ui/toast'
+import { getRouteName } from "@/core/config/routes.config"
 import type { StockMaterialsDTO } from '@/modules/admin/stock-materials/models/stock-materials.model'
 import type { StockRequestStockMaterialDTO } from '@/modules/admin/stock-requests/models/stock-requests.model'
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
@@ -148,8 +149,16 @@ function cancelForm() {
 							v-for="(item, index) in stockRequestItemsForm"
 							:key="index"
 						>
-							<TableCell>{{ item.name }}</TableCell>
-							<TableCell>{{ item.size }} {{ item.unit.name }}</TableCell>
+							<TableCell>
+								<RouterLink
+									:to="{name: getRouteName('ADMIN_STOCK_MATERIAL_DETAILS'), params: {id: item.stockMaterialId}}"
+									target="_blank"
+									class="hover:text-primary underline underline-offset-4 transition-colors duration-300"
+								>
+									{{ item.name }}
+								</RouterLink>
+							</TableCell>
+							<TableCell>{{ item.size }} {{ item.unit.name.toLowerCase() }}</TableCell>
 							<TableCell>
 								<Input
 									type="number"

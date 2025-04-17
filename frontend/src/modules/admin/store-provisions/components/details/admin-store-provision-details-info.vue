@@ -89,24 +89,26 @@ const router = useRouter()
 
 function formatDate(date?: Date | string): string | null {
   if (!date) return null
-  return format(new Date(date), 'dd.MM.yyyy HH:mm', { locale: ru })
+  return format(new Date(date), 'd MMMM yyyy, HH:mm', { locale: ru })
 }
 
 const STORE_PROVISION_STATUS_FORMATTED: Record<StoreProvisionStatus, string> = {
   [StoreProvisionStatus.COMPLETED]: 'Приготовлен',
   [StoreProvisionStatus.PREPARING]: 'Готовится',
   [StoreProvisionStatus.EXPIRED]: 'Просрочен',
+  [StoreProvisionStatus.EMPTY]: 'Пустой',
 }
 
 const provisionDetails = computed(() => [
   { label: 'Номер провизии', value: storeProvision.id },
   { label: 'Заготовка', value: storeProvision.provision.name },
-  { label: 'Объем', value: `${storeProvision.volume} ${storeProvision.provision.unit.name.toLowerCase()}` },
+  { label: 'Доступный объем', value: `${storeProvision.volume} ${storeProvision.provision.unit.name.toLowerCase()}` },
+  { label: 'Изначальный объем', value: `${storeProvision.initialVolume} ${storeProvision.provision.unit.name.toLowerCase()}` },
   { label: 'Срок годности (минут)', value: storeProvision.expirationInMinutes },
   { label: 'Статус', value:  STORE_PROVISION_STATUS_FORMATTED[storeProvision.status] },
   { label: 'Дата создания', value: formatDate(storeProvision.createdAt) },
-  { label: 'Дата завершения', value: formatDate(storeProvision.completedAt) },
-  { label: 'Дата истечения', value: formatDate(storeProvision.expiresAt) },
+  { label: 'Дата приготовления', value: formatDate(storeProvision.completedAt) },
+  { label: 'Дата истечения срока', value: formatDate(storeProvision.expiresAt) },
 ])
 
 

@@ -330,6 +330,21 @@ func (r *provisionRepository) DeleteProvision(provisionID uint) (*data.Provision
 			return err
 		}
 
+		subQuery := tx.Model(&data.StoreProvision{}).
+			Select("store_provisions.id").
+			Where("store_provisions.provision_id = ?", provisionID)
+
+		if err := tx.Unscoped().
+			Where("store_provision_id IN (?)", subQuery).
+			Delete(&data.StoreProvisionIngredient{}).Error; err != nil {
+			return err
+		}
+
+		if err := tx.Where("provision_id = ?", provisionID).
+			Delete(&data.StoreProvision{}).Error; err != nil {
+			return err
+		}
+
 		return nil
 	})
 	if err != nil {
@@ -360,8 +375,14 @@ func checkProvisionReferences(db *gorm.DB, provisionID uint) error {
 		return types.ErrProvisionIsInUse
 	}
 
+	now := time.Now().UTC()
 	if err := db.Model(&data.StoreProvision{}).
-		Where("provision_id = ? AND status = ?", provisionID, data.PROVISION_STATUS_PREPARING).
+		Where("provision_id = ? AND (status = ? OR (status = ? AND expires_at > ?))",
+			provisionID,
+			data.STORE_PROVISION_STATUS_PREPARING,
+			data.STORE_PROVISION_STATUS_COMPLETED,
+			now,
+		).
 		Limit(1).Count(&count).Error; err != nil {
 		return err
 	}

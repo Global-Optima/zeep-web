@@ -252,7 +252,6 @@ export function useOrderGenerateQR() {
 	) {
 		// Default label dimensions in mm
 		const { labelWidthMm = 60, labelHeightMm = 40 } = options
-
 		// Convert mm to dots (8 dots per mm for 203 DPI printers)
 		const labelWidthDots = Math.round(labelWidthMm * 8)
 		const labelHeightDots = Math.round(labelHeightMm * 8)
@@ -261,26 +260,33 @@ export function useOrderGenerateQR() {
 		const widthScale = labelWidthDots / 320
 		const heightScale = labelHeightDots / 180
 
-		// Calculate margins and positioning based on reference design
-		const marginX = Math.round(6 * widthScale)
-		const textAreaWidth = Math.round(308 * widthScale)
+		// Apply stronger reduction factors
+		const overallReductionFactor = 0.75 // 25% overall reduction
+		const textReductionFactor = 0.65 // 35% text reduction (much smaller)
+		const qrReductionFactor = 0.8 // 20% QR reduction (slightly smaller)
 
-		// Reduce top padding by adjusting the label home position
-		const labelHomeY = Math.round(10 * heightScale) // Reduced from 30
+		// Calculate margins and positioning based on reference design with reduction
+		const marginX = Math.round(6 * widthScale * overallReductionFactor)
+		const textAreaWidth = Math.round(308 * widthScale * overallReductionFactor)
 
-		// Text positions - bring everything up slightly
-		const line1Y = Math.round(15 * heightScale) // Reduced from 20
-		const line2Y = Math.round(45 * heightScale) // Reduced from 50
+		// Adjust vertical positioning for reduced size while maintaining spacing
+		const labelHomeY = Math.round(8 * heightScale * overallReductionFactor)
+		const line1Y = Math.round(12 * heightScale * overallReductionFactor)
 
-		// QR code position - reduce space between text and QR
-		const qrY = Math.round(80 * heightScale) // Reduced from 105
-		// Slight adjustment to QR horizontal position
-		const qrX = Math.round(labelWidthDots / 2 - 60 * widthScale)
+		// Increase space between line 1 and line 2
+		const line2Y = Math.round(45 * heightScale * overallReductionFactor) // Increased from 35
 
-		// QR code magnification - in reference it's 6
+		// Increase space between Line 2 and QR code
+		const qrY = Math.round(95 * heightScale * overallReductionFactor) // Adjusted to maintain spacing from line 2
+
+		// Center the QR code considering its reduced size
+		const qrBaseSize = 60 * qrReductionFactor
+		const qrX = Math.round(labelWidthDots / 2 - qrBaseSize * widthScale)
+
+		// QR code magnification - reduced more significantly
 		const qrMagnification = Math.max(
 			2,
-			Math.min(10, Math.round(5 * Math.min(widthScale, heightScale))),
+			Math.min(8, Math.round(5 * Math.min(widthScale, heightScale) * qrReductionFactor)),
 		)
 
 		// Generate the order content
@@ -288,8 +294,11 @@ export function useOrderGenerateQR() {
 		const line1 = `#${order.displayNumber} ${order.customerName} (${index + 1}/${order.subOrders.length})`
 		const line2 = `${suborder.productSize.productName} ${suborder.productSize.sizeName} (${suborder.productSize.size} ${suborder.productSize.unit.name.toLowerCase()}, ${MACHINE_CATEGORY_FORMATTED[suborder.productSize.machineCategory].toLowerCase()})`
 
-		// Font sizes - reference uses AZN,20 for both lines
-		const fontSize = Math.max(12, Math.round(20 * Math.min(widthScale, heightScale)))
+		// Font sizes - significantly reduced for much smaller text
+		const fontSize = Math.max(
+			8,
+			Math.round(20 * Math.min(widthScale, heightScale) * textReductionFactor),
+		)
 
 		// Build the ZPL commands
 		const zplCommands = `^XA
@@ -311,7 +320,7 @@ export function useOrderGenerateQR() {
   ^FO${qrX},${qrY}
   ^BQN,2,${qrMagnification}
   ^FDLA,${qrValue}^FS
-  ^XZ`.trim()
+  ^XZ;`.trim()
 
 		return new Blob([zplCommands], { type: 'application/octet-stream' })
 	}

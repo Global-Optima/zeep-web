@@ -5,6 +5,10 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers"
+	storeInventoryManagersTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers/types"
+	"github.com/sirupsen/logrus"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
@@ -50,14 +54,17 @@ type orderValidationResults struct {
 }
 
 type orderService struct {
-	taskQueue           taskqueue.TaskQueue
-	orderRepo           OrderRepository
-	storeProductRepo    storeProducts.StoreProductRepository
-	storeAdditiveRepo   storeAdditives.StoreAdditiveRepository
-	storeStockRepo      storeStocks.StoreStockRepository
-	notificationService notifications.NotificationService
-	transactionManager  TransactionManager
-	logger              *zap.SugaredLogger
+	taskQueue                 taskqueue.TaskQueue
+	orderRepo                 OrderRepository
+	storeProductRepo          storeProducts.StoreProductRepository
+	storeAdditiveRepo         storeAdditives.StoreAdditiveRepository
+	storeStockRepo            storeStocks.StoreStockRepository
+	storeInventoryManagerRepo storeInventoryManagers.StoreInventoryManagerRepository
+	storeProductService       storeProducts.StoreProductService
+	storeAdditiveService      storeAdditives.StoreAdditiveService
+	notificationService       notifications.NotificationService
+	transactionManager        TransactionManager
+	logger                    *zap.SugaredLogger
 }
 
 func NewOrderService(
@@ -66,19 +73,25 @@ func NewOrderService(
 	storeProductRepo storeProducts.StoreProductRepository,
 	storeAdditiveRepo storeAdditives.StoreAdditiveRepository,
 	storeStockRepo storeStocks.StoreStockRepository,
+	storeInventoryManagerRepo storeInventoryManagers.StoreInventoryManagerRepository,
+	storeProductService storeProducts.StoreProductService,
+	storeAdditiveService storeAdditives.StoreAdditiveService,
 	notificationService notifications.NotificationService,
 	transactionManager TransactionManager,
 	logger *zap.SugaredLogger,
 ) OrderService {
 	return &orderService{
-		taskQueue:           taskQueue,
-		orderRepo:           orderRepo,
-		storeProductRepo:    storeProductRepo,
-		storeAdditiveRepo:   storeAdditiveRepo,
-		storeStockRepo:      storeStockRepo,
-		notificationService: notificationService,
-		transactionManager:  transactionManager,
-		logger:              logger,
+		taskQueue:                 taskQueue,
+		orderRepo:                 orderRepo,
+		storeProductRepo:          storeProductRepo,
+		storeAdditiveRepo:         storeAdditiveRepo,
+		storeStockRepo:            storeStockRepo,
+		storeInventoryManagerRepo: storeInventoryManagerRepo,
+		storeProductService:       storeProductService,
+		storeAdditiveService:      storeAdditiveService,
+		notificationService:       notificationService,
+		transactionManager:        transactionManager,
+		logger:                    logger,
 	}
 }
 
@@ -144,6 +157,7 @@ func ExpandSuborders(suborders []types.CreateSubOrderDTO) []types.CreateSubOrder
 }
 
 func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrderDTO) (*data.Order, error) {
+	start := time.Now()
 	censorValidator := censor.GetCensorValidator()
 
 	if err := censorValidator.ValidateText(createOrderDTO.CustomerName); err != nil {
@@ -155,17 +169,20 @@ func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrd
 		return nil, fmt.Errorf("order can not be empty")
 	}
 
+	logrus.Infof("Order: %v", createOrderDTO)
+	logrus.Infof("storeID: %v, createOrderDTO: %v, storeAdditiveRepo: %v", storeID, createOrderDTO, s.storeAdditiveRepo)
 	if err := ValidateMultipleSelect(storeID, *createOrderDTO, s.storeAdditiveRepo); err != nil {
 		s.logger.Error(err)
 		return nil, types.ErrMultipleSelect // TODO: test updates
 	}
 
-	frozenMap, err := s.orderRepo.CalculateFrozenStock(storeID)
+	frozenInventory, err := s.storeInventoryManagerRepo.CalculateFrozenInventory(storeID, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to calculate frozen stock: %w", err)
+		return nil, fmt.Errorf("failed to calculate frozen inventory: %w", err)
 	}
 
-	if err := s.CheckAndAccumulateSuborders(storeID, createOrderDTO.Suborders, frozenMap); err != nil {
+	logrus.Infof("Frozen Stock BEFORE creating order: %v", frozenInventory)
+	if err := s.CheckAndAccumulateSuborders(storeID, createOrderDTO.Suborders, frozenInventory); err != nil {
 		return nil, err
 	}
 
@@ -175,7 +192,7 @@ func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrd
 		storeID,
 		storeProductSizeIDs,
 		storeAdditiveIDs,
-		frozenMap,
+		frozenInventory,
 	)
 	if err != nil {
 		s.logger.Error("validation failed: %w", err)
@@ -193,9 +210,20 @@ func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrd
 
 	id, err := s.orderRepo.CreateOrder(&order)
 	if err != nil {
-		wrappedErr := fmt.Errorf("error creating order: %w", err)
-		s.logger.Error(wrappedErr.Error())
-		return nil, wrappedErr
+		return nil, fmt.Errorf("failed to create order: %w", err)
+	}
+
+	inventoryLists, err := s.orderRepo.GetOrderInventory(id)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get ingredients: %w", err)
+	}
+
+	err = s.storeInventoryManagerRepo.RecalculateStoreInventory(order.StoreID, &storeInventoryManagersTypes.RecalculateInput{
+		IngredientIDs: inventoryLists.IngredientIDs,
+		ProvisionIDs:  inventoryLists.ProvisionIDs,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to recalculate out of stock: %w", err)
 	}
 
 	payload, err := json.Marshal(types.WaitingOrderPayload{OrderID: id})
@@ -208,6 +236,7 @@ func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrd
 		return &order, err
 	}
 
+	logrus.Infof("________________order done in %v_________________", time.Since(start))
 	return &order, nil
 }
 
@@ -215,9 +244,9 @@ func (s *orderService) StockAndPriceValidationResults(
 	suborders []types.CreateSubOrderDTO,
 	storeID uint,
 	storeProductSizeIDs, storeAdditiveIDs []uint,
-	frozenMap map[uint]float64,
+	frozenInventory *storeInventoryManagersTypes.FrozenInventory,
 ) (*orderValidationResults, error) {
-	productPrices, productNames, err := ValidateStoreProductSizes(storeID, storeProductSizeIDs, s.storeProductRepo, frozenMap)
+	productPrices, productNames, err := ValidateStoreProductSizes(storeID, storeProductSizeIDs, s.storeProductRepo, frozenInventory)
 	if err != nil {
 		s.logger.Error(fmt.Errorf("product validation failed: %w", err))
 		return nil, err
@@ -227,7 +256,7 @@ func (s *orderService) StockAndPriceValidationResults(
 		storeID,
 		suborders,
 		s.storeAdditiveRepo,
-		frozenMap,
+		frozenInventory,
 	)
 	if err != nil {
 		s.logger.Error(fmt.Errorf("additive validation failed: %w", err))
@@ -246,7 +275,7 @@ func ValidateStoreAdditives(
 	storeID uint,
 	suborders []types.CreateSubOrderDTO,
 	repo storeAdditives.StoreAdditiveRepository,
-	frozenMap map[uint]float64,
+	frozenInventory *storeInventoryManagersTypes.FrozenInventory,
 ) (map[uint]float64, map[uint]string, error) {
 	prices := make(map[uint]float64)
 	additiveNames := make(map[uint]string)
@@ -298,7 +327,7 @@ func ValidateMultipleSelect(storeID uint, createOrderDTO types.CreateOrderDTO, r
 	for _, suborder := range createOrderDTO.Suborders {
 		categoryCount := make(map[uint]int)
 		for _, addID := range suborder.StoreAdditivesIDs {
-			storeAdd, err := repo.GetStoreAdditiveByID(addID, &contexts.StoreContextFilter{StoreID: &storeID})
+			storeAdd, err := repo.GetStoreAdditiveWithDetailsByID(addID, &contexts.StoreContextFilter{StoreID: &storeID})
 			if err != nil {
 				return err
 			}
@@ -317,13 +346,13 @@ func ValidateStoreProductSizes(
 	storeID uint,
 	storeProductSizeIDs []uint,
 	repo storeProducts.StoreProductRepository,
-	frozenMap map[uint]float64,
+	frozenInventory *storeInventoryManagersTypes.FrozenInventory,
 ) (map[uint]float64, map[uint]string, error) {
 	prices := make(map[uint]float64)
 	productNames := make(map[uint]string)
 
 	for _, psID := range storeProductSizeIDs {
-		storePS, err := repo.GetStoreProductSizeById(storeID, psID)
+		storePS, err := repo.GetStoreProductSizeWithDetailsByID(storeID, psID)
 		if err != nil {
 			return nil, nil, fmt.Errorf("error with store product size: %w", err)
 		}
@@ -359,7 +388,7 @@ func RetrieveIDs(createOrderDTO types.CreateOrderDTO) ([]uint, []uint) {
 func (s *orderService) CheckAndAccumulateSuborders(
 	storeID uint,
 	suborders []types.CreateSubOrderDTO,
-	frozenMap map[uint]float64,
+	frozenInventory *storeInventoryManagersTypes.FrozenInventory,
 ) error {
 	// Expand any suborders with quantity > 1 into separate single-quantity items
 	expanded := ExpandSuborders(suborders)
@@ -367,7 +396,9 @@ func (s *orderService) CheckAndAccumulateSuborders(
 	// For each single suborder, call existing checks
 	for _, sub := range expanded {
 		// Product Size
-		sps, err := s.storeProductRepo.GetSufficientStoreProductSizeById(storeID, sub.StoreProductSizeID, frozenMap)
+
+		logrus.Infof("storeID: %v, storeProductSizeID: %v, frozenInventory: %v", storeID, sub.StoreProductSizeID, frozenInventory)
+		err := s.storeProductService.CheckSufficientStoreProductSizeByID(storeID, sub.StoreProductSizeID, frozenInventory)
 		if err != nil {
 			s.logger.Error(fmt.Errorf(
 				"error occured while trying to get sufficient store product size %d: %w",
@@ -375,25 +406,17 @@ func (s *orderService) CheckAndAccumulateSuborders(
 			))
 			return err
 		}
-
-		// If success, we 'freeze' that usage. We add the usage from the product size to the frozenMap.
-		for _, usage := range sps.ProductSize.ProductSizeIngredients {
-			frozenMap[usage.IngredientID] += usage.Quantity
-		}
+		logrus.Infof("Frozen Stock AFTER 1st suborder: %v", frozenInventory)
 
 		// Additives
 		for _, addID := range sub.StoreAdditivesIDs {
-			sa, err := s.storeAdditiveRepo.GetSufficientStoreAdditiveByID(storeID, addID, frozenMap)
+			err := s.storeAdditiveService.CheckSufficientStoreAdditiveByID(storeID, addID, frozenInventory)
 			if err != nil {
 				s.logger.Error(fmt.Errorf(
 					"error occured while trying to get sufficient store additive %d: %w",
 					addID, err,
 				))
 				return err
-			}
-			// freeze additive usage
-			for _, ingrUsage := range sa.Additive.Ingredients {
-				frozenMap[ingrUsage.IngredientID] += ingrUsage.Quantity
 			}
 		}
 	}
@@ -521,11 +544,40 @@ func (s *orderService) SuccessOrderPayment(orderID uint, dto *types.TransactionD
 }
 
 func (s *orderService) FailOrderPayment(orderID uint) error {
-	err := s.orderRepo.HandlePaymentFailure(orderID)
+	order, err := s.orderRepo.GetRawOrderById(orderID)
 	if err != nil {
-		s.logger.Errorf("failed to delete the order %d after payment refuse", err)
-		return err
+		wrappedErr := fmt.Errorf("failed to delete the order %d after payment refuse: failed to get order data: %w", orderID, err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
 	}
+
+	inventoryLists, err := s.orderRepo.GetOrderInventory(orderID)
+	if err != nil {
+		wrappedErr := fmt.Errorf("could not get inventory lists for order id %d: %w", orderID, err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
+	}
+
+	if order.Status != data.OrderStatusWaitingForPayment {
+		return types.ErrInappropriateOrderStatus
+	}
+
+	err = s.orderRepo.HardDeleteOrderByID(orderID)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to delete the order %d after payment refuse: %w", orderID, err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
+	}
+
+	go func() {
+		err = s.storeInventoryManagerRepo.RecalculateStoreInventory(order.StoreID, &storeInventoryManagersTypes.RecalculateInput{
+			IngredientIDs: inventoryLists.IngredientIDs,
+			ProvisionIDs:  inventoryLists.ProvisionIDs,
+		})
+		if err != nil {
+			s.logger.Errorf("could not recalculate stock after order deletion: %v", err)
+		}
+	}()
 
 	return nil
 }

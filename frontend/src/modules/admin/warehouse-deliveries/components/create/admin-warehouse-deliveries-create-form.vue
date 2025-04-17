@@ -94,7 +94,7 @@
 							:key="material.stockMaterialId"
 						>
 							<TableCell>{{ material.name }}</TableCell>
-							<TableCell>{{ material.size }} {{ material.unit.name }}</TableCell>
+							<TableCell>{{ material.size }} {{ material.unit.name.toLowerCase() }}</TableCell>
 							<TableCell>{{ material.category }}</TableCell>
 							<TableCell>
 								<Input
@@ -178,26 +178,26 @@
 
 <script setup lang="ts">
 import { Button } from '@/core/components/ui/button'
-import { ref, computed } from 'vue'
 import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
 } from '@/core/components/ui/card'
 import { Input } from '@/core/components/ui/input'
 import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-	TableFooter,
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from '@/core/components/ui/table'
 import { useToast } from '@/core/components/ui/toast'
 import { ChevronLeft, Trash } from 'lucide-vue-next'
+import { computed, ref } from 'vue'
 
 // Dialog Components
 import AdminStockMaterialsSelectDialog from '@/modules/admin/stock-materials/components/admin-stock-materials-select-dialog.vue'

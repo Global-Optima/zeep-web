@@ -47,6 +47,7 @@ import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 import { ProductSizeNames, type ProductSizeDetailsDTO } from '@/modules/kiosk/products/models/product.model'
 import { ChevronDown, ChevronLeft, EllipsisVertical, Trash } from 'lucide-vue-next'
 import { watch } from 'vue'
+import { getRouteName } from "@/core/config/routes.config"
 
 const AdminSelectAdditiveDialog = defineAsyncComponent(() =>
   import('@/modules/admin/additives/components/admin-select-additive-dialog.vue'))
@@ -507,7 +508,15 @@ watch(initialProductSize, (newVal) => {
 									/>
 								</TableCell>
 
-								<TableCell>{{ additive.name }}</TableCell>
+								<TableCell>
+									<RouterLink
+										:to="{name: getRouteName('ADMIN_ADDITIVE_DETAILS'), params: {id: additive.additiveId}}"
+										target="_blank"
+										class="hover:text-primary underline transition-colors duration-300 underline-offset-4"
+									>
+										{{ additive.name }}
+									</RouterLink>
+								</TableCell>
 								<TableCell>{{ additive.categoryName }}</TableCell>
 								<TableCell>{{ additive.size }} {{ additive.unitName }}</TableCell>
 
@@ -598,7 +607,15 @@ watch(initialProductSize, (newVal) => {
 								v-for="(ingredient, index) in ingredients"
 								:key="ingredient.ingredientId"
 							>
-								<TableCell>{{ ingredient.name }}</TableCell>
+								<TableCell>
+									<RouterLink
+										:to="{name: getRouteName('ADMIN_INGREDIENTS_DETAILS'), params: {id: ingredient.ingredientId}}"
+										target="_blank"
+										class="hover:text-primary underline transition-colors duration-300 underline-offset-4"
+									>
+										{{ ingredient.name }}
+									</RouterLink>
+								</TableCell>
 								<TableCell>{{ ingredient.category }}</TableCell>
 
 								<TableCell class="flex items-center gap-4">
@@ -656,7 +673,15 @@ watch(initialProductSize, (newVal) => {
 								v-for="(provision, index) in provisions"
 								:key="provision.provisionId"
 							>
-								<TableCell>{{ provision.name }}</TableCell>
+								<TableCell>
+									<RouterLink
+										:to="{name: getRouteName('ADMIN_PROVISION_DETAILS'), params: {id: provision.provisionId}}"
+										target="_blank"
+										class="hover:text-primary underline transition-colors duration-300 underline-offset-4"
+									>
+										{{ provision.name }}
+									</RouterLink>
+								</TableCell>
 								<TableCell
 									>{{ provision.absoluteVolume }} {{ provision.unit.toLowerCase() }}</TableCell
 								>

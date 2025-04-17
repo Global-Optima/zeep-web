@@ -6,9 +6,10 @@ import { Label } from '@/core/components/ui/label'
 import { Switch } from '@/core/components/ui/switch'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/core/components/ui/table'
 import { useToast } from '@/core/components/ui/toast'
+import { getRouteName } from "@/core/config/routes.config"
 import type { StoreProductDetailsDTO, UpdateStoreProductDTO } from '@/modules/admin/store-products/models/store-products.model'
 import type { ProductDetailsDTO } from '@/modules/kiosk/products/models/product.model'
-import { ChevronLeft, Trash } from 'lucide-vue-next'
+import { ChevronLeft, ExternalLink, Trash } from 'lucide-vue-next'
 import { computed, onMounted, reactive, watch } from 'vue'
 
 const props = defineProps<{
@@ -71,9 +72,11 @@ function initStoreProductLocal() {
 
 const hasSizes = computed(() => storeProductLocal.sizes.length > 0);
 
-function removeSize(index: number) {
+function removeSize(sizeId: number) {
   if (props.readonly) return;
-  storeProductLocal.sizes.splice(index, 1);
+  storeProductLocal.sizes = storeProductLocal.sizes.filter(
+    (sz) => sz.id !== sizeId
+  );
 }
 
 function onResetSizes() {
@@ -127,7 +130,17 @@ function onCancel() {
 				<span class="sr-only">Назад</span>
 			</Button>
 
-			<h1 class="font-semibold text-xl tracking-tight shrink-0">{{ props.product.name }}</h1>
+			<div class="flex items-center gap-3">
+				<h1 class="font-semibold text-xl tracking-tight shrink-0">{{ props.product.name }}</h1>
+
+				<RouterLink
+					:to="{name: getRouteName('ADMIN_PRODUCT_DETAILS'), params: {id: props.product.id}}"
+					target="_blank"
+					class="hover:text-primary transition-colors duration-300"
+				>
+					<ExternalLink class="size-5 -mt-1" />
+				</RouterLink>
+			</div>
 
 			<div
 				v-if="!props.readonly"
@@ -173,7 +186,7 @@ function onCancel() {
 					<TableBody>
 						<template v-if="hasSizes">
 							<TableRow
-								v-for="(size, i) in sortedSizes"
+								v-for="size in sortedSizes"
 								:key="size.id"
 							>
 								<TableCell>{{ size.name }}</TableCell>
@@ -190,7 +203,7 @@ function onCancel() {
 									<Button
 										variant="ghost"
 										size="icon"
-										@click="removeSize(i)"
+										@click="removeSize(size.id)"
 									>
 										<Trash class="w-5 h-5 text-red-500 hover:text-red-700" />
 									</Button>

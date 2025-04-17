@@ -1,22 +1,33 @@
 package storeAdditives
 
 import (
+	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers"
+	storeInventoryManagersTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
 	storeStocksTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks/types"
+	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
 type TransactionManager interface {
 	CreateStoreAdditivesWithStocks(storeID uint, storeAdditive []data.StoreAdditive, ingredientIDs []uint) ([]uint, error)
+	CheckSufficientInventoryByStoreAdditiveID(
+		storeID, storeAdditiveID uint,
+		frozenInventory *storeInventoryManagersTypes.FrozenInventory,
+	) error
 }
 
 type transactionManager struct {
-	db                *gorm.DB
-	storeAdditiveRepo StoreAdditiveRepository
-	storeStockRepo    storeStocks.StoreStockRepository
-	ingredientRepo    ingredients.IngredientRepository
+	db                        *gorm.DB
+	storeAdditiveRepo         StoreAdditiveRepository
+	storeStockRepo            storeStocks.StoreStockRepository
+	ingredientRepo            ingredients.IngredientRepository
+	storeInventoryManagerRepo storeInventoryManagers.StoreInventoryManagerRepository
 }
 
 func NewTransactionManager(
@@ -24,12 +35,14 @@ func NewTransactionManager(
 	storeAdditiveRepo StoreAdditiveRepository,
 	storeStockRepo storeStocks.StoreStockRepository,
 	ingredientRepo ingredients.IngredientRepository,
+	storeInventoryManagerRepo storeInventoryManagers.StoreInventoryManagerRepository,
 ) TransactionManager {
 	return &transactionManager{
-		db:                db,
-		storeAdditiveRepo: storeAdditiveRepo,
-		storeStockRepo:    storeStockRepo,
-		ingredientRepo:    ingredientRepo,
+		db:                        db,
+		storeAdditiveRepo:         storeAdditiveRepo,
+		storeStockRepo:            storeStockRepo,
+		ingredientRepo:            ingredientRepo,
+		storeInventoryManagerRepo: storeInventoryManagerRepo,
 	}
 }
 
@@ -48,7 +61,7 @@ func (m *transactionManager) CreateStoreAdditivesWithStocks(storeID uint, storeA
 			return err
 		}
 
-		storeWarehouseRepo := m.storeStockRepo.CloneWithTransaction(tx)
+		storeStockRepo := m.storeStockRepo.CloneWithTransaction(tx)
 
 		missingIngredientIDs, err := m.storeStockRepo.FilterMissingIngredientsIDs(storeID, ingredientIDs)
 		if err != nil {
@@ -70,7 +83,7 @@ func (m *transactionManager) CreateStoreAdditivesWithStocks(storeID uint, storeA
 		}
 
 		if len(newStoreStocks) > 0 {
-			_, err = m.addStocks(&storeWarehouseRepo, newStoreStocks)
+			_, err = m.addStocks(storeStockRepo, newStoreStocks)
 			if err != nil {
 				return err
 			}
@@ -81,12 +94,18 @@ func (m *transactionManager) CreateStoreAdditivesWithStocks(storeID uint, storeA
 			storeAdditiveIDs[i] = storeAdditive.ID
 		}
 
-		frozenStockMap, err := data.CalculateFrozenStock(tx, storeID, ingredientIDs)
+		storeInventoryManagerRepoTx := m.storeInventoryManagerRepo.CloneWithTransaction(tx)
+		frozenStockMap, err := storeInventoryManagerRepoTx.CalculateFrozenInventory(
+			storeID,
+			&storeInventoryManagersTypes.FrozenInventoryFilter{
+				IngredientIDs: ingredientIDs,
+			},
+		)
 		if err != nil {
 			return err
 		}
 
-		if err := data.RecalculateStoreAdditives(tx, storeAdditiveIDs, storeID, frozenStockMap); err != nil {
+		if err := storeInventoryManagerRepoTx.RecalculateStoreAdditives(storeAdditiveIDs, storeID, frozenStockMap); err != nil {
 			return err
 		}
 
@@ -96,6 +115,47 @@ func (m *transactionManager) CreateStoreAdditivesWithStocks(storeID uint, storeA
 		return nil, err
 	}
 	return ids, nil
+}
+
+func (m *transactionManager) CheckSufficientInventoryByStoreAdditiveID(
+	storeID, storeAdditiveID uint,
+	frozenInventory *storeInventoryManagersTypes.FrozenInventory,
+) error {
+	var storeAdditive data.StoreAdditive
+
+	err := m.db.
+		Where("store_id = ?", storeID).
+		Where("id = ?", storeAdditiveID).
+		Preload("Additive.Ingredients").
+		Preload("Additive.AdditiveProvisions").
+		First(&storeAdditive).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return types.ErrStoreAdditiveNotFound
+		}
+		return fmt.Errorf("%w: failed to get storeAdditive (id=%d): %w",
+			types.ErrFailedToFetchStoreAdditive, storeAdditiveID, err)
+	}
+
+	requiredIngredientMap := make(map[uint]float64)
+	for _, ingr := range storeAdditive.Additive.Ingredients {
+		requiredIngredientMap[ingr.IngredientID] += ingr.Quantity
+	}
+
+	if err := m.storeInventoryManagerRepo.CheckStoreStocks(storeID, requiredIngredientMap, frozenInventory); err != nil {
+		return err
+	}
+
+	requiredProvisionMap := make(map[uint]float64)
+	for _, prov := range storeAdditive.Additive.AdditiveProvisions {
+		requiredProvisionMap[prov.ProvisionID] += prov.Volume
+	}
+
+	if err := m.storeInventoryManagerRepo.CheckStoreProvisions(storeID, requiredProvisionMap, frozenInventory); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (m *transactionManager) addStocks(storeStockRepo storeStocks.StoreStockRepository, stocks []data.StoreStock) ([]uint, error) {

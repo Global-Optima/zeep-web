@@ -4,6 +4,7 @@
 	<AdminProductSizeUpdateForm
 		v-else
 		:productSize="productSizeDetails"
+		:readonly="!canUpdate"
 		@onSubmit="handleUpdate"
 		@onCancel="handleCancel"
 	/>
@@ -11,6 +12,8 @@
 
 <script lang="ts" setup>
 import { useToast } from '@/core/components/ui/toast/use-toast'
+import { useHasRole } from '@/core/hooks/use-has-roles.hook'
+import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import AdminProductSizeUpdateForm, { type UpdateProductSizeFormSchema } from '@/modules/admin/products/components/details/admin-product-size-details-form.vue'
 import type {
   SelectedAdditiveDTO,
@@ -26,6 +29,8 @@ const router = useRouter()
 const queryClient = useQueryClient()
 const route = useRoute()
 const { toast } = useToast()
+
+const canUpdate = useHasRole([EmployeeRole.ADMIN])
 
 const productSizeId = route.params.id as string
 const productId = route.query.productId as string

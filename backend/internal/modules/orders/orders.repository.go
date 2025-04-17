@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	storeInventoryManagersTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers/types"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -16,6 +18,7 @@ import (
 type OrderRepository interface {
 	GetOrders(filter types.OrdersFilterQuery) ([]data.Order, error)
 	GetAllBaristaOrders(filter types.OrdersTimeZoneFilter) ([]data.Order, error)
+	GetRawOrderById(orderID uint) (*data.Order, error)
 	GetOrderById(orderID uint) (*data.Order, error)
 	CreateOrder(order *data.Order) (uint, error)
 	UpdateOrderStatus(suborderID uint, updateData types.UpdateOrderDTO) error
@@ -30,10 +33,10 @@ type OrderRepository interface {
 	GetOrderDetails(orderID uint, filter *contexts.StoreContextFilter) (*data.Order, error)
 	GetOrdersForExport(filter *types.OrdersExportFilterQuery) ([]data.Order, error)
 	GetSuborderByID(suborderID uint) (*data.Suborder, error)
+	GetOrderInventory(orderID uint) (*storeInventoryManagersTypes.InventoryIDsLists, error)
 
-	CalculateFrozenStock(storeID uint) (map[uint]float64, error)
 	HandlePaymentSuccess(orderID uint, paymentTransaction *data.Transaction) (*data.Order, error)
-	HandlePaymentFailure(orderID uint) error
+	HardDeleteOrderByID(orderID uint) error
 	CloneWithTransaction(tx *gorm.DB) orderRepository
 }
 
@@ -58,84 +61,70 @@ func (r *orderRepository) CreateOrder(order *data.Order) (uint, error) {
 	const shiftStartHour = 0 // 0 means midnight UTC, 4 would mean 4:00 AM UTC, etc.
 	const maxDisplayNumber = 99
 
-	err := r.db.Transaction(func(tx *gorm.DB) error {
-		// (A) Lock rows for the store
-		if err := tx.Exec(`
+	// (A) Lock rows for the store
+	if err := r.db.Exec(`
 					SELECT 1
 					FROM orders
 					WHERE store_id = ?
 					FOR UPDATE
 			`, order.StoreID).Error; err != nil {
-			if !errors.Is(err, gorm.ErrRecordNotFound) {
-				return fmt.Errorf("failed to lock rows for store %d: %w", order.StoreID, err)
-			}
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return 0, fmt.Errorf("failed to lock rows for store %d: %w", order.StoreID, err)
 		}
+	}
 
-		// (B) Fetch the latest order (DisplayNumber + CreatedAt) for the store
-		var lastOrder struct {
-			DisplayNumber int
-			CreatedAt     time.Time
+	// (B) Fetch the latest order (DisplayNumber + CreatedAt) for the store
+	var lastOrder struct {
+		DisplayNumber int
+		CreatedAt     time.Time
+	}
+	if err := r.db.Model(&data.Order{}).
+		Where("store_id = ?", order.StoreID).
+		Order("created_at DESC").
+		Limit(1).
+		Select("display_number, created_at").
+		Scan(&lastOrder).Error; err != nil {
+		if !errors.Is(err, gorm.ErrRecordNotFound) {
+			return 0, fmt.Errorf("failed to fetch last order: %w", err)
 		}
-		if err := tx.Model(&data.Order{}).
-			Where("store_id = ?", order.StoreID).
-			Order("created_at DESC").
-			Limit(1).
-			Select("display_number, created_at").
-			Scan(&lastOrder).Error; err != nil {
-			if !errors.Is(err, gorm.ErrRecordNotFound) {
-				return fmt.Errorf("failed to fetch last order: %w", err)
-			}
-		}
+	}
 
-		// (C) Determine the next DisplayNumber
-		nowUTC := time.Now().UTC()
-		lastUTC := lastOrder.CreatedAt.UTC() // last order time in UTC
-		var nextDisplayNumber int
+	// (C) Determine the next DisplayNumber
+	nowUTC := time.Now().UTC()
+	lastUTC := lastOrder.CreatedAt.UTC() // last order time in UTC
+	var nextDisplayNumber int
 
-		if lastOrder.DisplayNumber == 0 {
-			// Means there's no prior order, so start from 1
+	if lastOrder.DisplayNumber == 0 {
+		// Means there's no prior order, so start from 1
+		nextDisplayNumber = 1
+	} else {
+		// Compare "shift date" of now and the last order
+		lastShiftDate := getShiftDate(lastUTC, shiftStartHour)
+		currShiftDate := getShiftDate(nowUTC, shiftStartHour)
+
+		if lastShiftDate != currShiftDate {
+			// It's a new day/shift, reset to 1
 			nextDisplayNumber = 1
 		} else {
-			// Compare "shift date" of now and the last order
-			lastShiftDate := getShiftDate(lastUTC, shiftStartHour)
-			currShiftDate := getShiftDate(nowUTC, shiftStartHour)
-
-			if lastShiftDate != currShiftDate {
-				// It's a new day/shift, reset to 1
-				nextDisplayNumber = 1
-			} else {
-				// Same shift, increment the last display number
-				nextDisplayNumber = lastOrder.DisplayNumber + 1
-			}
+			// Same shift, increment the last display number
+			nextDisplayNumber = lastOrder.DisplayNumber + 1
 		}
+	}
 
-		// (D) Enforce maximum display number
-		if nextDisplayNumber > maxDisplayNumber {
-			nextDisplayNumber = 1
-		}
+	// (D) Enforce maximum display number
+	if nextDisplayNumber > maxDisplayNumber {
+		nextDisplayNumber = 1
+	}
 
-		order.DisplayNumber = nextDisplayNumber
-		order.CreatedAt = nowUTC // or let GORM set automatically
+	order.DisplayNumber = nextDisplayNumber
+	order.CreatedAt = nowUTC // or let GORM set automatically
 
-		// (E) Insert the new order
-		if err := tx.Create(order).Error; err != nil {
-			return fmt.Errorf("failed to create order: %w", err)
-		}
+	// (E) Insert the new order
+	if err := r.db.Create(order).Error; err != nil {
+		return 0, fmt.Errorf("failed to create order: %w", err)
+	}
 
-		// (F) Any post‐processing, e.g., recalc out of stock
-		orderIngredients, err := r.getOrderIngredients(tx, order.ID)
-		if err != nil {
-			return fmt.Errorf("failed to get order ingredients: %w", err)
-		}
-
-		if err := data.RecalculateOutOfStock(tx, order.StoreID, orderIngredients, nil, nil); err != nil {
-			return fmt.Errorf("failed to recalculate out of stock: %w", err)
-		}
-
-		return nil
-	})
-
-	return order.ID, err
+	return order.ID, nil
 }
 
 // getShiftDate normalizes a time to the "shift start" boundary in UTC.
@@ -155,40 +144,83 @@ func getShiftDate(t time.Time, shiftStartHour int) time.Time {
 	return shifted
 }
 
-func (r *orderRepository) getOrderIngredients(tx *gorm.DB, orderID uint) ([]uint, error) {
-	ingredientIDsFromProductSizes, err := r.getOrderProductSizeIngredients(tx, orderID)
+func (r *orderRepository) GetOrderInventory(orderID uint) (*storeInventoryManagersTypes.InventoryIDsLists, error) {
+	ingredientIDsFromProductSizes, err := r.getOrderProductSizeIngredientIDs(orderID)
 	if err != nil {
 		return nil, err
 	}
 
-	ingredientIDsFromAdditives, err := r.getOrderAdditiveIngredients(tx, orderID)
+	ingredientIDsFromAdditives, err := r.getOrderAdditiveIngredientIDs(orderID)
 	if err != nil {
 		return nil, err
 	}
 
-	return utils.UnionSlices(ingredientIDsFromProductSizes, ingredientIDsFromAdditives), nil
+	provisionIDsFromAdditives, err := r.getOrderAdditiveProvisionIDs(orderID)
+	if err != nil {
+		return nil, err
+	}
+
+	provisionIDsFromProductSizes, err := r.getOrderProductSizeProvisionIDs(orderID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &storeInventoryManagersTypes.InventoryIDsLists{
+		IngredientIDs: utils.UnionSlices(ingredientIDsFromProductSizes, ingredientIDsFromAdditives),
+		ProvisionIDs:  utils.UnionSlices(provisionIDsFromProductSizes, provisionIDsFromAdditives),
+	}, nil
 }
 
-func (r *orderRepository) getOrderProductSizeIngredients(tx *gorm.DB, orderID uint) ([]uint, error) {
-	var ingredientIDsFromProductSizes []uint
+func (r *orderRepository) getOrderProductSizeIngredientIDs(orderID uint) ([]uint, error) {
+	directIngrIDs, err := r.getOrderProductSizeDirectIngredientIDs(orderID)
+	if err != nil {
+		return nil, err
+	}
 
-	err := tx.Model(&data.ProductSizeIngredient{}).
+	defaultAdditiveIngrIDs, err := r.getOrderProductSizeDefaultAdditiveIngredients(orderID)
+	if err != nil {
+		return nil, err
+	}
+
+	return utils.UnionSlices(directIngrIDs, defaultAdditiveIngrIDs), nil
+}
+
+func (r *orderRepository) getOrderProductSizeDirectIngredientIDs(orderID uint) ([]uint, error) {
+	var ids []uint
+
+	err := r.db.Model(&data.ProductSizeIngredient{}).
 		Distinct("product_size_ingredients.ingredient_id").
 		Joins("JOIN store_product_sizes ON store_product_sizes.product_size_id = product_size_ingredients.product_size_id").
 		Joins("JOIN suborders ON suborders.store_product_size_id = store_product_sizes.id").
 		Where("suborders.order_id = ?", orderID).
-		Pluck("product_size_ingredients.ingredient_id", &ingredientIDsFromProductSizes).Error
+		Pluck("product_size_ingredients.ingredient_id", &ids).Error
 	if err != nil {
-		return nil, fmt.Errorf("failed to get ingredients from product sizes: %w", err)
+		return nil, fmt.Errorf("failed to get direct product size ingredients: %w", err)
 	}
-
-	return ingredientIDsFromProductSizes, nil
+	return ids, nil
 }
 
-func (r *orderRepository) getOrderAdditiveIngredients(tx *gorm.DB, orderID uint) ([]uint, error) {
+func (r *orderRepository) getOrderProductSizeDefaultAdditiveIngredients(orderID uint) ([]uint, error) {
+	var ids []uint
+
+	err := r.db.Model(&data.AdditiveIngredient{}).
+		Distinct("additive_ingredients.ingredient_id").
+		Joins("JOIN product_size_additives ON product_size_additives.additive_id = additive_ingredients.additive_id").
+		Joins("JOIN store_product_sizes ON store_product_sizes.product_size_id = product_size_additives.product_size_id").
+		Joins("JOIN suborders ON suborders.store_product_size_id = store_product_sizes.id").
+		Where("suborders.order_id = ?", orderID).
+		Where("product_size_additives.is_default = TRUE").
+		Pluck("additive_ingredients.ingredient_id", &ids).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to get default additive ingredients: %w", err)
+	}
+	return ids, nil
+}
+
+func (r *orderRepository) getOrderAdditiveIngredientIDs(orderID uint) ([]uint, error) {
 	var ingredientIDsFromAdditives []uint
 
-	err := tx.Model(&data.AdditiveIngredient{}).
+	err := r.db.Model(&data.AdditiveIngredient{}).
 		Distinct("additive_ingredients.ingredient_id").
 		Joins("JOIN store_additives ON store_additives.additive_id = additive_ingredients.additive_id").
 		Joins("JOIN suborder_additives ON suborder_additives.store_additive_id = store_additives.id").
@@ -200,6 +232,39 @@ func (r *orderRepository) getOrderAdditiveIngredients(tx *gorm.DB, orderID uint)
 	}
 
 	return ingredientIDsFromAdditives, nil
+}
+
+func (r *orderRepository) getOrderProductSizeProvisionIDs(orderID uint) ([]uint, error) {
+	var provisionIDsFromProductSizes []uint
+
+	err := r.db.Model(&data.ProductSizeProvision{}).
+		Distinct("product_size_provisions.provision_id").
+		Joins("JOIN store_product_sizes ON store_product_sizes.product_size_id = product_size_provisions.product_size_id").
+		Joins("JOIN suborders ON suborders.store_product_size_id = store_product_sizes.id").
+		Where("suborders.order_id = ?", orderID).
+		Pluck("product_size_provisions.ingredient_id", &provisionIDsFromProductSizes).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to get provisions from product sizes: %w", err)
+	}
+
+	return provisionIDsFromProductSizes, nil
+}
+
+func (r *orderRepository) getOrderAdditiveProvisionIDs(orderID uint) ([]uint, error) {
+	var provisionIDsFromAdditives []uint
+
+	err := r.db.Model(&data.AdditiveProvision{}).
+		Distinct("additive_provisions.provision_id").
+		Joins("JOIN store_additives ON store_additives.additive_id = additive_provisions.additive_id").
+		Joins("JOIN suborder_additives ON suborder_additives.store_additive_id = store_additives.id").
+		Joins("JOIN suborders ON suborders.id = suborder_additives.suborder_id").
+		Where("suborders.order_id = ?", orderID).
+		Pluck("additive_provisions.provision_id", &provisionIDsFromAdditives).Error
+	if err != nil {
+		return nil, fmt.Errorf("failed to get provisions from additives: %w", err)
+	}
+
+	return provisionIDsFromAdditives, nil
 }
 
 func (r *orderRepository) GetOrders(filter types.OrdersFilterQuery) ([]data.Order, error) {
@@ -527,12 +592,8 @@ func (r *orderRepository) GetSuborderByID(suborderID uint) (*data.Suborder, erro
 	var suborder data.Suborder
 
 	err := r.db.
-		Preload("StoreProductSize").
-		Preload("StoreProductSize.ProductSize").
 		Preload("StoreProductSize.ProductSize.Product").
 		Preload("StoreProductSize.ProductSize.Unit").
-		Preload("SuborderAdditives").
-		Preload("SuborderAdditives.StoreAdditive").
 		Preload("SuborderAdditives.StoreAdditive.Additive").
 		Where("id = ?", suborderID).
 		First(&suborder).Error
@@ -540,60 +601,6 @@ func (r *orderRepository) GetSuborderByID(suborderID uint) (*data.Suborder, erro
 		return nil, err
 	}
 	return &suborder, nil
-}
-
-func (r *orderRepository) CalculateFrozenStock(storeID uint) (map[uint]float64, error) {
-	frozenStock := make(map[uint]float64)
-
-	activeOrders, err := r.loadActiveOrders(storeID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to load active orders for store %d: %w", storeID, err)
-	}
-
-	for _, order := range activeOrders {
-		for _, sub := range order.Suborders {
-			if !isSuborderActive(sub) {
-				continue
-			}
-			accumulateProductUsage(&frozenStock, sub)
-			accumulateAdditiveUsage(&frozenStock, sub)
-		}
-	}
-
-	return frozenStock, nil
-}
-
-func (r *orderRepository) loadActiveOrders(storeID uint) ([]data.Order, error) {
-	var orders []data.Order
-	err := r.db.
-		Preload("Suborders.SuborderAdditives.StoreAdditive.Additive.Ingredients.Ingredient").
-		Preload("Suborders.StoreProductSize.ProductSize.ProductSizeIngredients.Ingredient").
-		Where("store_id = ?", storeID).
-		Where("status IN ?", []data.OrderStatus{
-			data.OrderStatusWaitingForPayment,
-			data.OrderStatusPending,
-			data.OrderStatusPreparing,
-		}).
-		Find(&orders).Error
-	return orders, err
-}
-
-func isSuborderActive(sub data.Suborder) bool {
-	return sub.Status == data.SubOrderStatusPending || sub.Status == data.SubOrderStatusPreparing
-}
-
-func accumulateProductUsage(frozenStock *map[uint]float64, sub data.Suborder) {
-	for _, usage := range sub.StoreProductSize.ProductSize.ProductSizeIngredients {
-		(*frozenStock)[usage.IngredientID] += usage.Quantity
-	}
-}
-
-func accumulateAdditiveUsage(frozenStock *map[uint]float64, sub data.Suborder) {
-	for _, subAdd := range sub.SuborderAdditives {
-		for _, ingrUsage := range subAdd.StoreAdditive.Additive.Ingredients {
-			(*frozenStock)[ingrUsage.IngredientID] += ingrUsage.Quantity
-		}
-	}
 }
 
 func (r *orderRepository) HandlePaymentSuccess(orderID uint, paymentTransaction *data.Transaction) (*data.Order, error) {
@@ -627,26 +634,8 @@ func (r *orderRepository) HandlePaymentSuccess(orderID uint, paymentTransaction 
 	return order, nil
 }
 
-func (r *orderRepository) HandlePaymentFailure(orderID uint) error {
-	order, err := r.GetRawOrderById(orderID)
-	if err != nil {
-		return err
-	}
-
-	if order.Status != data.OrderStatusWaitingForPayment {
-		return types.ErrInappropriateOrderStatus
-	}
-
-	orderIngredients, err := r.getOrderIngredients(r.db, orderID)
-	if err != nil {
-		return err
-	}
-
-	if err := data.RecalculateOutOfStock(r.db, order.StoreID, orderIngredients, nil, nil); err != nil {
-		return err
-	}
-
-	if err := r.db.Unscoped().Delete(&order).Error; err != nil {
+func (r *orderRepository) HardDeleteOrderByID(orderID uint) error {
+	if err := r.db.Unscoped().Where("id = ?", orderID).Delete(&data.Order{}).Error; err != nil {
 		return err
 	}
 

@@ -6,6 +6,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/franchisees"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
 	"github.com/Global-Optima/zeep-web/backend/internal/scheduler"
@@ -24,10 +25,11 @@ func NewStoreStockModule(
 	auditService audit.AuditService,
 	notificationService notifications.NotificationService,
 	storeService stores.StoreService,
+	storeInventoryManagerRepo storeInventoryManagers.StoreInventoryManagerRepository,
 	cronManager *scheduler.CronManager,
 ) *StoreStockModule {
 	repo := storeStocks.NewStoreStockRepository(base.DB)
-	service := storeStocks.NewStoreStockService(repo, notificationService, base.Logger)
+	service := storeStocks.NewStoreStockService(repo, storeInventoryManagerRepo, notificationService, base.Logger)
 	handler := storeStocks.NewStoreStockHandler(service, ingredientService, auditService, franchiseeService, base.Logger)
 
 	base.Router.RegisterStoreWarehouseRoutes(handler)

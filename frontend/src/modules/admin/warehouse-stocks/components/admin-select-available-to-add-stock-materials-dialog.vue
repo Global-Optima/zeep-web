@@ -35,7 +35,7 @@
 								<div class="flex-1">
 									<p>{{ stockMaterial.name }}</p>
 									<p class="text-gray-500 text-sm">
-										{{ stockMaterial.size }} {{ stockMaterial.unit.name }}
+										{{ stockMaterial.size }} {{ stockMaterial.unit.name.toLowerCase() }}
 									</p>
 								</div>
 

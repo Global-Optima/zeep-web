@@ -12,14 +12,17 @@ import (
 )
 
 type OrderAsynqTasks struct {
-	orderRepo orders.OrderRepository
-	logger    *zap.SugaredLogger
+	orderService orders.OrderService
+	logger       *zap.SugaredLogger
 }
 
-func NewOrderAsynqTasks(orderRepo orders.OrderRepository, logger *zap.SugaredLogger) *OrderAsynqTasks {
+func NewOrderAsynqTasks(
+	orderService orders.OrderService,
+	logger *zap.SugaredLogger,
+) *OrderAsynqTasks {
 	return &OrderAsynqTasks{
-		orderRepo: orderRepo,
-		logger:    logger,
+		orderService: orderService,
+		logger:       logger,
 	}
 }
 
@@ -29,7 +32,7 @@ func (h *OrderAsynqTasks) HandleOrderPaymentFailureTask(ctx context.Context, t *
 		return err
 	}
 
-	err := h.orderRepo.HandlePaymentFailure(payload.OrderID)
+	err := h.orderService.FailOrderPayment(payload.OrderID)
 	if err != nil {
 		if errors.Is(err, ordersTypes.ErrOrderNotFound) {
 			h.logger.Warnf("ℹ️ Order %d already deleted, skipping deferred deletion", payload.OrderID)

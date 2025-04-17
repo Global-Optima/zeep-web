@@ -18,6 +18,7 @@ import type { ProvisionDTO, ProvisionDetailsDTO } from '@/modules/admin/provisio
 import type { CreateStoreProvisionDTO } from '@/modules/admin/store-provisions/models/store-provision.models'
 
 import { provisionsService } from '@/modules/admin/provisions/services/provisions.service'
+import { getRouteName } from "@/core/config/routes.config"
 
 // Emits definition
 const emits = defineEmits<{
@@ -29,7 +30,7 @@ const emits = defineEmits<{
 const createStoreProvisionSchema = toTypedSchema(
   z.object({
     volume: z.number().min(0.0001, 'Введите объем заготовки'),
-    expirationInMinutes: z.number().min(0, 'Введите срок годности в минутах').default(60),
+    expirationInMinutes: z.number().min(0, 'Введите срок годности в минутах'),
   })
 )
 
@@ -48,6 +49,7 @@ function selectProvision(provision: ProvisionDTO) {
   selectedProvision.value = provision
   openProvisionDialog.value = false
   setFieldValue('volume', provision.absoluteVolume)
+  setFieldValue('expirationInMinutes', provision.defaultExpirationInMinutes)
 }
 
 // Query to fetch the full provision details (including ingredients)
@@ -214,7 +216,7 @@ const onCancel = () => {
 
 		<Card v-if="selectedProvision">
 			<CardHeader>
-				<CardTitle>Сырье</CardTitle>
+				<CardTitle>Технологическая карта</CardTitle>
 				<CardDescription> Технологическая карта на заданный обьем </CardDescription>
 			</CardHeader>
 			<CardContent>
@@ -232,7 +234,15 @@ const onCancel = () => {
 							v-for="ingredient in scaledTechnicalMap"
 							:key="ingredient.ingredientId"
 						>
-							<TableCell>{{ ingredient.name }}</TableCell>
+							<TableCell>
+								<RouterLink
+									:to="{name: getRouteName('ADMIN_INGREDIENTS_DETAILS'), params: {id: ingredient.ingredientId}}"
+									target="_blank"
+									class="hover:text-primary underline transition-colors duration-300 underline-offset-4"
+								>
+									{{ ingredient.name }}
+								</RouterLink>
+							</TableCell>
 							<TableCell>{{ ingredient.category.name }}</TableCell>
 							<TableCell>{{ ingredient.quantity }} {{ ingredient.unit.toLowerCase() }}</TableCell>
 							<TableCell class="font-semibold">
