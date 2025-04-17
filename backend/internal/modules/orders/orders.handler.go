@@ -3,11 +3,11 @@ package orders
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Global-Optima/zeep-web/backend/internal/errors/handlerErrors"
-	"github.com/sirupsen/logrus"
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/errors/handlerErrors"
 
 	storeProvisionsTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/storeProvisions/types"
 
@@ -121,7 +121,6 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 	var orderDTO types.CreateOrderDTO
 	if err := c.ShouldBindJSON(&orderDTO); err != nil {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
-		logrus.Info(err)
 		return
 	}
 

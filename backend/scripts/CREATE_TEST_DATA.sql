@@ -357,5 +357,5 @@ INSERT INTO store_provisions(
 VALUES
     (1, 1, 100, 'PREPARING', 15, 15),
     (1, 2, 100, 'PREPARING', 20, 20),
-    (1, 1, 100, 'COMPLETED', 35, 40),
+    (1, 1, 100, 'COMPLETED', 50, 40),
     (1, 2, 100, 'COMPLETED', 30, 30);

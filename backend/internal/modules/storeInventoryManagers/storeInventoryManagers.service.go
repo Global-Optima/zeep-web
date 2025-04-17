@@ -2,9 +2,9 @@ package storeInventoryManagers
 
 import (
 	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers/types"
-	"github.com/sirupsen/logrus"
 	"go.uber.org/zap"
 )
 
@@ -40,7 +40,6 @@ func (s *storeInventoryManagerService) CalculateFrozenInventory(storeID uint, fi
 		s.logger.Error(wrappedErr)
 		return nil, wrappedErr
 	}
-	logrus.Info(frozenInventory)
 
 	inventory := frozenInventory.GetIDs()
 

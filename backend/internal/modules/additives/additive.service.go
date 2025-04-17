@@ -10,7 +10,6 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications/details"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"go.uber.org/zap"
 )
 
@@ -196,7 +195,6 @@ func (s *additiveService) CreateAdditive(dto *types.CreateAdditiveDTO) (uint, er
 		}
 		imageKey := data.StorageImageKey(imageUrl)
 		additive.ImageKey = &imageKey
-		logrus.Info(imageKey)
 	}
 
 	id, err := s.repo.CreateAdditive(additive)

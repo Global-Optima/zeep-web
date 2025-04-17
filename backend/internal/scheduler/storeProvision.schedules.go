@@ -2,13 +2,11 @@ package scheduler
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
-	storeInventoryManagersTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers/types"
-	"github.com/sirupsen/logrus"
-
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications/details"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/storeProvisions"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers"
+	storeInventoryManagersTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
 	"go.uber.org/zap"
 )
@@ -75,7 +73,6 @@ func (tasks *StoreProvisionCronTasks) CheckStoreProvisionNotifications() {
 				tasks.logger.Errorf("failed to recalculate inventory for expiredProvisions provision ID count: %v", err)
 			}
 		}
-		logrus.Infof("notification done, added %d records", len(expiredStoreProvisionIDs))
 	}
 
 	tasks.logger.Info("Check Store Provision Notifications completed.")

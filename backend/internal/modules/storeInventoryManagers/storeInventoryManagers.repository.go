@@ -2,17 +2,15 @@ package storeInventoryManagers
 
 import (
 	"fmt"
-	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
-	provisionsTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/types"
-	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 	storeProvisionsTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/storeProvisions/types"
+	provisionsTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers/types"
 	storeStocksTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -67,7 +65,6 @@ func (r *storeInventoryManagerRepository) GetIngredientsByIDs(ingredientIDs []ui
 		Preload("Unit").
 		Preload("IngredientCategory").
 		Find(&ingredients).Error
-
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, ingredientTypes.ErrIngredientNotFound
@@ -153,9 +150,6 @@ func (r *storeInventoryManagerRepository) DeductStoreStocksByStoreProvision(stor
 }
 
 func (r *storeInventoryManagerRepository) RecalculateStoreInventory(storeID uint, input *types.RecalculateInput) error {
-	logrus.Infof("=================RECALCULATION STARTS============================")
-	start := time.Now()
-
 	if storeID == 0 {
 		return errors.New("failed to recalculate with invalid input parameters")
 	}
@@ -243,7 +237,6 @@ func (r *storeInventoryManagerRepository) RecalculateStoreInventory(storeID uint
 			}
 		}
 
-		logrus.Infof("=====================Total time taken is: %v=====================", time.Since(start))
 		return nil
 	})
 }
@@ -301,13 +294,11 @@ func (r *storeInventoryManagerRepository) buildFrozenInventory(ctx *recalculateC
 		IngredientIDs: ctx.totalIngredientIDs,
 		ProvisionIDs:  ctx.totalProvisionIDs,
 	}
-	logrus.Infof("Filter: %v", frozenInventoryFilter)
 
 	frozen, err := calculateFrozenInventory(r.db, storeID, frozenInventoryFilter)
 	if err != nil {
 		return nil, err
 	}
-	logrus.Infof("FROZEN INVENTORY FETCHED(filtered): %v", frozen)
 
 	return frozen, nil
 }

@@ -561,7 +561,6 @@ func (r *storeProductRepository) GetStoreProductSizesWithDetailsByIDs(
 	storeID uint,
 	storeProductSizeIDs []uint,
 ) ([]data.StoreProductSize, error) {
-
 	if len(storeProductSizeIDs) == 0 {
 		return []data.StoreProductSize{}, nil
 	}
@@ -578,7 +577,6 @@ func (r *storeProductRepository) GetStoreProductSizesWithDetailsByIDs(
 		Preload("ProductSize.Additives.Additive.Ingredients").
 		Preload("ProductSize.Additives.Additive.AdditiveProvisions").
 		Find(&storePSList).Error
-
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, fmt.Errorf("failed to batch load storeProductSizes: %w", types.ErrStoreProductSizeNotFound)

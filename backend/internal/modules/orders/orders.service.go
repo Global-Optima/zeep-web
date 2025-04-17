@@ -3,16 +3,15 @@ package orders
 import (
 	"encoding/json"
 	"fmt"
+	"time"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
 	storeAdditivesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies/types"
 	storeStocksTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks/types"
-	"time"
-
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers"
-	storeInventoryManagersTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers/types"
-	"github.com/sirupsen/logrus"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers"
+	storeInventoryManagersTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/taskqueue"
 
@@ -194,7 +193,6 @@ func ExpandSuborders(suborders []types.CreateSubOrderDTO) []types.CreateSubOrder
 }
 
 func (s *orderService) CreateOrder(createOrderDTO *types.CreateOrderDTO) (*data.Order, error) {
-	start := time.Now()
 	censorValidator := censor.GetCensorValidator()
 
 	if err := censorValidator.ValidateText(createOrderDTO.CustomerName); err != nil {
@@ -213,9 +211,6 @@ func (s *orderService) CreateOrder(createOrderDTO *types.CreateOrderDTO) (*data.
 		return nil, err
 	}
 
-	logrus.Infof("Order: %v", createOrderDTO)
-	logrus.Infof("storeID: %v, createOrderDTO: %v, storeAdditiveRepo: %v", createOrderDTO.StoreID, createOrderDTO, s.storeAdditiveRepo)
-
 	frozenInventory, err := s.storeInventoryManagerRepo.CalculateFrozenInventory(createOrderDTO.StoreID, nil)
 	if err != nil {
 		wrappedErr := fmt.Errorf("suborders inventory check failed: %w", err)
@@ -223,13 +218,11 @@ func (s *orderService) CreateOrder(createOrderDTO *types.CreateOrderDTO) (*data.
 		return nil, wrappedErr
 	}
 
-	logrus.Infof("Frozen Stock BEFORE creating order: %v", frozenInventory)
 	if err := s.checkAndAccumulateInventory(createOrderDTO.StoreID, validationRes.subordersCtx, frozenInventory); err != nil {
 		wrappedErr := fmt.Errorf("suborders inventory check failed: %v", err)
 		s.logger.Error(wrappedErr)
 		return nil, err
 	}
-	logrus.Infof("Frozen Stock AFTER creating order: %v", frozenInventory)
 
 	order, total := types.ConvertCreateOrderDTOToOrder(
 		createOrderDTO,
@@ -278,7 +271,6 @@ func (s *orderService) CreateOrder(createOrderDTO *types.CreateOrderDTO) (*data.
 		}
 	}()
 
-	logrus.Infof("________________order done in %v_________________", time.Since(start))
 	return &order, nil
 }
 
@@ -430,7 +422,6 @@ func validateStoreProductSizes(
 	storeProductSizeIDs []uint,
 	repo storeProducts.StoreProductRepository,
 ) (*storeProductSizeValidationResults, error) {
-
 	// 1) Fetch all needed storeProductSizes at once
 	storePSList, err := repo.GetStoreProductSizesWithDetailsByIDs(storeID, storeProductSizeIDs)
 	if err != nil {
@@ -545,7 +536,6 @@ func (s *orderService) CheckAndAccumulateSuborders(
 	for _, sub := range expanded {
 		// Product Size
 
-		logrus.Infof("storeID: %v, storeProductSizeID: %v, frozenInventory: %v", storeID, sub.StoreProductSizeID, frozenInventory)
 		err := s.storeProductService.CheckSufficientStoreProductSizeByID(storeID, sub.StoreProductSizeID, frozenInventory)
 		if err != nil {
 			s.logger.Error(fmt.Errorf(
@@ -554,7 +544,6 @@ func (s *orderService) CheckAndAccumulateSuborders(
 			))
 			return err
 		}
-		logrus.Infof("Frozen Stock AFTER 1st suborder: %v", frozenInventory)
 
 		// Additives
 		for _, addID := range sub.StoreAdditivesIDs {
@@ -757,7 +746,7 @@ func (s *orderService) checkAndAccumulateInventory(
 			requiredProvisionVol[psp.ProvisionID] += psp.Volume * count
 		}
 
-		//productSize default additives ingredients and provisions
+		// productSize default additives ingredients and provisions
 		for _, psa := range sps.ProductSize.Additives {
 			if !psa.IsDefault {
 				continue

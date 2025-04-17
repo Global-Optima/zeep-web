@@ -10,7 +10,6 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers/types"
 	storeStocksTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
-	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -60,7 +59,6 @@ func deductStoreStocks(
 		if err := tx.Save(s).Error; err != nil {
 			return nil, fmt.Errorf("failed to save stock for ingredient %d: %w", ingrID, err)
 		}
-		logrus.Infof("deducted %.2f from ingredient %d", reqQty, ingrID)
 		result[ingrID] = s
 	}
 	return result, nil
@@ -124,7 +122,6 @@ func deductStoreProvisions(
 			if err := tx.Save(p).Error; err != nil {
 				return nil, fmt.Errorf("failed to update provision %d: %w", p.ID, err)
 			}
-			logrus.Infof("deducted %.2f from provision %d", delta, provID)
 			used = append(used, *p)
 		}
 
@@ -174,7 +171,6 @@ func recalculateStoreAdditives(
 	}
 
 	outOfStockIDs, err := getOutOfStockStoreAdditiveIDs(tx, storeAdditiveIDs, storeID, frozenInventory)
-	logrus.Infof("outOfstock additives: %v", outOfStockIDs)
 	if err != nil {
 		return err
 	}
@@ -366,7 +362,6 @@ func getOutOfStockStoreProductIDs(
 	if err != nil {
 		return nil, err
 	}
-	logrus.Infof("usages: %v", usage)
 
 	// 3) gather all needed ingredientIDs / provisionIDs
 	ingredientSet := make(map[uint]struct{})
@@ -390,10 +385,6 @@ func getOutOfStockStoreProductIDs(
 	stockMap, provisionMap, err := buildStockMaps(tx, storeID, ingredientIDs, provisionIDs, frozenInventory)
 	if err != nil {
 		return nil, err
-	}
-	// TODO remove
-	if vol, exists := provisionMap[5]; exists {
-		logrus.Infof("                                      requried: %v  inStock: %v; ", usage.Provision[usageKey{74, 5}], vol)
 	}
 
 	// We track which storeProducts are out-of-stock

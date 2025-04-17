@@ -10,7 +10,6 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"go.uber.org/zap"
 )
 
@@ -31,7 +30,6 @@ func NewProvisionHandler(service ProvisionService, auditService audit.AuditServi
 func (h *ProvisionHandler) CreateProvision(c *gin.Context) {
 	var dto types.CreateProvisionDTO
 	if err := c.ShouldBindJSON(&dto); err != nil {
-		logrus.Info(err)
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}

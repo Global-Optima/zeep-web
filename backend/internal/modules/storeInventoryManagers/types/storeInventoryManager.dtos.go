@@ -16,7 +16,7 @@ type RecalculateInput struct {
 	ProvisionIDs    []uint
 	ProductSizeIDs  []uint
 	AdditiveIDs     []uint
-	FrozenInventory *FrozenInventory //optional
+	FrozenInventory *FrozenInventory // optional
 }
 
 type FrozenInventory struct {

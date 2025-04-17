@@ -2,7 +2,6 @@ package orders
 
 import (
 	"fmt"
-	"github.com/sirupsen/logrus"
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers"
@@ -98,13 +97,10 @@ func (m *transactionManager) handleSuborderCompletion(repoTx OrderRepository, st
 		return fmt.Errorf("failed to retrieve order for suborder %d: %w", suborder.ID, err)
 	}
 
-	start := time.Now()
-	logrus.Info("********************DEDUCTION STARTS***********************")
 	inventoryMap, err := m.deductSuborderInventoryFromStock(storeInventoryManagerRepoTx, order.StoreID, suborder)
 	if err != nil {
 		return fmt.Errorf("failed to deduct ingredients: %w", err)
 	}
-	logrus.Infof("******************DEDUCTION COMPLETED IN: %v ***************************", time.Since(start))
 
 	// filter storeStocks for recalculation: only keep those below or equal to lowStockThreshold
 	for id, stock := range inventoryMap.IngredientStoreStockMap {
