@@ -3,8 +3,7 @@
 		<TableHeader>
 			<TableRow>
 				<TableHead>Название</TableHead>
-				<TableHead>Обьем</TableHead>
-        <TableHead>Начальный объем</TableHead>
+				<TableHead>Доступный обьем</TableHead>
 				<TableHead>Создан</TableHead>
 				<TableHead>Статус</TableHead>
 				<TableHead></TableHead>
@@ -22,10 +21,6 @@
 					>{{ storeProvision.volume }}
 					{{ storeProvision.provision.unit.name.toLowerCase() }}</TableCell
 				>
-        <TableCell
-        >{{ storeProvision.initialVolume }}
-          {{ storeProvision.provision.unit.name.toLowerCase() }}</TableCell
-        >
 				<TableCell>{{ formatCreatedDate(storeProvision.createdAt) }}</TableCell>
 
 				<TableCell>
@@ -100,7 +95,7 @@ const onDeleteClick = (e: Event, id: number) => {
 }
 
 const formatCreatedDate = (date: Date) => {
-  return format(date, "dd.MM.yyyy hh:mm", {locale: ru})
+  return format(date, "d MMMM yyyy, HH:mm", {locale: ru})
 }
 
 const canDelete = (provision: StoreProvisionDTO) => {

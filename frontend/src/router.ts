@@ -33,17 +33,20 @@ router.beforeEach(async (to, from, next) => {
 	// Authentication check for protected routes
 	if (to.meta?.requiresAuth) {
 		try {
-			const currentEmployee = await employeesService.getCurrentEmployee()
-			if (!currentEmployee) {
+			const employee = await employeesService.getCurrentEmployee()
+			if (!employee) {
 				return next({ name: 'LOGIN' })
 			}
 
-			setCurrentEmployee(currentEmployee)
-		} catch (error) {
-			console.error('Error fetching current employee:', error)
+			setCurrentEmployee(employee)
+		} catch (err: unknown) {
+			console.error('Unexpected error fetching employee:', err)
 
-			if (isAxiosError(error) && error.status === 401) {
-				return next({ name: 'LOGIN' })
+			if (isAxiosError(err)) {
+				const status = err.response?.status
+				if (status === 401) {
+					return next({ name: 'LOGIN' })
+				}
 			}
 
 			return next({ name: 'INTERNAL_ERROR' })

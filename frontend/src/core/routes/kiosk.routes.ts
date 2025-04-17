@@ -6,6 +6,7 @@ export const KIOSK_CHILDREN_ROUTES = {
 		path: '',
 		meta: {
 			title: 'Главная',
+			requiresAuth: true,
 		},
 		component: () => import('@/modules/kiosk/products/pages/kiosk-home-page.vue'),
 	},
@@ -13,6 +14,7 @@ export const KIOSK_CHILDREN_ROUTES = {
 		path: 'products/:id',
 		meta: {
 			title: 'Детали продукта',
+			requiresAuth: true,
 		},
 		component: () => import('@/modules/kiosk/products/pages/kiosk-product-page.vue'),
 	},
@@ -20,6 +22,7 @@ export const KIOSK_CHILDREN_ROUTES = {
 		path: 'landing',
 		meta: {
 			title: 'Популярное',
+			requiresAuth: true,
 		},
 		component: () => import('@/modules/kiosk/landing/pages/kiosk-landing-page.vue'),
 	},
@@ -27,6 +30,7 @@ export const KIOSK_CHILDREN_ROUTES = {
 		path: 'cart/payment/:orderId',
 		meta: {
 			title: 'Оплата',
+			requiresAuth: true,
 		},
 		component: () => import('@/modules/kiosk/cart/pages/kiosk-cart-payment-page.vue'),
 	},
@@ -34,6 +38,7 @@ export const KIOSK_CHILDREN_ROUTES = {
 		path: 'cart/payment/:orderId/success',
 		meta: {
 			title: 'Успешная оплата',
+			requiresAuth: true,
 		},
 		component: () => import('@/modules/kiosk/cart/pages/kiosk-cart-payment-success-page.vue'),
 	},
@@ -41,6 +46,7 @@ export const KIOSK_CHILDREN_ROUTES = {
 		path: 'checklist',
 		meta: {
 			title: 'Проверка',
+			requiresAuth: true,
 		},
 		component: () => import('@/modules/kiosk/checklist/pages/kiosk-checklist-page.vue'),
 	},

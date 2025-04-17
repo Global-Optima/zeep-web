@@ -3,7 +3,7 @@
 		<TableHeader>
 			<TableRow>
 				<TableHead>Поставщик</TableHead>
-				<TableHead>Дата Доставки</TableHead>
+				<TableHead>Дата доставки</TableHead>
 				<TableHead>Продуктов</TableHead>
 			</TableRow>
 		</TableHeader>
@@ -15,7 +15,7 @@
 				@click="handleRowClick(delivery.id)"
 			>
 				<TableCell class="py-4 font-medium">{{ delivery.supplier.name }}</TableCell>
-				<TableCell>{{ format(delivery.deliveryDate, "dd.MM.yyyy") }}</TableCell>
+				<TableCell>{{ format(delivery.deliveryDate, "d MMMM yyyy", {locale:ru}) }}</TableCell>
 				<TableCell>{{  delivery.materials.length }}</TableCell>
 			</TableRow>
 		</TableBody>
@@ -35,6 +35,7 @@ import {
 } from '@/core/components/ui/table'
 import type { WarehouseDeliveryDTO } from '@/modules/admin/warehouse-stocks/models/warehouse-stock.model'
 import { format } from 'date-fns'
+import { ru } from 'date-fns/locale'
 
 
 defineProps<{

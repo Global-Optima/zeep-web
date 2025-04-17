@@ -20,12 +20,12 @@ import {
 import { Trash } from 'lucide-vue-next'
 
 import { useToast } from '@/core/components/ui/toast'
+import { getRouteName } from "@/core/config/routes.config"
 import type { StockMaterialsDTO } from '@/modules/admin/stock-materials/models/stock-materials.model'
 import type { StockRequestStockMaterialDTO } from '@/modules/admin/stock-requests/models/stock-requests.model'
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 import AdminSelectAvailableToAddStockMaterialsDialog from '@/modules/admin/warehouse-stocks/components/admin-select-available-to-add-stock-materials-dialog.vue'
 import { ref } from 'vue'
-import { getRouteName } from "@/core/config/routes.config"
 
 interface CreateStockRequestItemForm {
 	stockMaterialId: number
@@ -153,12 +153,12 @@ function cancelForm() {
 								<RouterLink
 									:to="{name: getRouteName('ADMIN_STOCK_MATERIAL_DETAILS'), params: {id: item.stockMaterialId}}"
 									target="_blank"
-									class="hover:text-primary underline transition-colors duration-300 underline-offset-4"
+									class="hover:text-primary underline underline-offset-4 transition-colors duration-300"
 								>
 									{{ item.name }}
 								</RouterLink>
 							</TableCell>
-							<TableCell>{{ item.size }} {{ item.unit.name }}</TableCell>
+							<TableCell>{{ item.size }} {{ item.unit.name.toLowerCase() }}</TableCell>
 							<TableCell>
 								<Input
 									type="number"

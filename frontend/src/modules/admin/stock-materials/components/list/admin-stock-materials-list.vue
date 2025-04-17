@@ -22,7 +22,7 @@
 				<TableCell class="py-4 font-medium">{{ stockMaterial.name }}</TableCell>
 				<TableCell>{{ stockMaterial.category.name }}</TableCell>
 				<TableCell>{{ stockMaterial.ingredient.name }}</TableCell>
-				<TableCell>{{ stockMaterial.size }} {{ stockMaterial.unit.name }}</TableCell>
+				<TableCell>{{ stockMaterial.size }} {{ stockMaterial.unit.name.toLowerCase() }}</TableCell>
 				<TableCell class="flex justify-end">
 					<Button
 						v-if="canDelete"

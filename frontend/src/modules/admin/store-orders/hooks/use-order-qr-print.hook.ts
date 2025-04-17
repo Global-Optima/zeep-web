@@ -311,7 +311,7 @@ export function useOrderGenerateQR() {
   ^FO${qrX},${qrY}
   ^BQN,2,${qrMagnification}
   ^FDLA,${qrValue}^FS
-  ^XZ`.trim()
+  ^XZ;`.trim()
 
 		return new Blob([zplCommands], { type: 'application/octet-stream' })
 	}
