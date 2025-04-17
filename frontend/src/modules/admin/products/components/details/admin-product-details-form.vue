@@ -5,10 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/cor
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core/components/ui/form'
 import { Input } from '@/core/components/ui/input'
 import { Textarea } from '@/core/components/ui/textarea'
-import AdminProductsTranslationsDialog from '@/modules/admin/products/components/admin-products-translations-dialog.vue'
 import type { ProductCategoryDTO, ProductDetailsDTO, UpdateProductDTO } from '@/modules/kiosk/products/models/product.model'
 import { toTypedSchema } from '@vee-validate/zod'
-import {Camera, ChevronLeft, Video, X} from 'lucide-vue-next'
+import { Camera, ChevronLeft, Video, X } from 'lucide-vue-next'
 import { useForm } from 'vee-validate'
 import { defineAsyncComponent, ref, useTemplateRef } from 'vue'
 import * as z from 'zod'
@@ -16,6 +15,9 @@ import * as z from 'zod'
 // Lazy-load the dialog component
 const AdminSelectProductCategory = defineAsyncComponent(() =>
   import('@/modules/admin/product-categories/components/admin-select-product-category.vue')
+);
+const AdminProductsTranslationsDialog = defineAsyncComponent(() =>
+  import('@/modules/admin/products/components/admin-products-translations-dialog.vue')
 );
 
 const {productDetails, readonly, isSubmitting} = defineProps<{
@@ -168,7 +170,7 @@ const triggerVideoInput = () => videoInputRef.value?.click();
 				class="hidden md:flex items-center gap-2 md:ml-auto"
 				v-if="!readonly"
 			>
-        <AdminProductsTranslationsDialog/>
+				<AdminProductsTranslationsDialog :productId="productDetails.id" />
 
 				<Button
 					variant="outline"

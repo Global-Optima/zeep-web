@@ -19,6 +19,8 @@ const AdminSelectIngredientCategory = defineAsyncComponent(() =>
   import('@/modules/admin/ingredient-categories/components/admin-select-ingredient-category.vue'))
 const AdminSelectUnit = defineAsyncComponent(() =>
   import('@/modules/admin/units/components/admin-select-unit.vue'))
+const AdminIngredientsTranslationsDialog = defineAsyncComponent(() =>
+  import('@/modules/admin/ingredients/components/admin-ingredients-translations-dialog.vue'))
 
 const { ingredient, readonly = false } = defineProps<{
   ingredient: IngredientsDTO
@@ -126,6 +128,8 @@ function selectUnit(unit: UnitDTO) {
 				v-if="!readonly"
 				class="hidden md:flex items-center gap-2 md:ml-auto"
 			>
+				<AdminIngredientsTranslationsDialog :ingredient-id="ingredient.id" />
+
 				<Button
 					variant="outline"
 					type="button"

@@ -3,14 +3,23 @@
 		:open="isOpen"
 		@update:open="onUpdateOpenDialog"
 	>
-		<DialogContent :include-close-button="false" class='max-h-[95vh] overflow-y-auto'>
+		<DialogContent
+			:include-close-button="false"
+			class="max-h-[95vh] overflow-y-auto"
+		>
 			<DialogHeader>
 				<DialogTitle> Редактор переводов </DialogTitle>
 				<DialogDescription> Управление переводами для ваших полей </DialogDescription>
 			</DialogHeader>
 
-			<!-- Переработанный интерфейс с аккордеоном для каждого поля -->
-			<div>
+			<div
+				v-if="loading"
+				class="flex justify-center items-center mt-8"
+			>
+				<Loader class="size-8 text-primary animate-spin" />
+			</div>
+
+			<div v-else>
 				<Accordion
 					type="multiple"
 					class="w-full"
@@ -100,19 +109,23 @@
 				<Button
 					variant="outline"
 					@click="closeDialog"
+					:disabled="loading"
 					>Отмена</Button
 				>
 				<Button
 					@click="submit"
 					class="flex items-center"
-					>Сохранить</Button
+					:disabled="loading"
 				>
+					Сохранить
+				</Button>
 			</div>
 		</DialogContent>
 	</Dialog>
 </template>
 
 <script setup lang="ts">
+import { TranslationsLanguage, type TranslationFieldLocale } from '@/core/components/admin-translations-dialog'
 import {
   Accordion,
   AccordionContent,
@@ -136,62 +149,51 @@ import {
   SelectValue
 } from '@/core/components/ui/select'
 import { cn } from '@/core/utils/tailwind.utils'
-import { PlusIcon, XIcon } from 'lucide-vue-next'
-import { defineEmits, defineProps, reactive, ref, watch } from 'vue'
+import { Loader, PlusIcon, XIcon } from 'lucide-vue-next'
+import { reactive, ref, watch } from 'vue'
 
-// Поддерживаемые языки
-enum Language {
-  EN = 'en',
-  KK = 'kk',
-  RU = 'ru',
-}
+
 
 // Массив языков в требуемом порядке: RU, KK, EN.
-const sortedLanguages: Language[] = [Language.RU, Language.KK, Language.EN]
+const sortedLanguages: TranslationsLanguage[] = [TranslationsLanguage.RU, TranslationsLanguage.KK, TranslationsLanguage.EN]
 
 // Отображаемые названия языков
-const languageNames: Record<Language, string> = {
-  [Language.EN]: 'Английский',
-  [Language.KK]: 'Казахский',
-  [Language.RU]: 'Русский',
+const languageNames: Record<TranslationsLanguage, string> = {
+  [TranslationsLanguage.EN]: 'Английский',
+  [TranslationsLanguage.KK]: 'Казахский',
+  [TranslationsLanguage.RU]: 'Русский',
 }
 
 // Новые цвета для бейджей, ассоциированные с каждым языком
-const languageColors: Record<Language, string> = {
-  [Language.RU]: 'bg-rose-100 text-rose-700',
-  [Language.KK]: 'bg-yellow-100 text-yellow-700',
-  [Language.EN]: 'bg-sky-100 text-sky-700',
+const languageColors: Record<TranslationsLanguage, string> = {
+  [TranslationsLanguage.RU]: 'bg-rose-100 text-rose-700',
+  [TranslationsLanguage.KK]: 'bg-yellow-100 text-yellow-700',
+  [TranslationsLanguage.EN]: 'bg-sky-100 text-sky-700',
 }
 
 // Тип для описания поля с переводами.
-interface FieldLocale {
-  field: string;
-  label: string;
-  locales: {
-    [key in Language]?: string;
-  };
-}
 
 // Пропсы компонента.
 const props = defineProps<{
-  fields: FieldLocale[];
+  fields: TranslationFieldLocale[];
   open: boolean;
+  loading: boolean;
 }>()
 
 // События компонента.
 const emit = defineEmits<{
-  (e: 'submit', payload: Record<string, Partial<Record<Language, string>>>[]): void;
+  (e: 'submit', payload: Record<string, Partial<Record<TranslationsLanguage, string>>>[]): void;
   (e: 'update:open', value: boolean): void;
 }>()
 
 // Локальная реактивная копия полей для редактирования.
-const localFields = reactive<FieldLocale[]>(props.fields.map(field => ({
+const localFields = reactive<TranslationFieldLocale[]>(props.fields.map(field => ({
   ...field,
   locales: { ...field.locales },
 })))
 
 // Отслеживаем выбор новой локали для каждого поля.
-const newLocaleForField = ref<Record<number, Language | ''>>({})
+const newLocaleForField = ref<Record<number, TranslationsLanguage | ''>>({})
 
 // Синхронизируем входящие пропсы с локальным состоянием.
 watch(() => props.fields, (newFields) => {
@@ -209,12 +211,12 @@ watch(() => props.open, (newVal) => {
 })
 
 // Возвращает отсортированные локали для поля в порядке RU, KK, EN.
-function getSortedLocales(item: FieldLocale): Language[] {
+function getSortedLocales(item: TranslationFieldLocale): TranslationsLanguage[] {
   return sortedLanguages.filter(lang => lang in item.locales)
 }
 
 // Возвращает недостающие локали для конкретного поля.
-function getMissingLocalesForField(index: number): Language[] {
+function getMissingLocalesForField(index: number): TranslationsLanguage[] {
   const fieldLocales = new Set(Object.keys(localFields[index].locales))
   return sortedLanguages.filter(lang => !fieldLocales.has(lang))
 }
@@ -230,19 +232,19 @@ function addLocaleToField(index: number): void {
 }
 
 // Удаление локали у конкретного поля.
-function removeLocale(index: number, locale: Language): void {
+function removeLocale(index: number, locale: TranslationsLanguage): void {
   if (localFields[index].locales[locale] !== undefined) {
     delete localFields[index].locales[locale]
   }
 }
 
 // Функция для получения отображаемого названия языка.
-function getLanguageName(code: Language): string {
+function getLanguageName(code: TranslationsLanguage): string {
   return languageNames[code] || code
 }
 
 // Функция для получения класса бейджа для языка.
-function getLanguageBadgeClass(code: Language): string {
+function getLanguageBadgeClass(code: TranslationsLanguage): string {
   return languageColors[code] || 'bg-gray-100 text-gray-800'
 }
 

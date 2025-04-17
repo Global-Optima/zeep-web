@@ -1,4 +1,5 @@
 import { apiClient } from '@/core/config/axios-instance.config'
+import type { PaginatedResponse } from '@/core/utils/pagination.utils'
 import { buildRequestFilter } from '@/core/utils/request-filters.utils'
 import type {
 	CreateIngredientCategoryDTO,
@@ -7,10 +8,10 @@ import type {
 	IngredientCategoryFilter,
 	IngredientFilter,
 	IngredientsDTO,
+	IngredientTranslationsDTO,
 	UpdateIngredientCategoryDTO,
 	UpdateIngredientDTO,
 } from '../models/ingredients.model'
-import type { PaginatedResponse } from '@/core/utils/pagination.utils'
 
 class IngredientsService {
 	async getIngredients(filter?: IngredientFilter) {
@@ -64,6 +65,28 @@ class IngredientsService {
 
 	async deleteIngredientCategory(id: number) {
 		await apiClient.delete<void>(`/ingredient-categories/${id}`)
+	}
+
+	async upsertIngredientTranslations(productId: number, data: IngredientTranslationsDTO) {
+		try {
+			const response = await apiClient.post<void>(`/ingredients/${productId}/translations`, data)
+			return response.data
+		} catch (error) {
+			console.error('Failed to upsert ingredient translations: ', error)
+			throw error
+		}
+	}
+
+	async getIngredientTranslations(productId: number) {
+		try {
+			const response = await apiClient.get<IngredientTranslationsDTO>(
+				`/ingredients/${productId}/translations`,
+			)
+			return response.data
+		} catch (error) {
+			console.error('Failed to get ingredient translations: ', error)
+			throw error
+		}
 	}
 }
 

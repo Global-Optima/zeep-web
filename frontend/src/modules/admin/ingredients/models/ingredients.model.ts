@@ -1,6 +1,7 @@
 // ingredient.dtos.ts
 
 import type { PaginationParams } from '@/core/utils/pagination.utils'
+import type { TranslationLocalizedField } from '@/modules/kiosk/products/models/product.model'
 import type { UnitDTO } from '../../units/models/units.model'
 
 /**
@@ -78,4 +79,8 @@ export interface IngredientCategoryDTO {
 
 export interface IngredientCategoryFilter extends PaginationParams {
 	search?: string
+}
+
+export interface IngredientTranslationsDTO {
+	name?: TranslationLocalizedField
 }

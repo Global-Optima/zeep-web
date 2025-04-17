@@ -9,6 +9,7 @@ import type {
 	AdditiveDTO,
 	AdditiveFilterQuery,
 	AdditiveTechnicalMap,
+	AdditiveTranslationsDTO,
 	CreateAdditiveCategoryDTO,
 	CreateAdditiveDTO,
 	UpdateAdditiveCategoryDTO,
@@ -95,6 +96,28 @@ class AdditiveService {
 	// Delete an additive category by ID
 	async deleteAdditiveCategory(id: number) {
 		await apiClient.delete(`/additives/categories/${id}`)
+	}
+
+	async upsertAdditiveTranslations(productId: number, data: AdditiveTranslationsDTO) {
+		try {
+			const response = await apiClient.post<void>(`/additives/${productId}/translations`, data)
+			return response.data
+		} catch (error) {
+			console.error('Failed to upsert additive translations: ', error)
+			throw error
+		}
+	}
+
+	async getAdditiveTranslations(productId: number) {
+		try {
+			const response = await apiClient.get<AdditiveTranslationsDTO>(
+				`/additives/${productId}/translations`,
+			)
+			return response.data
+		} catch (error) {
+			console.error('Failed to get additive translations: ', error)
+			throw error
+		}
 	}
 }
 
