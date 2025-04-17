@@ -4,6 +4,7 @@
 	<AdminIngredientsDetailsForm
 		v-else
 		:ingredient="ingredientDetails"
+		:readonly="!canUpdate"
 		@onSubmit="handleUpdate"
 		@onCancel="handleCancel"
 	/>
@@ -11,6 +12,8 @@
 
 <script lang="ts" setup>
 import { useToast } from '@/core/components/ui/toast/use-toast'
+import { useHasRole } from '@/core/hooks/use-has-roles.hook'
+import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import AdminIngredientsDetailsForm from '@/modules/admin/ingredients/components/details/admin-ingredients-details-form.vue'
 import type { UpdateIngredientDTO } from '@/modules/admin/ingredients/models/ingredients.model'
 import { ingredientsService } from '@/modules/admin/ingredients/services/ingredients.service'
@@ -22,6 +25,8 @@ const route = useRoute()
 const router = useRouter()
 const queryClient = useQueryClient()
 const { toast } = useToast()
+
+const canUpdate = useHasRole([EmployeeRole.ADMIN])
 
 const ingredientId = route.params.id as string
 

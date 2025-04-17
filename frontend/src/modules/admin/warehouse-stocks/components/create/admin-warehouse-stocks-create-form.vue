@@ -74,7 +74,7 @@
 							:key="ingredient.stockMaterialId"
 						>
 							<TableCell>{{ ingredient.name }}</TableCell>
-							<TableCell>{{ ingredient.size }} {{ ingredient.unit.name }}</TableCell>
+							<TableCell>{{ ingredient.size }} {{ ingredient.unit.name.toLowerCase() }}</TableCell>
 							<TableCell>{{ ingredient.category.name }}</TableCell>
 							<TableCell>
 								<Input

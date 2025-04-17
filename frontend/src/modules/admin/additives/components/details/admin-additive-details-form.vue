@@ -19,12 +19,13 @@ import { Input } from '@/core/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/core/components/ui/table'
 import { Textarea } from '@/core/components/ui/textarea'
 import { useToast } from '@/core/components/ui/toast'
+import { getRouteName } from "@/core/config/routes.config"
 import { TechnicalMapEntity, useCopyTechnicalMap } from '@/core/hooks/use-copy-technical-map.hooks'
 import type { AdditiveCategoryDetailsDTO, AdditiveCategoryDTO, AdditiveDetailsDTO, SelectedIngredientDTO, UpdateAdditiveDTO } from '@/modules/admin/additives/models/additives.model'
 import type { IngredientsDTO } from '@/modules/admin/ingredients/models/ingredients.model'
+import type { ProvisionDTO } from "@/modules/admin/provisions/models/provision.models"
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 import { Camera, ChevronLeft, EllipsisVertical, Trash, X } from 'lucide-vue-next'
-import type { ProvisionDTO } from "@/modules/admin/provisions/models/provision.models"
 
 // Async Components
 const AdminSelectAdditiveCategory = defineAsyncComponent(() =>
@@ -468,7 +469,15 @@ const onPasteTechMapClick = async () => {
 									v-for="(ingredient, index) in selectedIngredients"
 									:key="ingredient.ingredientId"
 								>
-									<TableCell>{{ ingredient.name }}</TableCell>
+									<TableCell>
+										<RouterLink
+											:to="{name: getRouteName('ADMIN_INGREDIENTS_DETAILS'), params: {id: ingredient.ingredientId}}"
+											target="_blank"
+											class="hover:text-primary underline underline-offset-4 transition-colors duration-300"
+										>
+											{{ ingredient.name }}
+										</RouterLink>
+									</TableCell>
 									<TableCell>{{ ingredient.category }}</TableCell>
 									<TableCell class="flex items-center gap-2">
 										<Input
@@ -527,7 +536,7 @@ const onPasteTechMapClick = async () => {
 									<TableHead>Название</TableHead>
 									<TableHead>Изначальный обьем</TableHead>
 									<TableHead>Обьем для продукта</TableHead>
-									<TableHead></TableHead>
+									<TableHead v-if="!readonly"></TableHead>
 								</TableRow>
 							</TableHeader>
 							<TableBody>
@@ -535,7 +544,15 @@ const onPasteTechMapClick = async () => {
 									v-for="(provision, index) in provisions"
 									:key="provision.provisionId"
 								>
-									<TableCell>{{ provision.name }}</TableCell>
+									<TableCell>
+										<RouterLink
+											:to="{name: getRouteName('ADMIN_PROVISION_DETAILS'), params: {id: provision.provisionId}}"
+											target="_blank"
+											class="hover:text-primary underline underline-offset-4 transition-colors duration-300"
+										>
+											{{ provision.name }}
+										</RouterLink>
+									</TableCell>
 									<TableCell
 										>{{ provision.absoluteVolume }} {{ provision.unit.toLowerCase() }}</TableCell
 									>
@@ -550,7 +567,10 @@ const onPasteTechMapClick = async () => {
 										/>
 										{{ provision.unit.toLowerCase() }}
 									</TableCell>
-									<TableCell class="text-center">
+									<TableCell
+										v-if="!readonly"
+										class="text-center"
+									>
 										<Button
 											variant="ghost"
 											size="icon"

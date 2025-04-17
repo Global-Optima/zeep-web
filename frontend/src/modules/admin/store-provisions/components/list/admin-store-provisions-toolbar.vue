@@ -12,11 +12,11 @@
 				class="bg-white w-full md:w-64"
 			/>
 
-      <MultiSelectFilter
-        title="Статусы"
-        :options="statusOptions"
-        v-model="selectedStatuses"
-      />
+			<MultiSelectFilter
+				title="Статусы"
+				:options="statusOptions"
+				v-model="selectedStatuses"
+			/>
 		</div>
 
 		<!-- Right Side: Export and Add Store Buttons -->

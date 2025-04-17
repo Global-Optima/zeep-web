@@ -22,7 +22,7 @@ import {
 } from '@/core/components/ui/table'
 
 // Icons
-import { ChevronLeft, Trash } from 'lucide-vue-next'
+import { ChevronLeft, ExternalLink, Trash } from 'lucide-vue-next'
 
 // Dialog for selecting products
 
@@ -30,6 +30,7 @@ import { ChevronLeft, Trash } from 'lucide-vue-next'
 import AdminSelectAvailableToAddProductDialog from '@/modules/admin/store-products/components/admin-select-available-to-add-product-dialog.vue'
 import type { CreateStoreProductDTO } from '@/modules/admin/store-products/models/store-products.model'
 import type { ProductDetailsDTO } from '@/modules/kiosk/products/models/product.model'
+import { getRouteName } from "@/core/config/routes.config"
 
 // Props & Emits
 const emits = defineEmits<{
@@ -174,7 +175,19 @@ function removeProduct(index: number) {
 					<CardHeader>
 						<div class="flex justify-between">
 							<div>
-								<CardTitle>{{ product.name }}</CardTitle>
+								<CardTitle class="flex items-center gap-2">
+									<span>
+										{{ product.name }}
+									</span>
+
+									<RouterLink
+										:to="{name: getRouteName('ADMIN_PRODUCT_DETAILS'), params: {id: product.id}}"
+										target="_blank"
+										class="hover:text-primary transition-colors duration-300"
+									>
+										<ExternalLink class="size-4 -mt-1" />
+									</RouterLink>
+								</CardTitle>
 								<CardDescription class="mt-2">{{ product.categoryName }}</CardDescription>
 							</div>
 							<!-- Trash icon to remove entire product card -->

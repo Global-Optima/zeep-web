@@ -3,7 +3,7 @@
 		<!-- Display Message if No Activities -->
 		<p
 			v-if="audits.length === 0"
-			class="py-4 text-center text-muted-foreground"
+			class="py-4 text-muted-foreground text-center"
 		>
 			Активности отсутствуют
 		</p>
@@ -56,7 +56,7 @@ defineProps<{
 }>()
 
 const formatDate = (date: Date): string => {
-  return format(new Date(date), 'dd MMM yyyy, HH:mm', { locale: ru })
+  return format(new Date(date), 'd MMMM yyyy, HH:mm', { locale: ru })
 }
 </script>
 

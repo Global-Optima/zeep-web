@@ -23,15 +23,17 @@
 				<AdminProductDetailsForm
 					ref="formRef"
 					:product-details="productDetails"
+					:is-submitting="isPending"
+					:readonly="!canUpdate"
 					@on-submit="onUpdate"
 					@on-cancel="onCancel"
-					:is-submitting="isPending"
 				/>
 			</TabsContent>
 
 			<TabsContent value="variants">
 				<AdminProductsVariants
 					:product-details="productDetails"
+					:readonly="!canUpdate"
 					@on-cancel="onCancel"
 				/>
 			</TabsContent>
@@ -40,26 +42,29 @@
 </template>
 
 <script setup lang="ts">
+import PageLoader from "@/core/components/page-loader/PageLoader.vue"
 import {
-    Tabs,
-    TabsContent,
-    TabsList,
-    TabsTrigger,
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
 } from '@/core/components/ui/tabs'
 import { useToast } from '@/core/components/ui/toast/use-toast'
+import { useHasRole } from '@/core/hooks/use-has-roles.hook'
+import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import AdminProductDetailsForm from '@/modules/admin/products/components/details/admin-product-details-form.vue'
 import AdminProductsVariants from '@/modules/admin/products/components/details/admin-product-sizes.vue'
 import type { UpdateProductDTO } from '@/modules/kiosk/products/models/product.model'
 import { productsService } from '@/modules/kiosk/products/services/products.service'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
+import { useTemplateRef } from "vue"
 import { useRoute, useRouter } from 'vue-router'
-import {useTemplateRef} from "vue";
-import PageLoader from "@/core/components/page-loader/PageLoader.vue";
 
 const route = useRoute()
 const router = useRouter()
 const queryClient = useQueryClient()
 const { toast } = useToast()
+const canUpdate = useHasRole([EmployeeRole.ADMIN])
 
 const productId = route.params.id as string
 

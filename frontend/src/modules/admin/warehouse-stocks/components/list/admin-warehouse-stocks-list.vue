@@ -14,7 +14,7 @@
 			<TableRow v-if="stocks.length === 0">
 				<TableCell
 					colspan="6"
-					class="py-6 text-center text-muted-foreground"
+					class="py-6 text-muted-foreground text-center"
 				>
 					Нет данных
 				</TableCell>
@@ -30,7 +30,7 @@
 				<TableCell class="py-4 font-medium">{{ stock.stockMaterial.name }}</TableCell>
 				<TableCell class="hidden md:table-cell">
 					{{ stock.stockMaterial.size }}
-					{{ stock.stockMaterial.unit.name }}
+					{{ stock.stockMaterial.unit.name.toLowerCase() }}
 				</TableCell>
 				<TableCell>{{ stock.quantity }}</TableCell>
 				<!-- Status badges -->
@@ -56,7 +56,7 @@
 
 				<!-- Expiration Date -->
 				<TableCell class="hidden md:table-cell">
-					{{ stock.earliestExpirationDate ? format(stock.earliestExpirationDate, "dd.MM.yyyy hh:mm") : "Не указано" }}
+					{{ stock.earliestExpirationDate ? format(stock.earliestExpirationDate, "d MMMM yyyy, HH:mm", {locale: ru}) : "Не указано" }}
 				</TableCell>
 			</TableRow>
 		</TableBody>
@@ -76,6 +76,7 @@ import {
 } from '@/core/components/ui/table'
 import type { WarehouseStocksDTO } from '@/modules/admin/warehouse-stocks/models/warehouse-stock.model'
 import { differenceInDays, format } from 'date-fns'
+import { ru } from 'date-fns/locale'
 
 defineProps<{
   stocks: WarehouseStocksDTO[]

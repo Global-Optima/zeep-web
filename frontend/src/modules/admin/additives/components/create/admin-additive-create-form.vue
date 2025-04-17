@@ -25,6 +25,7 @@ import type { IngredientsDTO } from '@/modules/admin/ingredients/models/ingredie
 import type { ProvisionDTO } from "@/modules/admin/provisions/models/provision.models"
 import type { UnitDTO } from '@/modules/admin/units/models/units.model'
 import { Camera, ChevronLeft, EllipsisVertical, Trash, X } from 'lucide-vue-next'
+import { getRouteName } from "@/core/config/routes.config"
 
 const AdminSelectAdditiveCategory = defineAsyncComponent(() =>
   import('@/modules/admin/additive-categories/components/admin-select-additive-category.vue'))
@@ -464,7 +465,15 @@ function removeProvision(index: number) {
 									v-for="(ingredient, index) in selectedIngredients"
 									:key="ingredient.ingredientId"
 								>
-									<TableCell>{{ ingredient.name }}</TableCell>
+									<TableCell>
+										<RouterLink
+											:to="{name: getRouteName('ADMIN_INGREDIENTS_DETAILS'), params: {id: ingredient.ingredientId}}"
+											target="_blank"
+											class="hover:text-primary underline transition-colors duration-300 underline-offset-4"
+										>
+											{{ ingredient.name }}
+										</RouterLink>
+									</TableCell>
 									<TableCell>{{ ingredient.category }}</TableCell>
 
 									<TableCell class="flex items-center gap-2">
@@ -522,7 +531,15 @@ function removeProvision(index: number) {
 									v-for="(provision, index) in provisions"
 									:key="provision.provisionId"
 								>
-									<TableCell>{{ provision.name }}</TableCell>
+									<TableCell>
+										<RouterLink
+											:to="{name: getRouteName('ADMIN_PROVISION_DETAILS'), params: {id: provision.provisionId}}"
+											target="_blank"
+											class="hover:text-primary underline transition-colors duration-300 underline-offset-4"
+										>
+											{{ provision.name }}
+										</RouterLink>
+									</TableCell>
 									<TableCell
 										>{{ provision.absoluteVolume }} {{ provision.unit.toLowerCase() }}</TableCell
 									>
