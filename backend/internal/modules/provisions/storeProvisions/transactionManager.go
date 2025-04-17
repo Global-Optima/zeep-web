@@ -15,7 +15,7 @@ import (
 
 type TransactionManager interface {
 	CreateStoreProvisionWithStocks(storeProvision *data.StoreProvision, ingredientIDs []uint) (storeProvisionID uint, err error)
-	CompleteStoreProvision(existingProvision *data.StoreProvision) ([]data.StoreStock, error)
+	CompleteStoreProvision(existingProvision *data.StoreProvision) (map[uint]*data.StoreStock, error)
 }
 
 type transactionManager struct {
@@ -98,7 +98,7 @@ func (m *transactionManager) addStocks(storeStockRepo storeStocks.StoreStockRepo
 	return ids, nil
 }
 
-func (m *transactionManager) CompleteStoreProvision(provision *data.StoreProvision) ([]data.StoreStock, error) {
+func (m *transactionManager) CompleteStoreProvision(provision *data.StoreProvision) (map[uint]*data.StoreStock, error) {
 	if provision == nil || provision.ID == 0 || provision.StoreID == 0 {
 		return nil, fmt.Errorf("invalid input arguments")
 	}
@@ -116,7 +116,7 @@ func (m *transactionManager) CompleteStoreProvision(provision *data.StoreProvisi
 	expirationTime := currentTime.Add(time.Duration(provision.ExpirationInMinutes) * time.Minute)
 	provision.ExpiresAt = &expirationTime
 
-	var deductedStocks []data.StoreStock
+	var deductedStocks map[uint]*data.StoreStock
 
 	err := m.db.Transaction(func(tx *gorm.DB) error {
 		var err error

@@ -10,87 +10,131 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers/types"
 	storeStocksTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
-func deductStoreStock(tx *gorm.DB, storeID, ingredientID uint, requiredQuantity float64) (*data.StoreStock, error) {
-	var existingStock data.StoreStock
-	err := tx.Preload("Ingredient").
-		Preload("Ingredient.Unit").
-		Where("store_id = ? AND ingredient_id = ?", storeID, ingredientID).
-		First(&existingStock).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, fmt.Errorf("stock not found for ingredient ID %d", ingredientID)
-		}
-		return nil, fmt.Errorf("failed to fetch store warehouse stock: %w", err)
-	}
-
-	if existingStock.Quantity < requiredQuantity {
-		return nil, fmt.Errorf("%w: insufficient stock for ingredient ID %d", storeStocksTypes.ErrInsufficientStock, ingredientID)
-	}
-
-	existingStock.Quantity -= requiredQuantity
-
-	if err := tx.Save(&existingStock).Error; err != nil {
-		return nil, fmt.Errorf("failed to save store warehouse stock for ingredient ID %d: %w", ingredientID, err)
-	}
-	logrus.Infof("deducted for ingredientID %v: %v", ingredientID, requiredQuantity)
-
-	return &existingStock, nil
-}
-
-func deductStoreProvisions(tx *gorm.DB, storeID, provisionID uint, requiredVolume float64) ([]data.StoreProvision, error) {
-	if requiredVolume <= 0 {
+func deductStoreStocks(
+	tx *gorm.DB,
+	storeID uint,
+	requiredIngredientQtyMap map[uint]float64,
+) (map[uint]*data.StoreStock, error) {
+	if len(requiredIngredientQtyMap) == 0 {
 		return nil, nil
 	}
 
-	var provisions []data.StoreProvision
-	err := tx.Where("store_id = ? AND provision_id = ? AND status = ? AND (expires_at IS NULL OR expires_at > ?)",
-		storeID, provisionID, data.STORE_PROVISION_STATUS_COMPLETED, time.Now().UTC()).
+	// 1) Load all relevant stocks in one query.
+	ids := make([]uint, 0, len(requiredIngredientQtyMap))
+	for id := range requiredIngredientQtyMap {
+		ids = append(ids, id)
+	}
+
+	var stocks []data.StoreStock
+	if err := tx.
+		Preload("Ingredient").
+		Preload("Ingredient.Unit").
+		Where("store_id = ? AND ingredient_id IN ?", storeID, ids).
+		Find(&stocks).Error; err != nil {
+		return nil, fmt.Errorf("failed to load store stocks: %w", err)
+	}
+
+	// Map for lookup.
+	stockMap := make(map[uint]*data.StoreStock, len(stocks))
+	for i := range stocks {
+		s := &stocks[i]
+		stockMap[s.IngredientID] = s
+	}
+
+	// 2) Deduct each required amount.
+	result := make(map[uint]*data.StoreStock, len(requiredIngredientQtyMap))
+	for ingrID, reqQty := range requiredIngredientQtyMap {
+		s, ok := stockMap[ingrID]
+		if !ok {
+			return nil, fmt.Errorf("stock not found for ingredient ID %d", ingrID)
+		}
+		if s.Quantity < reqQty {
+			return nil, fmt.Errorf("%w: insufficient stock for ingredient ID %d",
+				storeStocksTypes.ErrInsufficientStock, ingrID)
+		}
+		s.Quantity -= reqQty
+		if err := tx.Save(s).Error; err != nil {
+			return nil, fmt.Errorf("failed to save stock for ingredient %d: %w", ingrID, err)
+		}
+		logrus.Infof("deducted %.2f from ingredient %d", reqQty, ingrID)
+		result[ingrID] = s
+	}
+	return result, nil
+}
+
+func deductStoreProvisions(
+	tx *gorm.DB,
+	storeID uint,
+	requiredProvisionVolMap map[uint]float64,
+) (map[uint][]data.StoreProvision, error) {
+	if len(requiredProvisionVolMap) == 0 {
+		return nil, nil
+	}
+
+	// 1) Load all relevant provisions in one query.
+	provIDs := make([]uint, 0, len(requiredProvisionVolMap))
+	for id := range requiredProvisionVolMap {
+		provIDs = append(provIDs, id)
+	}
+
+	var allProv []data.StoreProvision
+	if err := tx.
+		Where("store_id = ? AND provision_id IN ? AND status = ? AND (expires_at IS NULL OR expires_at > ?)",
+			storeID, provIDs, data.STORE_PROVISION_STATUS_COMPLETED, time.Now().UTC()).
 		Order("created_at ASC").
-		Find(&provisions).Error
-	if err != nil {
+		Find(&allProv).Error; err != nil {
 		return nil, fmt.Errorf("failed to load store provisions: %w", err)
 	}
 
-	var usedProvisions []data.StoreProvision
-	remaining := requiredVolume
-
-	for _, provision := range provisions {
-		if remaining <= 0 {
-			break
-		}
-
-		available := provision.Volume
-		deduct := min(available, remaining)
-		if deduct == 0 {
-			continue
-		}
-
-		provision.Volume -= deduct
-		remaining -= deduct
-
-		if provision.Volume == 0 {
-			provision.Status = data.STORE_PROVISION_STATUS_EMPTY
-		}
-
-		if err := tx.Save(&provision).Error; err != nil {
-			return nil, fmt.Errorf("failed to update provision volume for ID %d: %w", provision.ID, err)
-		}
-
-		logrus.Infof("deducted for provisionID %v: %v", provisionID, deduct)
-
-		usedProvisions = append(usedProvisions, provision)
+	// Group by provisionID
+	group := make(map[uint][]data.StoreProvision, len(requiredProvisionVolMap))
+	for _, p := range allProv {
+		group[p.ProvisionID] = append(group[p.ProvisionID], p)
 	}
 
-	if remaining > 0 {
-		return nil, fmt.Errorf("%w: not enough provision volume for provision ID %d", storeProvisionsTypes.ErrInsufficientStoreProvision, provisionID)
-	}
+	// 2) Deduct for each provision ID
+	result := make(map[uint][]data.StoreProvision, len(requiredProvisionVolMap))
+	for provID, reqVol := range requiredProvisionVolMap {
+		remain := reqVol
+		used := []data.StoreProvision{}
 
-	return usedProvisions, nil
+		list := group[provID]
+		for i := range list {
+			if remain <= 0 {
+				break
+			}
+			p := &list[i]
+			avail := p.Volume
+			delta := avail
+			if delta > remain {
+				delta = remain
+			}
+			if delta == 0 {
+				continue
+			}
+			p.Volume -= delta
+			remain -= delta
+			if p.Volume == 0 {
+				p.Status = data.STORE_PROVISION_STATUS_EMPTY
+			}
+			if err := tx.Save(p).Error; err != nil {
+				return nil, fmt.Errorf("failed to update provision %d: %w", p.ID, err)
+			}
+			logrus.Infof("deducted %.2f from provision %d", delta, provID)
+			used = append(used, *p)
+		}
+
+		if remain > 0 {
+			return nil, fmt.Errorf("%w: not enough volume for provision %d",
+				storeProvisionsTypes.ErrInsufficientStoreProvision, provID)
+		}
+		result[provID] = used
+	}
+	return result, nil
 }
 
 func recalculateStoreProducts(

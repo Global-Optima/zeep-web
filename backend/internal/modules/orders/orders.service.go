@@ -224,7 +224,7 @@ func (s *orderService) CreateOrder(createOrderDTO *types.CreateOrderDTO) (*data.
 	}
 
 	logrus.Infof("Frozen Stock BEFORE creating order: %v", frozenInventory)
-	if err := s.accumulateAndCheckInventory(createOrderDTO.StoreID, validationRes.subordersCtx, frozenInventory); err != nil {
+	if err := s.checkAndAccumulateInventory(createOrderDTO.StoreID, validationRes.subordersCtx, frozenInventory); err != nil {
 		wrappedErr := fmt.Errorf("suborders inventory check failed: %v", err)
 		s.logger.Error(wrappedErr)
 		return nil, err
@@ -732,7 +732,7 @@ func (s *orderService) FailOrderPayment(orderID uint) error {
 
 // in your orderService (or wherever it belongs)
 
-func (s *orderService) accumulateAndCheckInventory(
+func (s *orderService) checkAndAccumulateInventory(
 	storeID uint,
 	ctx *subordersContext,
 	frozen *storeInventoryManagersTypes.FrozenInventory,

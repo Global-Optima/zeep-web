@@ -209,20 +209,3 @@ type TransactionDTO struct {
 type WaitingOrderPayload struct {
 	OrderID uint `json:"orderId"`
 }
-
-type DeductedInventoryMap struct {
-	IngredientStoreStockMap     map[uint]*data.StoreStock
-	ProvisionStoreProvisionsMap map[uint][]data.StoreProvision
-}
-
-func (d *DeductedInventoryMap) GetKeys() (ingredientIDs []uint, provisionIDs []uint) {
-	for id := range d.IngredientStoreStockMap {
-		ingredientIDs = append(ingredientIDs, id)
-	}
-
-	for id := range d.ProvisionStoreProvisionsMap {
-		provisionIDs = append(provisionIDs, id)
-	}
-
-	return
-}
