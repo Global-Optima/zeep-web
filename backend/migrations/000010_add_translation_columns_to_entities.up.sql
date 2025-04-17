@@ -61,3 +61,43 @@ ALTER TABLE ingredients
 
 ALTER TABLE ingredients
   ADD COLUMN name_translation_id BIGINT NULL;
+
+
+-- Categories
+ALTER TABLE product_categories 
+  DROP CONSTRAINT IF EXISTS fk_product_categories_name_translation,
+  DROP CONSTRAINT IF EXISTS fk_product_categories_description_translation;
+
+ALTER TABLE product_categories 
+  DROP COLUMN IF EXISTS name_translation_id,
+  DROP COLUMN IF EXISTS description_translation_id;
+
+ALTER TABLE product_categories
+  ADD COLUMN name_translation_id BIGINT NULL,
+  ADD COLUMN description_translation_id BIGINT NULL;
+
+-- Additive categories
+ALTER TABLE additive_categories 
+  DROP CONSTRAINT IF EXISTS fk_additive_categories_name_translation,
+  DROP CONSTRAINT IF EXISTS fk_additive_categories_description_translation;
+
+ALTER TABLE additive_categories 
+  DROP COLUMN IF EXISTS name_translation_id,
+  DROP COLUMN IF EXISTS description_translation_id;
+
+ALTER TABLE additive_categories
+  ADD COLUMN name_translation_id BIGINT NULL,
+  ADD COLUMN description_translation_id BIGINT NULL;
+
+-- Ingredient categories
+ALTER TABLE ingredient_categories 
+  DROP CONSTRAINT IF EXISTS fk_ingredient_categories_name_translation,
+  DROP CONSTRAINT IF EXISTS fk_ingredient_categories_description_translation;
+
+ALTER TABLE ingredient_categories 
+  DROP COLUMN IF EXISTS name_translation_id,
+  DROP COLUMN IF EXISTS description_translation_id;
+
+ALTER TABLE ingredient_categories
+  ADD COLUMN name_translation_id BIGINT NULL,
+  ADD COLUMN description_translation_id BIGINT NULL;

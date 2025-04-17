@@ -65,24 +65,24 @@ func (m *transactionManager) UpsertAdditiveTranslations(additiveID uint, dto *ty
 
 func (m *transactionManager) upsertFieldTranslations(tx translations.TranslationManager, currentGroupID *uint, locale types.FieldLocale) (uint, error) {
 	var entries []struct {
-		Language string
+		Language data.LanguageCode
 		Text     string
 	}
 	if locale.En != "" {
 		entries = append(entries, struct {
-			Language string
+			Language data.LanguageCode
 			Text     string
 		}{"en", locale.En})
 	}
 	if locale.Ru != "" {
 		entries = append(entries, struct {
-			Language string
+			Language data.LanguageCode
 			Text     string
 		}{"ru", locale.Ru})
 	}
 	if locale.Kk != "" {
 		entries = append(entries, struct {
-			Language string
+			Language data.LanguageCode
 			Text     string
 		}{"kk", locale.Kk})
 	}
@@ -100,7 +100,7 @@ func (m *transactionManager) upsertFieldTranslations(tx translations.Translation
 		firstEntry := entries[0]
 		firstTranslation := data.AppTranslations{
 			TranslationID:  0, // temporary placeholder
-			LanguageCode:   data.LanguageCode(firstEntry.Language),
+			LanguageCode:   firstEntry.Language,
 			TranslatedText: firstEntry.Text,
 		}
 		if err := tx.CreateTranslation(&firstTranslation); err != nil {
@@ -116,7 +116,7 @@ func (m *transactionManager) upsertFieldTranslations(tx translations.Translation
 			entry := entries[i]
 			newRec := data.AppTranslations{
 				TranslationID:  groupID,
-				LanguageCode:   data.LanguageCode(entry.Language),
+				LanguageCode:   entry.Language,
 				TranslatedText: entry.Text,
 			}
 			if err := tx.CreateTranslation(&newRec); err != nil {
@@ -129,7 +129,7 @@ func (m *transactionManager) upsertFieldTranslations(tx translations.Translation
 	// Otherwise, the translation group already exists.
 	groupID := *currentGroupID
 	for _, entry := range entries {
-		lang := data.LanguageCode(entry.Language)
+		lang := entry.Language
 		existing, err := tx.FindTranslation(groupID, lang)
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -157,7 +157,7 @@ func (m *transactionManager) upsertFieldTranslations(tx translations.Translation
 	}
 
 	// Delete obsolete translations in this group that are not among our fixed set.
-	providedLangs := make([]string, len(entries))
+	providedLangs := make([]data.LanguageCode, len(entries))
 	for i, e := range entries {
 		providedLangs[i] = e.Language
 	}

@@ -172,8 +172,8 @@ func (r *Router) RegisterProductCategoriesRoutes(handler *categories.CategoryHan
 func (r *Router) RegisterAdditivesRoutes(handler *additives.AdditiveHandler, additivesTechMapHandler *additivesTechnicalMap.TechnicalMapHandler) {
 	router := r.EmployeeRoutes.Group("/additives")
 	{
-		router.GET("", handler.GetAdditives)
-		router.GET("/:id", handler.GetAdditiveByID)
+		router.GET("", middleware.LocaleMiddleware(), handler.GetAdditives)
+		router.GET("/:id", middleware.LocaleMiddleware(), handler.GetAdditiveByID)
 		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateAdditive)
 		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateAdditive)
 		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteAdditive)

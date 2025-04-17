@@ -3,25 +3,27 @@ package middleware
 import (
 	"strings"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/gin-gonic/gin"
 )
 
-var AllowedLanguages = map[string]struct{}{
-	"en": {},
-	"ru": {},
-	"kk": {},
-}
+var LocaleKey = "locale"
 
-const LocaleKey = "locale"
+var AllowedLanguages = map[data.LanguageCode]struct{}{
+	data.LanguageCodeEN: {},
+	data.LanguageCodeRU: {},
+	data.LanguageCodeKK: {},
+}
 
 func LocaleMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var locale string
+		var locale data.LanguageCode
 
 		if q := c.Query("lang"); q != "" {
 			q = normalizeLang(q)
-			if isAllowed(q) {
-				locale = q
+			if isAllowed(data.LanguageCode(q)) {
+				locale = data.LanguageCode(q)
 			}
 		}
 
@@ -31,8 +33,9 @@ func LocaleMiddleware() gin.HandlerFunc {
 				part := strings.SplitN(header, ",", 2)[0]
 				part = strings.SplitN(part, ";", 2)[0]
 				part = normalizeLang(part)
-				if isAllowed(part) {
-					locale = part
+				sanitized := data.LanguageCode(part)
+				if isAllowed(sanitized) {
+					locale = sanitized
 				}
 			}
 		}
@@ -41,8 +44,8 @@ func LocaleMiddleware() gin.HandlerFunc {
 			locale = "ru"
 		}
 
-		c.Set(LocaleKey, locale)
-		c.Header("Content-Language", locale)
+		contexts.SetLocaleCtx(c, locale)
+		c.Header("Content-Language", locale.String())
 		c.Next()
 	}
 }
@@ -53,7 +56,7 @@ func normalizeLang(s string) string {
 	return strings.ToLower(strings.TrimSpace(s))
 }
 
-func isAllowed(lang string) bool {
+func isAllowed(lang data.LanguageCode) bool {
 	_, ok := AllowedLanguages[lang]
 	return ok
 }

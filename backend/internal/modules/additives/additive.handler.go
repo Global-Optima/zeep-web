@@ -2,8 +2,8 @@ package additives
 
 import (
 	"net/http"
-	"strconv"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 	provisionsTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/types"
 	"github.com/sirupsen/logrus"
@@ -80,13 +80,13 @@ func (h *AdditiveHandler) UpdateAdditiveCategory(c *gin.Context) {
 		return
 	}
 
-	categoryID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	categoryID, err := utils.ParseParam(c, "id")
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400AdditiveCategory)
 		return
 	}
 
-	category, err := h.service.GetAdditiveCategoryByID(uint(categoryID))
+	category, err := h.service.GetAdditiveCategoryByID(categoryID)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500AdditiveCategoryUpdate)
 		return
@@ -113,13 +113,13 @@ func (h *AdditiveHandler) UpdateAdditiveCategory(c *gin.Context) {
 }
 
 func (h *AdditiveHandler) DeleteAdditiveCategory(c *gin.Context) {
-	categoryID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	categoryID, err := utils.ParseParam(c, "id")
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400AdditiveCategory)
 		return
 	}
 
-	category, err := h.service.GetAdditiveCategoryByID(uint(categoryID))
+	category, err := h.service.GetAdditiveCategoryByID(categoryID)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500AdditiveCategoryDelete)
 		return
@@ -149,13 +149,13 @@ func (h *AdditiveHandler) DeleteAdditiveCategory(c *gin.Context) {
 }
 
 func (h *AdditiveHandler) GetAdditiveCategoryByID(c *gin.Context) {
-	categoryID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	categoryID, err := utils.ParseParam(c, "id")
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400AdditiveCategory)
 		return
 	}
 
-	category, err := h.service.GetAdditiveCategoryByID(uint(categoryID))
+	category, err := h.service.GetAdditiveCategoryByID(categoryID)
 	if err != nil {
 		switch {
 		case errors.Is(err, types.ErrAdditiveCategoryNotFound):
@@ -177,7 +177,9 @@ func (h *AdditiveHandler) GetAdditives(c *gin.Context) {
 		return
 	}
 
-	additives, err := h.service.GetAdditives(&filter)
+	locale := contexts.GetLocaleFromCtx(c)
+
+	additives, err := h.service.GetAdditives(locale, &filter)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500AdditiveCategoryGet)
 		return
@@ -232,7 +234,7 @@ func (h *AdditiveHandler) CreateAdditive(c *gin.Context) {
 }
 
 func (h *AdditiveHandler) UpdateAdditive(c *gin.Context) {
-	additiveID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	additiveID, err := utils.ParseParam(c, "id")
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400Additive)
 		return
@@ -262,7 +264,7 @@ func (h *AdditiveHandler) UpdateAdditive(c *gin.Context) {
 
 	logrus.Info(dto.Provisions)
 
-	additive, err := h.service.UpdateAdditive(uint(additiveID), &dto)
+	additive, err := h.service.UpdateAdditive(additiveID, &dto)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500AdditiveUpdate)
 		return
@@ -284,13 +286,15 @@ func (h *AdditiveHandler) UpdateAdditive(c *gin.Context) {
 }
 
 func (h *AdditiveHandler) DeleteAdditive(c *gin.Context) {
-	additiveID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	additiveID, err := utils.ParseParam(c, "id")
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400Additive)
 		return
 	}
 
-	additive, err := h.service.GetAdditiveByID(uint(additiveID))
+	locale := contexts.GetLocaleFromCtx(c)
+
+	additive, err := h.service.GetAdditiveByID(locale, additiveID)
 	if err != nil {
 		if errors.Is(err, types.ErrAdditiveNotFound) {
 			localization.SendLocalizedResponseWithKey(c, types.Response404Additive)
@@ -325,13 +329,16 @@ func (h *AdditiveHandler) DeleteAdditive(c *gin.Context) {
 }
 
 func (h *AdditiveHandler) GetAdditiveByID(c *gin.Context) {
-	additiveID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	additiveID, err := utils.ParseParam(c, "id")
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400Additive)
 		return
 	}
 
-	additive, err := h.service.GetAdditiveByID(uint(additiveID))
+	locale := contexts.GetLocaleFromCtx(c)
+	logrus.Info(locale)
+
+	additive, err := h.service.GetAdditiveByID(locale, additiveID)
 	if err != nil {
 		switch {
 		case errors.Is(err, types.ErrAdditiveNotFound):

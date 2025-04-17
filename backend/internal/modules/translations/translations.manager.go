@@ -12,8 +12,15 @@ type TranslationManager interface {
 	FindTranslation(groupID uint, language data.LanguageCode) (data.AppTranslations, error)
 	UpdateTranslation(t *data.AppTranslations) error
 	CreateTranslation(t *data.AppTranslations) error
-	DeleteObsoleteTranslations(groupID uint, validLangs []string) error
+	DeleteObsoleteTranslations(groupID uint, validLangs []data.LanguageCode) error
+
 	UpdateAdditiveTranslationIDs(additiveID, nameGroupID, descGroupID uint) error
+	UpdateAdditiveCategoryTranslationIDs(additiveCategoryID, nameGroupID, descGroupID uint) error
+	UpdateProductTranslationIDs(productID, nameGroupID, descGroupID uint) error
+	UpdateProductCategoryTranslationIDs(productCategoryID, nameGroupID, descGroupID uint) error
+	UpdateIngredientTranslationIDs(ingredientID, nameGroupID, descGroupID uint) error
+	UpdateIngredientCategoryTranslationIDs(ingredientCategoryID, nameGroupID, descGroupID uint) error
+
 	CloneWithTransaction(tx *gorm.DB) TranslationManager
 }
 
@@ -53,7 +60,7 @@ func (r *translationManager) CreateTranslation(t *data.AppTranslations) error {
 	return r.db.Create(t).Error
 }
 
-func (r *translationManager) DeleteObsoleteTranslations(groupID uint, validLangs []string) error {
+func (r *translationManager) DeleteObsoleteTranslations(groupID uint, validLangs []data.LanguageCode) error {
 	q := r.db.Unscoped().Where("translation_id = ?", groupID)
 
 	if len(validLangs) > 0 {
@@ -73,6 +80,17 @@ func (r *translationManager) UpdateAdditiveTranslationIDs(additiveID, nameGroupI
 	return nil
 }
 
+func (r *translationManager) UpdateAdditiveCategoryTranslationIDs(additiveCategoryID, nameGroupID, descGroupID uint) error {
+	updates := &data.AdditiveCategory{
+		NameTranslationID:        &nameGroupID,
+		DescriptionTranslationID: &descGroupID,
+	}
+	if err := r.db.Model(&data.AdditiveCategory{}).Where("id = ?", additiveCategoryID).Updates(updates).Error; err != nil {
+		return fmt.Errorf("failed to update additive category translation IDs: %w", err)
+	}
+	return nil
+}
+
 func (r *translationManager) UpdateProductTranslationIDs(productID, nameGroupID, descGroupID uint) error {
 	updates := &data.Product{
 		NameTranslationID:        &nameGroupID,
@@ -84,12 +102,34 @@ func (r *translationManager) UpdateProductTranslationIDs(productID, nameGroupID,
 	return nil
 }
 
+func (r *translationManager) UpdateProductCategoryTranslationIDs(productCategoryID, nameGroupID, descGroupID uint) error {
+	updates := &data.ProductCategory{
+		NameTranslationID:        &nameGroupID,
+		DescriptionTranslationID: &descGroupID,
+	}
+	if err := r.db.Model(&data.ProductCategory{}).Where("id = ?", productCategoryID).Updates(updates).Error; err != nil {
+		return fmt.Errorf("failed to update product category translation IDs: %w", err)
+	}
+	return nil
+}
+
 func (r *translationManager) UpdateIngredientTranslationIDs(ingredientID, nameGroupID, descGroupID uint) error {
 	updates := &data.Ingredient{
 		NameTranslationID: &nameGroupID,
 	}
 	if err := r.db.Model(&data.Ingredient{}).Where("id = ?", ingredientID).Updates(updates).Error; err != nil {
 		return fmt.Errorf("failed to update ingredient translation IDs: %w", err)
+	}
+	return nil
+}
+
+func (r *translationManager) UpdateIngredientCategoryTranslationIDs(ingredientCategoryID, nameGroupID, descGroupID uint) error {
+	updates := &data.IngredientCategory{
+		NameTranslationID:        &nameGroupID,
+		DescriptionTranslationID: &descGroupID,
+	}
+	if err := r.db.Model(&data.IngredientCategory{}).Where("id = ?", ingredientCategoryID).Updates(updates).Error; err != nil {
+		return fmt.Errorf("failed to update ingredient category translation IDs: %w", err)
 	}
 	return nil
 }

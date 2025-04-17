@@ -116,6 +116,12 @@ type IngredientCategory struct {
 	Name        string       `gorm:"size:255;not null;uniqueIndex"`
 	Description string       `gorm:"type:text"`
 	Ingredients []Ingredient `gorm:"foreignKey:CategoryID"`
+
+	NameTranslationID *uint             `gorm:"index"`
+	NameTranslation   []AppTranslations `gorm:"foreignKey:TranslationID;constraint:OnDelete:CASCADE"`
+
+	DescriptionTranslationID *uint             `gorm:"index"`
+	DescriptionTranslation   []AppTranslations `gorm:"foreignKey:TranslationID;constraint:OnDelete:CASCADE"`
 }
 
 type Provision struct {
@@ -178,6 +184,12 @@ type ProductCategory struct {
 	Description     string          `gorm:"type:text"`
 	MachineCategory MachineCategory `gorm:"type:varchar(20);not null"`
 	Products        []Product       `gorm:"foreignKey:CategoryID"`
+
+	NameTranslationID *uint             `gorm:"index"`
+	NameTranslation   []AppTranslations `gorm:"foreignKey:TranslationID;constraint:OnDelete:CASCADE"`
+
+	DescriptionTranslationID *uint             `gorm:"index"`
+	DescriptionTranslation   []AppTranslations `gorm:"foreignKey:TranslationID;constraint:OnDelete:CASCADE"`
 }
 
 type Additive struct {
@@ -213,4 +225,10 @@ type AdditiveCategory struct {
 	Additives        []Additive `gorm:"foreignKey:AdditiveCategoryID"`
 	IsMultipleSelect bool       `gorm:"default:true" sort:"isMultipleSelect"`
 	IsRequired       bool       `gorm:"not null;default:false" sort:"isRequired"`
+
+	NameTranslationID *uint             `gorm:"index"`
+	NameTranslation   []AppTranslations `gorm:"foreignKey:TranslationID;constraint:OnDelete:CASCADE"`
+
+	DescriptionTranslationID *uint             `gorm:"index"`
+	DescriptionTranslation   []AppTranslations `gorm:"foreignKey:TranslationID;constraint:OnDelete:CASCADE"`
 }

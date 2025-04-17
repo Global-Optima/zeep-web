@@ -8,6 +8,19 @@ var (
 	LanguageCodeKK LanguageCode = "kk"
 )
 
+func (lc LanguageCode) IsValid() bool {
+	switch lc {
+	case LanguageCodeEN, LanguageCodeRU, LanguageCodeKK:
+		return true
+	default:
+		return false
+	}
+}
+
+func (lc LanguageCode) String() string {
+	return string(lc)
+}
+
 type AppTranslations struct {
 	BaseEntity
 	TranslationID  uint         `gorm:"index;not null"`

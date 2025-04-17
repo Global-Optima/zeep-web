@@ -22,8 +22,8 @@ type AdditiveService interface {
 	DeleteAdditiveCategory(categoryID uint) error
 	GetAdditiveCategoryByID(categoryID uint) (*types.AdditiveCategoryDetailsDTO, error)
 
-	GetAdditives(filter *types.AdditiveFilterQuery) ([]types.AdditiveDTO, error)
-	GetAdditiveByID(additiveID uint) (*types.AdditiveDetailsDTO, error)
+	GetAdditives(locale data.LanguageCode, filter *types.AdditiveFilterQuery) ([]types.AdditiveDTO, error)
+	GetAdditiveByID(locale data.LanguageCode, additiveID uint) (*types.AdditiveDetailsDTO, error)
 	GetAdditivesByIDs(additiveIDs []uint) ([]types.AdditiveDTO, error)
 	CreateAdditive(dto *types.CreateAdditiveDTO) (uint, error)
 	UpdateAdditive(additiveID uint, dto *types.UpdateAdditiveDTO) (*types.AdditiveDTO, error)
@@ -149,8 +149,8 @@ func (s *additiveService) GetAdditiveCategoryByID(categoryID uint) (*types.Addit
 	return types.ConvertToAdditiveCategoryDetailsDTO(category), nil
 }
 
-func (s *additiveService) GetAdditives(filter *types.AdditiveFilterQuery) ([]types.AdditiveDTO, error) {
-	additives, err := s.repo.GetAdditives(filter)
+func (s *additiveService) GetAdditives(locale data.LanguageCode, filter *types.AdditiveFilterQuery) ([]types.AdditiveDTO, error) {
+	additives, err := s.repo.GetAdditives(locale, filter)
 	if err != nil {
 		wrappedError := utils.WrapError("failed to retrieve additives", err)
 		s.logger.Error(wrappedError)
@@ -321,8 +321,8 @@ func (s *additiveService) DeleteAdditive(additiveID uint) error {
 	return nil
 }
 
-func (s *additiveService) GetAdditiveByID(additiveID uint) (*types.AdditiveDetailsDTO, error) {
-	additive, err := s.repo.GetAdditiveWithDetailsByID(additiveID)
+func (s *additiveService) GetAdditiveByID(locale data.LanguageCode, additiveID uint) (*types.AdditiveDetailsDTO, error) {
+	additive, err := s.repo.GetAdditiveWithDetailsByID(locale, additiveID)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to fetch additive by ID", err)
 		s.logger.Error(wrappedErr)

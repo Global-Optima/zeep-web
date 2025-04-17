@@ -16,9 +16,9 @@ type AdditiveRepository interface {
 	GetAdditivesByProductSizeIDs(productSizeIDs []uint) ([]data.ProductSizeAdditive, error)
 	CheckAdditiveExists(additiveName string) (bool, error)
 	GetAdditiveByID(additiveID uint) (*data.Additive, error)
-	GetAdditiveWithDetailsByID(additiveID uint) (*data.Additive, error)
+	GetAdditiveWithDetailsByID(locale data.LanguageCode, additiveID uint) (*data.Additive, error)
 	GetAdditivesByIDs(additiveIDs []uint) ([]data.Additive, error)
-	GetAdditives(filter *types.AdditiveFilterQuery) ([]data.Additive, error)
+	GetAdditives(locale data.LanguageCode, filter *types.AdditiveFilterQuery) ([]data.Additive, error)
 	CreateAdditive(additive *data.Additive) (uint, error)
 	SaveAdditiveWithAssociations(additiveID uint, updateModels *types.AdditiveModels) error
 	DeleteAdditive(additiveID uint) (*data.Additive, error)
@@ -136,7 +136,7 @@ func (r *additiveRepository) GetAdditiveCategories(filter *types.AdditiveCategor
 	return categories, nil
 }
 
-func (r *additiveRepository) GetAdditives(filter *types.AdditiveFilterQuery) ([]data.Additive, error) {
+func (r *additiveRepository) GetAdditives(locale data.LanguageCode, filter *types.AdditiveFilterQuery) ([]data.Additive, error) {
 	var additives []data.Additive
 
 	query := r.db.
@@ -192,16 +192,15 @@ func (r *additiveRepository) GetAdditiveByID(additiveID uint) (*data.Additive, e
 	return &additive, nil
 }
 
-func (r *additiveRepository) GetAdditiveWithDetailsByID(additiveID uint) (*data.Additive, error) {
+func (r *additiveRepository) GetAdditiveWithDetailsByID(locale data.LanguageCode, additiveID uint) (*data.Additive, error) {
 	var additive data.Additive
-	err := r.db.Model(&data.Additive{}).
-		Preload("Category").
-		Where("id = ?", additiveID).
-		Preload("Unit").
-		Preload("Ingredients.Ingredient.Unit").
-		Preload("Ingredients.Ingredient.IngredientCategory").
-		Preload("AdditiveProvisions.Provision.Unit").
-		First(&additive).Error
+
+	err := utils.ApplyLocalizedPreloads(
+		r.db.Model(&data.Additive{}).Where("id = ?", additiveID),
+		locale,
+		types.AdditivePreloadMap,
+	).First(&additive).Error
+
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, types.ErrAdditiveNotFound

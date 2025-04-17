@@ -179,9 +179,19 @@ func ConvertToAdditiveDetailsDTO(additive *data.Additive) *AdditiveDetailsDTO {
 }
 
 func ConvertToBaseAdditiveDTO(additive *data.Additive) *BaseAdditiveDTO {
+	name := additive.Name
+	description := additive.Description
+
+	if len(additive.NameTranslation) > 0 {
+		name = additive.NameTranslation[0].TranslatedText
+	}
+	if len(additive.DescriptionTranslation) > 0 {
+		description = additive.DescriptionTranslation[0].TranslatedText
+	}
+
 	return &BaseAdditiveDTO{
-		Name:        additive.Name,
-		Description: additive.Description,
+		Name:        name,
+		Description: description,
 		BasePrice:   additive.BasePrice,
 		ImageURL:    additive.ImageKey.GetURL(),
 		Size:        additive.Size,
@@ -192,9 +202,19 @@ func ConvertToBaseAdditiveDTO(additive *data.Additive) *BaseAdditiveDTO {
 }
 
 func ConvertToBaseAdditiveCategoryDTO(category *data.AdditiveCategory) *BaseAdditiveCategoryDTO {
+	name := category.Name
+	description := category.Description
+
+	if len(category.NameTranslation) > 0 {
+		name = category.NameTranslation[0].TranslatedText
+	}
+	if len(category.DescriptionTranslation) > 0 {
+		description = category.DescriptionTranslation[0].TranslatedText
+	}
+
 	return &BaseAdditiveCategoryDTO{
-		Name:             category.Name,
-		Description:      category.Description,
+		Name:             name,
+		Description:      description,
 		IsMultipleSelect: category.IsMultipleSelect,
 		IsRequired:       category.IsRequired,
 	}
