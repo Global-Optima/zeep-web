@@ -8,13 +8,21 @@
 		"build": "run-p type-check \"build-only {@}\" --",
 		"build-only": "vite build",
 		"preview": "vite preview --host",
-		"test:unit": "vitest",
 		"type-check": "vue-tsc --build --force",
 		"lint": "eslint . --fix",
 		"format": "prettier --write src/",
 		"check:locales": "bun run scripts/check-locales.ts",
+		"test:unit": "vitest",
 		"test:e2e": "playwright install && playwright test",
 		"report:e2e": "playwright install && playwright show-report"
+	},
+	"vitest": {
+		"include": [
+			"src/**/*.{test,spec}.ts"
+		],
+		"exclude": [
+			"tests/**"
+		]
 	},
 	"dependencies": {
 		"@intlify/unplugin-vue-i18n": "^5.2.0",

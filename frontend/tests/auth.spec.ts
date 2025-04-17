@@ -1,5 +1,5 @@
 // tests/auth.spec.ts
-import { test, expect, Page } from '@playwright/test'
+import { expect, Page, test } from '@playwright/test'
 
 const BASE_URL = 'https://dev.zeep.kz/'
 
@@ -69,9 +69,13 @@ test.describe('Authentication Scenarios', () => {
 		await page.getByRole('option', { name: 'Сергей Павлов' }).click()
 
 		// fill too-short password
-		await page.getByRole('textbox', { name: 'Введите пароль сотрудника' }).fill('1234567')
+		await page.getByRole('textbox', { name: 'Введите пароль сотрудника' }).fill('Пароль123!')
 
 		// assert inline length message
-		await expect(page.getByText('Пароль должен содержать не менее 8 символов')).toBeVisible()
+		await expect(
+			page.getByText(
+				'Пароль должен содержать только латинские символы и разрешенные специальные символы',
+			),
+		).toBeVisible()
 	})
 })
