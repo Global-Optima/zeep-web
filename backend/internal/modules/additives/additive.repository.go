@@ -30,6 +30,14 @@ type AdditiveRepository interface {
 	GetAdditiveCategoryByID(categoryID uint) (*data.AdditiveCategory, error)
 
 	CloneWithTransaction(tx *gorm.DB) AdditiveRepository
+
+	FindRawAdditiveByID(id uint, additive *data.Additive) error
+	CreateTranslations(translations []data.AppTranslations) error
+	FindTranslation(groupID uint, language data.LanguageCode) (data.AppTranslations, error)
+	UpdateTranslation(t *data.AppTranslations) error
+	CreateTranslation(t *data.AppTranslations) error
+	DeleteObsoleteTranslations(groupID uint, validLangs []string) error
+	UpdateAdditiveTranslationIDs(additiveID, nameGroupID, descGroupID uint) error
 }
 
 type additiveRepository struct {
@@ -543,4 +551,45 @@ func (r *additiveRepository) GetAdditiveCategoryByID(categoryID uint) (*data.Add
 		return nil, err
 	}
 	return &category, nil
+}
+
+func (r *additiveRepository) FindRawAdditiveByID(id uint, additive *data.Additive) error {
+	return r.db.First(additive, id).Error
+}
+
+func (r *additiveRepository) CreateTranslations(translations []data.AppTranslations) error {
+	return r.db.Create(&translations).Error
+}
+
+func (r *additiveRepository) FindTranslation(groupID uint, language data.LanguageCode) (data.AppTranslations, error) {
+	var t data.AppTranslations
+	err := r.db.
+		Where("translation_id = ? AND language_code = ?", groupID, language).
+		First(&t).Error
+	return t, err
+}
+
+func (r *additiveRepository) UpdateTranslation(t *data.AppTranslations) error {
+	return r.db.Model(t).Updates(t).Error
+}
+
+func (r *additiveRepository) CreateTranslation(t *data.AppTranslations) error {
+	return r.db.Create(t).Error
+}
+
+func (r *additiveRepository) DeleteObsoleteTranslations(groupID uint, validLangs []string) error {
+	return r.db.
+		Where("translation_id = ? AND language_code NOT IN (?)", groupID, validLangs).
+		Delete(&data.AppTranslations{}).Unscoped().Error
+}
+
+func (r *additiveRepository) UpdateAdditiveTranslationIDs(additiveID, nameGroupID, descGroupID uint) error {
+	updates := &data.Additive{
+		NameTranslationID:        &nameGroupID,
+		DescriptionTranslationID: &descGroupID,
+	}
+	if err := r.db.Model(&data.Additive{}).Where("id = ?", additiveID).Updates(updates).Error; err != nil {
+		return fmt.Errorf("failed to update additive translation IDs: %w", err)
+	}
+	return nil
 }

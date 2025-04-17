@@ -27,4 +27,6 @@ var (
 	Response200AdditiveCategoryUpdate      = localization.NewResponseKey(200, data.AdditiveCategoryComponent, data.UpdateOperation.ToString())
 	Response200AdditiveCategoryDelete      = localization.NewResponseKey(200, data.AdditiveCategoryComponent, data.DeleteOperation.ToString())
 	Response201AdditiveCategory            = localization.NewResponseKey(201, data.AdditiveCategoryComponent)
+
+	Response500AdditiveTranslationsCreate = localization.NewResponseKey(500, data.AdditiveComponent, data.CreateOperation.ToString(), "translations")
 )

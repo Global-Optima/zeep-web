@@ -27,6 +27,12 @@ type Product struct {
 	Category     ProductCategory  `gorm:"foreignKey:CategoryID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL" sort:"category"`
 	RecipeSteps  []RecipeStep     `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
 	ProductSizes []ProductSize    `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
+
+	NameTranslationID *uint             `gorm:"index"`
+	NameTranslation   []AppTranslations `gorm:"foreignKey:TranslationID;constraint:OnDelete:CASCADE"`
+
+	DescriptionTranslationID *uint             `gorm:"index"`
+	DescriptionTranslation   []AppTranslations `gorm:"foreignKey:TranslationID;constraint:OnDelete:CASCADE"`
 }
 
 type Franchisee struct {

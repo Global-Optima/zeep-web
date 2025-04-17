@@ -129,3 +129,14 @@ type CreateAdditiveDTO struct {
 	Provisions         []provisionsTypes.SelectedProvisionDTO  `json:"-"`
 	Image              *multipart.FileHeader
 }
+
+type FieldLocale struct {
+	En string `json:"en" binding:"omitempty"`
+	Ru string `json:"ru" binding:"omitempty"`
+	Kk string `json:"kk" binding:"omitempty"`
+}
+
+type AdditiveTranslationsDTO struct {
+	Name        FieldLocale `json:"name" binding:"omitempty"`
+	Description FieldLocale `json:"description" binding:"omitempty"`
+}

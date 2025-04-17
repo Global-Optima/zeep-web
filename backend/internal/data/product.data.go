@@ -106,6 +106,9 @@ type Ingredient struct {
 	StoreStocks            []StoreStock            `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"`
 	AdditiveIngredients    []AdditiveIngredient    `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"`
 	ProvisionIngredients   []ProvisionIngredient   `gorm:"foreignKey:IngredientID;constraint:OnDelete:CASCADE"`
+
+	NameTranslationID *uint             `gorm:"index"`
+	NameTranslation   []AppTranslations `gorm:"foreignKey:TranslationID;constraint:OnDelete:CASCADE"`
 }
 
 type IngredientCategory struct {
@@ -195,6 +198,12 @@ type Additive struct {
 	StoreAdditives       []StoreAdditive       `gorm:"foreignKey:AdditiveID"`
 	Ingredients          []AdditiveIngredient  `gorm:"foreignKey:AdditiveID"`
 	AdditiveProvisions   []AdditiveProvision   `gorm:"foreignKey:AdditiveID"`
+
+	NameTranslationID *uint             `gorm:"index"`
+	NameTranslation   []AppTranslations `gorm:"foreignKey:TranslationID;constraint:OnDelete:CASCADE"`
+
+	DescriptionTranslationID *uint             `gorm:"index"`
+	DescriptionTranslation   []AppTranslations `gorm:"foreignKey:TranslationID;constraint:OnDelete:CASCADE"`
 }
 
 type AdditiveCategory struct {

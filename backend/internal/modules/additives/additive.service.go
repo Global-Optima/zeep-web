@@ -28,19 +28,28 @@ type AdditiveService interface {
 	CreateAdditive(dto *types.CreateAdditiveDTO) (uint, error)
 	UpdateAdditive(additiveID uint, dto *types.UpdateAdditiveDTO) (*types.AdditiveDTO, error)
 	DeleteAdditive(additiveID uint) error
+
+	UpsertAdditiveTranslations(additiveID uint, dto *types.AdditiveTranslationsDTO) error
 }
 
 type additiveService struct {
 	repo                AdditiveRepository
 	storageRepo         storage.StorageRepository
+	transactionManager  TransactionManager
 	notificationService notifications.NotificationService
 	logger              *zap.SugaredLogger
 }
 
-func NewAdditiveService(repo AdditiveRepository, storageRepo storage.StorageRepository, notificationService notifications.NotificationService, logger *zap.SugaredLogger) AdditiveService {
+func NewAdditiveService(
+	repo AdditiveRepository,
+	storageRepo storage.StorageRepository,
+	transactionManager TransactionManager,
+	notificationService notifications.NotificationService,
+	logger *zap.SugaredLogger) AdditiveService {
 	return &additiveService{
 		repo:                repo,
 		storageRepo:         storageRepo,
+		transactionManager:  transactionManager,
 		notificationService: notificationService,
 		logger:              logger,
 	}
@@ -321,4 +330,18 @@ func (s *additiveService) GetAdditiveByID(additiveID uint) (*types.AdditiveDetai
 	}
 
 	return types.ConvertToAdditiveDetailsDTO(additive), nil
+}
+
+func (s *additiveService) UpsertAdditiveTranslations(additiveID uint, dto *types.AdditiveTranslationsDTO) error {
+	if dto == nil {
+		return fmt.Errorf("translations DTO is nil")
+	}
+
+	if err := s.transactionManager.UpsertAdditiveTranslations(additiveID, dto); err != nil {
+		wrappedErr := fmt.Errorf("failed to upsert additive translations: %w", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
+	}
+
+	return nil
 }

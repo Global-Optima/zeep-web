@@ -34,7 +34,8 @@ func NewAdditivesModule(
 	notificationService notifications.NotificationService,
 ) *AdditivesModule {
 	repo := additives.NewAdditiveRepository(base.DB)
-	service := additives.NewAdditiveService(repo, storageRepo, notificationService, base.Logger)
+	transactionManager := additives.NewTransactionManager(base.DB, repo)
+	service := additives.NewAdditiveService(repo, storageRepo, transactionManager, notificationService, base.Logger)
 	handler := additives.NewAdditiveHandler(service, auditService)
 
 	storeAdditivesModule := NewStoreAdditivesModule(

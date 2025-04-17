@@ -178,6 +178,7 @@ func (r *Router) RegisterAdditivesRoutes(handler *additives.AdditiveHandler, add
 		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateAdditive)
 		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteAdditive)
 		router.GET("/:id/technical-map", middleware.EmployeeRoleMiddleware(), additivesTechMapHandler.GetAdditiveTechnicalMapByID)
+		router.POST("/:id/translations", middleware.EmployeeRoleMiddleware(), handler.CreateOrUpdateAdditiveTranslation)
 
 		additiveCategories := router.Group("/categories")
 		{

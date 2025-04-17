@@ -345,3 +345,24 @@ func (h *AdditiveHandler) GetAdditiveByID(c *gin.Context) {
 
 	utils.SendSuccessResponse(c, additive)
 }
+
+func (h *AdditiveHandler) CreateOrUpdateAdditiveTranslation(c *gin.Context) {
+	additiveID, err := utils.ParseParam(c, "id")
+	if err != nil {
+		localization.SendLocalizedResponseWithKey(c, types.Response400Additive)
+		return
+	}
+
+	var dto types.AdditiveTranslationsDTO
+	if err := c.ShouldBindJSON(&dto); err != nil {
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
+		return
+	}
+
+	if err := h.service.UpsertAdditiveTranslations(additiveID, &dto); err != nil {
+		localization.SendLocalizedResponseWithKey(c, types.Response500AdditiveTranslationsCreate)
+		return
+	}
+
+	utils.SendSuccessCreatedResponse(c, "successfully created translations")
+}
