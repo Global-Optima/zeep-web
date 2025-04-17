@@ -73,7 +73,15 @@
 							v-for="(ingredient, index) in selectedIngredients"
 							:key="ingredient.ingredientId"
 						>
-							<TableCell>{{ ingredient.name }}</TableCell>
+							<TableCell>
+								<RouterLink
+									:to="{name: getRouteName('ADMIN_INGREDIENTS_DETAILS'), params: {id: ingredient.ingredientId}}"
+									target="_blank"
+									class="hover:text-primary underline transition-colors duration-300 underline-offset-4"
+								>
+									{{ ingredient.name }}
+								</RouterLink>
+							</TableCell>
 							<TableCell>{{ ingredient.category.name }}</TableCell>
 							<TableCell>
 								<div class="flex items-center gap-2">
@@ -156,6 +164,7 @@ import {
   TableRow
 } from '@/core/components/ui/table'
 import { useToast } from '@/core/components/ui/toast'
+import { getRouteName } from "@/core/config/routes.config"
 import { ChevronLeft, Trash } from 'lucide-vue-next'
 import { computed, defineAsyncComponent, ref } from 'vue'
 

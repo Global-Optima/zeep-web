@@ -40,8 +40,12 @@ class EmployeeService {
 	}
 
 	async getCurrentEmployee(): Promise<EmployeeDetailsDTO> {
-		const response = await apiClient.get<EmployeeDetailsDTO>(`/employees/current`)
-		return response.data
+		try {
+			const { data } = await apiClient.get<EmployeeDetailsDTO>('/employees/current')
+			return data
+		} catch (err: unknown) {
+			throw err
+		}
 	}
 }
 

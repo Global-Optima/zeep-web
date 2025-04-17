@@ -43,7 +43,7 @@ const emit = defineEmits<{
 // Predefined Material Info Array
 const materialInfo = computed(() => [
   { label: 'Категория', value: props.initialData.stockMaterial.category.name },
-  { label: 'Упаковка', value: `${props.initialData.stockMaterial.size} ${props.initialData.stockMaterial.unit.name}` },
+  { label: 'Упаковка', value: `${props.initialData.stockMaterial.size} ${props.initialData.stockMaterial.unit.name.toLowerCase()}` },
   {
     label: 'Срок годности',
     value: `${props.initialData.stockMaterial.expirationPeriodInDays} дней`

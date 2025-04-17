@@ -58,7 +58,14 @@
 											alt="Изображение товара"
 											class="rounded-md w-12 h-12 object-cover"
 										/>
-										{{ suborder.storeProductSize.product.name }}
+
+										<RouterLink
+											:to="{name: getRouteName('ADMIN_PRODUCT_DETAILS'), params: {id: suborder.storeProductSize.product.id}}"
+											target="_blank"
+											class="hover:text-primary underline underline-offset-4 transition-colors duration-300"
+										>
+											{{ suborder.storeProductSize.product.name }}
+										</RouterLink>
 									</TableCell>
 
 									<TableCell>
@@ -214,6 +221,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Calendar, CalendarCheck, ChevronLeft, MapPin, Phone, User } from 'lucide-vue-next'
 
 // Import types and order models
+import { getRouteName } from '@/core/config/routes.config'
 import { formatPrice } from '@/core/utils/price.utils'
 import { OrderStatus, SubOrderStatus, type OrderDetailsDTO } from '@/modules/admin/store-orders/models/orders.models'
 

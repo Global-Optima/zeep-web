@@ -82,11 +82,11 @@ const requestDetails = computed(() => [
   { label: 'Статус', value: STOCK_REQUEST_STATUS_FORMATTED[props.request.status] },
   {
     label: 'Дата создания',
-    value: format(props.request.createdAt, "dd.MM.yyyy hh:mm", {locale: ru}),
+    value: format(props.request.createdAt, "d MMMM yyyy, HH:mm", {locale: ru}),
   },
   {
     label: 'Дата обновления',
-    value: format(props.request.updatedAt, "dd.MM.yyyy hh:mm", {locale: ru}),
+    value: format(props.request.updatedAt, "d MMMM yyyy, HH:mm", {locale: ru}),
   },
   { label: 'Комментарий от заказчика', value: props.request.storeComment },
   { label: 'Комментарий от Склада', value: props.request.warehouseComment },

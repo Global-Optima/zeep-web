@@ -37,7 +37,10 @@
 					</li>
 					<li>
 						<span>Дата доставки: </span>
-						<span class="font-medium">{{ formatDate(delivery.deliveryDate) }}</span>
+						<span
+							class="font-medium"
+							>{{ format(delivery.deliveryDate, "d MMMM yyyy, HH:mm", {locale:ru}) }}</span
+						>
 					</li>
 				</ul>
 			</CardContent>
@@ -68,17 +71,20 @@
 						>
 							<TableCell class="py-4 font-medium">{{ material.stockMaterial.name }}</TableCell>
 							<TableCell>
-								{{ material.stockMaterial.size }} {{ material.stockMaterial.unit.name }}
+								{{ material.stockMaterial.size }}
+								{{ material.stockMaterial.unit.name.toLowerCase() }}
 							</TableCell>
 							<TableCell>{{ material.quantity }}</TableCell>
-							<TableCell>{{ format(material.expirationDate, "dd.MM.yyyy") }}</TableCell>
+							<TableCell
+								>{{ format(material.expirationDate, "d MMMM yyyy, HH:mm", {locale: ru}) }}</TableCell
+							>
 							<TableCell>{{ material.price.toFixed(2) }}</TableCell>
 							<TableCell>{{ (material.quantity * material.price).toFixed(2) }}</TableCell>
 						</TableRow>
 						<TableRow v-if="delivery.materials.length === 0">
 							<TableCell
 								colspan="6"
-								class="py-4 text-center text-muted-foreground"
+								class="py-4 text-muted-foreground text-center"
 							>
 								Материалы отсутствуют
 							</TableCell>
@@ -107,37 +113,29 @@
 <script setup lang="ts">
 import { Button } from '@/core/components/ui/button'
 import {
-	Card,
-	CardContent,
-	CardDescription,
-	CardHeader,
-	CardTitle,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
 } from '@/core/components/ui/card'
 import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-	TableFooter,
+  Table,
+  TableBody,
+  TableCell,
+  TableFooter,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from '@/core/components/ui/table'
 import type { WarehouseDeliveryDTO } from '@/modules/admin/warehouse-stocks/models/warehouse-stock.model'
 import { format } from 'date-fns'
+import { ru } from 'date-fns/locale'
 import { ChevronLeft } from 'lucide-vue-next'
 import { computed } from 'vue'
 
 const { delivery } = defineProps<{ delivery: WarehouseDeliveryDTO }>()
 const emit = defineEmits<{ (e: 'onCancel'): void }>()
-
-// Utility Function: Format Date
-function formatDate(date: Date): string {
-	return new Date(date).toLocaleDateString('ru-RU', {
-		day: '2-digit',
-		month: '2-digit',
-		year: 'numeric',
-	})
-}
 
 // Compute the total sum (quantity * price) for all materials
 const totalSum = computed(() => {

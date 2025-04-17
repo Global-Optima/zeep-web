@@ -32,7 +32,7 @@
 					</p>
 				</TableCell>
 				<TableCell>
-					{{format(request.createdAt, "dd.MM.yyyy hh:mm", {locale: ru})}}
+					{{format(request.createdAt, "d MMMM yyyy, HH:mm", {locale: ru})}}
 				</TableCell>
 			</TableRow>
 		</TableBody>

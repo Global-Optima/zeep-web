@@ -33,6 +33,7 @@
 							<TableHead>Название</TableHead>
 							<TableHead>Размер</TableHead>
 							<TableHead>Начальная цена</TableHead>
+							<TableHead v-if="!readonly"></TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>
@@ -47,7 +48,11 @@
 							<TableCell>
 								{{ formatPrice(variant.basePrice) }}
 							</TableCell>
-							<TableCell class="text-right">
+
+							<TableCell
+								v-if="!readonly"
+								class="text-right"
+							>
 								<DropdownMenu>
 									<DropdownMenuTrigger asChild>
 										<Button
@@ -78,6 +83,7 @@
 <script setup lang="ts">
 import { Button } from '@/core/components/ui/button'
 import { Card, CardContent } from '@/core/components/ui/card'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/core/components/ui/dropdown-menu'
 import {
   Table,
   TableBody,
@@ -86,14 +92,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/core/components/ui/table'
-import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/core/components/ui/dropdown-menu'
-import { EllipsisVertical } from 'lucide-vue-next'
 import { getRouteName } from '@/core/config/routes.config'
 import { formatPrice } from '@/core/utils/price.utils'
 import type { ProductDetailsDTO, ProductSizeDTO } from '@/modules/kiosk/products/models/product.model'
 import { productsService } from '@/modules/kiosk/products/services/products.service'
 import { useQuery } from '@tanstack/vue-query'
-import { ChevronLeft } from 'lucide-vue-next'
+import { ChevronLeft, EllipsisVertical } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { useRouter } from "vue-router"
 

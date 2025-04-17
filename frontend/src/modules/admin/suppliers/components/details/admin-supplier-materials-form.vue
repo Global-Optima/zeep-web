@@ -184,7 +184,7 @@ function onCancel() {
 							:key="item.stockMaterialId"
 						>
 							<TableCell>{{ item.name }}</TableCell>
-							<TableCell>{{ item.size }} {{ item.unit.name }}</TableCell>
+							<TableCell>{{ item.size }} {{ item.unit.name.toLowerCase() }}</TableCell>
 							<TableCell>
 								<Input
 									v-model.number="item.basePrice"
