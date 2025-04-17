@@ -12,6 +12,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/notifications"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/translations"
 )
 
 type AdditivesModule struct {
@@ -32,9 +33,10 @@ func NewAdditivesModule(
 	storeInventoryManagerRepo storeInventoryManagers.StoreInventoryManagerRepository,
 	storageRepo storage.StorageRepository,
 	notificationService notifications.NotificationService,
+	translationManager translations.TranslationManager,
 ) *AdditivesModule {
 	repo := additives.NewAdditiveRepository(base.DB)
-	transactionManager := additives.NewTransactionManager(base.DB, repo)
+	transactionManager := additives.NewTransactionManager(base.DB, repo, translationManager)
 	service := additives.NewAdditiveService(repo, storageRepo, transactionManager, notificationService, base.Logger)
 	handler := additives.NewAdditiveHandler(service, auditService)
 

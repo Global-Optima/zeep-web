@@ -5,6 +5,7 @@ import (
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/translations"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
@@ -14,17 +15,20 @@ type TransactionManager interface {
 }
 
 type transactionManager struct {
-	db           *gorm.DB
-	additiveRepo AdditiveRepository
+	db                  *gorm.DB
+	additiveRepo        AdditiveRepository
+	translationsManager translations.TranslationManager
 }
 
 func NewTransactionManager(
 	db *gorm.DB,
 	additiveRepo AdditiveRepository,
+	translationsManager translations.TranslationManager,
 ) TransactionManager {
 	return &transactionManager{
-		db:           db,
-		additiveRepo: additiveRepo,
+		db:                  db,
+		additiveRepo:        additiveRepo,
+		translationsManager: translationsManager,
 	}
 }
 
@@ -37,17 +41,19 @@ func (m *transactionManager) UpsertAdditiveTranslations(additiveID uint, dto *ty
 			return fmt.Errorf("failed to load additive: %w", err)
 		}
 
-		nameGroupID, err := m.upsertFieldTranslations(repoTx, additive.NameTranslationID, dto.Name)
+		translationTx := m.translationsManager.CloneWithTransaction(tx)
+
+		nameGroupID, err := m.upsertFieldTranslations(translationTx, additive.NameTranslationID, dto.Name)
 		if err != nil {
 			return fmt.Errorf("failed upserting name translations: %w", err)
 		}
 
-		descGroupID, err := m.upsertFieldTranslations(repoTx, additive.DescriptionTranslationID, dto.Description)
+		descGroupID, err := m.upsertFieldTranslations(translationTx, additive.DescriptionTranslationID, dto.Description)
 		if err != nil {
 			return fmt.Errorf("failed upserting description translations: %w", err)
 		}
 
-		if err := repoTx.UpdateAdditiveTranslationIDs(additiveID, nameGroupID, descGroupID); err != nil {
+		if err := translationTx.UpdateAdditiveTranslationIDs(additiveID, nameGroupID, descGroupID); err != nil {
 			return fmt.Errorf("failed to update additive with translation group IDs: %w", err)
 		}
 
@@ -57,7 +63,7 @@ func (m *transactionManager) UpsertAdditiveTranslations(additiveID uint, dto *ty
 	return err
 }
 
-func (m *transactionManager) upsertFieldTranslations(repo AdditiveRepository, currentGroupID *uint, locale types.FieldLocale) (uint, error) {
+func (m *transactionManager) upsertFieldTranslations(tx translations.TranslationManager, currentGroupID *uint, locale types.FieldLocale) (uint, error) {
 	var entries []struct {
 		Language string
 		Text     string
@@ -97,12 +103,12 @@ func (m *transactionManager) upsertFieldTranslations(repo AdditiveRepository, cu
 			LanguageCode:   data.LanguageCode(firstEntry.Language),
 			TranslatedText: firstEntry.Text,
 		}
-		if err := repo.CreateTranslation(&firstTranslation); err != nil {
+		if err := tx.CreateTranslation(&firstTranslation); err != nil {
 			return 0, fmt.Errorf("failed to create first translation: %w", err)
 		}
 		groupID := firstTranslation.ID
 		firstTranslation.TranslationID = groupID
-		if err := repo.UpdateTranslation(&firstTranslation); err != nil {
+		if err := tx.UpdateTranslation(&firstTranslation); err != nil {
 			return 0, fmt.Errorf("failed to update first translation with group id: %w", err)
 		}
 
@@ -113,7 +119,7 @@ func (m *transactionManager) upsertFieldTranslations(repo AdditiveRepository, cu
 				LanguageCode:   data.LanguageCode(entry.Language),
 				TranslatedText: entry.Text,
 			}
-			if err := repo.CreateTranslation(&newRec); err != nil {
+			if err := tx.CreateTranslation(&newRec); err != nil {
 				return 0, fmt.Errorf("failed creating translation for language %s: %w", entry.Language, err)
 			}
 		}
@@ -124,7 +130,7 @@ func (m *transactionManager) upsertFieldTranslations(repo AdditiveRepository, cu
 	groupID := *currentGroupID
 	for _, entry := range entries {
 		lang := data.LanguageCode(entry.Language)
-		existing, err := repo.FindTranslation(groupID, lang)
+		existing, err := tx.FindTranslation(groupID, lang)
 		if err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				// Insert a new translation record if none exists.
@@ -133,7 +139,7 @@ func (m *transactionManager) upsertFieldTranslations(repo AdditiveRepository, cu
 					LanguageCode:   lang,
 					TranslatedText: entry.Text,
 				}
-				if err := repo.CreateTranslation(&newRec); err != nil {
+				if err := tx.CreateTranslation(&newRec); err != nil {
 					return 0, fmt.Errorf("failed creating translation for language %s: %w", entry.Language, err)
 				}
 			} else {
@@ -143,7 +149,7 @@ func (m *transactionManager) upsertFieldTranslations(repo AdditiveRepository, cu
 			// Update the translation if the text has changed.
 			if existing.TranslatedText != entry.Text {
 				existing.TranslatedText = entry.Text
-				if err := repo.UpdateTranslation(&existing); err != nil {
+				if err := tx.UpdateTranslation(&existing); err != nil {
 					return 0, fmt.Errorf("failed updating translation for language %s: %w", entry.Language, err)
 				}
 			}
@@ -151,8 +157,11 @@ func (m *transactionManager) upsertFieldTranslations(repo AdditiveRepository, cu
 	}
 
 	// Delete obsolete translations in this group that are not among our fixed set.
-	expectedLangs := []string{"en", "ru", "kk"}
-	if err := repo.DeleteObsoleteTranslations(groupID, expectedLangs); err != nil {
+	providedLangs := make([]string, len(entries))
+	for i, e := range entries {
+		providedLangs[i] = e.Language
+	}
+	if err := tx.DeleteObsoleteTranslations(groupID, providedLangs); err != nil {
 		return 0, fmt.Errorf("failed to delete obsolete translations: %w", err)
 	}
 

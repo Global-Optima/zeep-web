@@ -360,6 +360,10 @@ func (h *AdditiveHandler) CreateOrUpdateAdditiveTranslation(c *gin.Context) {
 	}
 
 	if err := h.service.UpsertAdditiveTranslations(additiveID, &dto); err != nil {
+		if errors.Is(err, types.ErrAdditiveNotFound) {
+			localization.SendLocalizedResponseWithKey(c, types.Response404Additive)
+			return
+		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500AdditiveTranslationsCreate)
 		return
 	}
