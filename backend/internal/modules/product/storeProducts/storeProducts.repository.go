@@ -3,8 +3,6 @@ package storeProducts
 import (
 	"fmt"
 
-	storeInventoryManagersTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers/types"
-
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -31,7 +29,6 @@ type StoreProductRepository interface {
 	GetStoreProductSizeByID(storeProductSizeID uint) (*data.StoreProductSize, error)
 	GetStoreProductSizeWithDetailsByID(storeID, storeProductSizeID uint) (*data.StoreProductSize, error)
 	GetStoreProductSizesWithDetailsByIDs(storeID uint, storeProductSizeIDs []uint) ([]data.StoreProductSize, error)
-	GetSufficientStoreProductSizeById(storeID, storeProductSizeID uint, frozenInventory *storeInventoryManagersTypes.FrozenInventory) (*data.StoreProductSize, error)
 	UpdateProductSize(storeID, productSizeID uint, size *data.StoreProductSize) error
 	DeleteStoreProductSize(storeID, productSizeID uint) error
 	CloneWithTransaction(tx *gorm.DB) StoreProductRepository
@@ -529,53 +526,6 @@ func (r *storeProductRepository) GetStoreProductSizeByID(storeProductSizeID uint
 			return nil, types.ErrStoreProductSizeNotFound
 		}
 		return nil, fmt.Errorf("failed to fetch store product size: %w", err)
-	}
-
-	return &storeProductSize, nil
-}
-
-func (r *storeProductRepository) GetSufficientStoreProductSizeById(
-	storeID, storeProductSizeID uint,
-	frozenInventory *storeInventoryManagersTypes.FrozenInventory,
-) (*data.StoreProductSize, error) {
-	var storeProductSize data.StoreProductSize
-
-	err := r.db.Model(&data.StoreProductSize{}).
-		Joins("JOIN store_products sp ON store_product_sizes.store_product_id = sp.id").
-		Where("sp.store_id = ? AND store_product_sizes.id = ?", storeID, storeProductSizeID).
-		Preload("StoreProduct.Store").
-		Preload("StoreProduct.Product").
-		Preload("ProductSize").
-		Preload("ProductSize.Unit").
-		Preload("ProductSize.Product").
-		Preload("ProductSize.ProductSizeIngredients.Ingredient.Unit").
-		Preload("ProductSize.ProductSizeIngredients.Ingredient.IngredientCategory").
-		Preload("ProductSize.Additives.Additive").
-		Preload("ProductSize.Additives.Additive.Ingredients.Ingredient.Unit").
-		Preload("ProductSize.Additives.Additive.Ingredients.Ingredient.IngredientCategory").
-		First(&storeProductSize).Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, types.ErrStoreProductSizeNotFound
-		}
-		return nil, fmt.Errorf("%w: failed to load StoreProductSize (ID=%d): %w",
-			types.ErrFailedToFetchStoreProductSize, storeProductSizeID, err)
-	}
-
-	usedIngredientQuantity := make(map[uint]float64)
-	// Check base ingredients
-	for _, usage := range storeProductSize.ProductSize.ProductSizeIngredients {
-		usedIngredientQuantity[usage.IngredientID] += usage.Quantity
-	}
-
-	// Check ingredients from default additives
-	for _, psa := range storeProductSize.ProductSize.Additives {
-		if !psa.IsDefault {
-			continue
-		}
-		for _, additiveIng := range psa.Additive.Ingredients {
-			usedIngredientQuantity[additiveIng.IngredientID] += additiveIng.Quantity
-		}
 	}
 
 	return &storeProductSize, nil

@@ -23,14 +23,9 @@ type psAddKey struct {
 type StoreAdditiveRepository interface {
 	GetMissingStoreAdditiveIDsForProductSizes(storeID uint, productSizeIDs []uint) ([]uint, error)
 	FilterMissingStoreAdditiveIDs(storeID uint, additivesIDs []uint) ([]uint, error)
-	CreateStoreAdditive(storeID uint, dto *types.CreateStoreAdditiveDTO) (uint, error)
 	CreateStoreAdditives(storeAdditives []data.StoreAdditive) ([]uint, error)
 	GetStoreAdditiveWithDetailsByID(storeAdditiveID uint, filter *contexts.StoreContextFilter) (*data.StoreAdditive, error)
 
-	GetStoreAdditivesWithCategoryByIDs(
-		storeID uint,
-		additiveIDs []uint,
-	) (map[uint]*data.StoreAdditive, error)
 	GetStoreAdditiveByID(storeAdditiveID uint) (*data.StoreAdditive, error)
 	GetAvailableAdditivesToAdd(storeID uint, filter *additiveTypes.AdditiveFilterQuery) ([]data.Additive, error)
 	GetStoreAdditives(storeID uint, filter *additiveTypes.AdditiveFilterQuery) ([]data.StoreAdditive, error)
@@ -40,11 +35,6 @@ type StoreAdditiveRepository interface {
 
 	UpdateStoreAdditive(storeID, storeAdditiveID uint, input *data.StoreAdditive) error
 	DeleteStoreAdditive(storeID, storeAdditiveID uint) error
-	GetStoreAdditiveWithProductSizeAdditive(
-		storeID uint,
-		storeProductSizeID uint,
-		storeAdditiveID uint,
-	) (*data.StoreAdditive, *data.ProductSizeAdditive, error)
 	GetPSAByProductSizeAndAdditive(
 		keys []types.StorePSAdditiveKey,
 	) (map[types.StorePSAdditiveKey]*data.ProductSizeAdditive, error)
@@ -134,25 +124,6 @@ func (r *storeAdditiveRepository) FilterMissingStoreAdditiveIDs(storeID uint, ad
 	}
 
 	return missingIngredientIDs, nil
-}
-
-func (r *storeAdditiveRepository) CreateStoreAdditive(storeID uint, dto *types.CreateStoreAdditiveDTO) (uint, error) {
-	var existingStock data.StoreStock
-	err := r.db.
-		Where("store_id = ? AND additive_id = ?", storeID, dto.AdditiveID).
-		First(&existingStock).Error
-	if err == nil {
-		return 0, fmt.Errorf("%w: store additive with additive ID %d already exists for store ID %d",
-			moduleErrors.ErrAlreadyExists, dto.AdditiveID, storeID)
-	}
-
-	storeAdditive := types.CreateToStoreAdditive(dto, storeID)
-
-	if err := r.db.Create(storeAdditive).Error; err != nil {
-		return 0, err
-	}
-
-	return storeAdditive.ID, nil
 }
 
 func (r *storeAdditiveRepository) CreateStoreAdditives(storeAdditives []data.StoreAdditive) ([]uint, error) {
@@ -343,30 +314,6 @@ func (r *storeAdditiveRepository) GetStoreAdditiveWithDetailsByID(storeAdditiveI
 	return storeAdditive, nil
 }
 
-// TODO refactor and use ([]data.StoreAdditive, error) and turn it into map in service logic
-func (r *storeAdditiveRepository) GetStoreAdditivesWithCategoryByIDs(
-	storeID uint,
-	additiveIDs []uint,
-) (map[uint]*data.StoreAdditive, error) {
-	var storeAdditives []data.StoreAdditive
-
-	err := r.db.Model(&data.StoreAdditive{}).
-		Preload("Additive.Category").
-		Where("store_id = ? AND id IN ?", storeID, additiveIDs).
-		Find(&storeAdditives).Error
-	if err != nil {
-		return nil, err
-	}
-
-	out := make(map[uint]*data.StoreAdditive, len(storeAdditives))
-	for i := range storeAdditives {
-		sa := &storeAdditives[i]
-		out[sa.ID] = sa
-	}
-
-	return out, nil
-}
-
 func (r *storeAdditiveRepository) GetStoreAdditiveByID(storeAdditiveID uint) (*data.StoreAdditive, error) {
 	var storeAdditive *data.StoreAdditive
 
@@ -381,61 +328,6 @@ func (r *storeAdditiveRepository) GetStoreAdditiveByID(storeAdditiveID uint) (*d
 	}
 
 	return storeAdditive, nil
-}
-
-func (r *storeAdditiveRepository) GetStoreAdditiveWithProductSizeAdditive(
-	storeID uint,
-	storeProductSizeId uint,
-	storeAdditiveId uint,
-) (*data.StoreAdditive, *data.ProductSizeAdditive, error) {
-	var sa data.StoreAdditive
-	err := r.db.
-		Model(&data.StoreAdditive{}).
-		Preload("Additive").
-		Where("id = ? AND store_id = ?", storeAdditiveId, storeID).
-		First(&sa).
-		Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, nil, fmt.Errorf("storeAdditive not found (storeID=%d, storeAdditiveID=%d)", storeID, storeAdditiveId)
-		}
-		return nil, nil, fmt.Errorf("failed to load StoreAdditive: %w", err)
-	}
-
-	var sps data.StoreProductSize
-	err = r.db.
-		Model(&data.StoreProductSize{}).
-		Preload("ProductSize").
-		Where("id = ?", storeProductSizeId).
-		First(&sps).
-		Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return &sa, nil, fmt.Errorf("storeProductSize not found (id=%d)", storeProductSizeId)
-		}
-		return &sa, nil, fmt.Errorf("failed to load StoreProductSize: %w", err)
-	}
-
-	productSizeId := sps.ProductSizeID
-
-	var psa data.ProductSizeAdditive
-	err = r.db.
-		Model(&data.ProductSizeAdditive{}).
-		Where("product_size_id = ? AND additive_id = ?", productSizeId, sa.AdditiveID).
-		Preload("Additive").
-		First(&psa).
-		Error
-	if err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return &sa, nil, fmt.Errorf(
-				"productSizeAdditive not found (productSizeId=%d, additiveId=%d)",
-				productSizeId, sa.AdditiveID,
-			)
-		}
-		return &sa, nil, fmt.Errorf("failed to load ProductSizeAdditive: %w", err)
-	}
-
-	return &sa, &psa, nil
 }
 
 func (r *storeAdditiveRepository) GetStoreAdditives(storeID uint, filter *additiveTypes.AdditiveFilterQuery) ([]data.StoreAdditive, error) {
@@ -625,8 +517,6 @@ func (r *storeAdditiveRepository) GetPSAByProductSizeAndAdditive(
 		storeAddToAdd[sa.ID] = sa.AdditiveID
 	}
 
-	// 4) Build a set of (ProductSizeID, AdditiveID) pairs from the original keys.
-	// Define a local type for the pair.
 	type psAddPair struct {
 		ProductSizeID uint
 		AdditiveID    uint
@@ -644,18 +534,15 @@ func (r *storeAdditiveRepository) GetPSAByProductSizeAndAdditive(
 		keyMapping[pair] = append(keyMapping[pair], k)
 	}
 
-	// If no valid keys remain, return an empty map.
 	if len(keyMapping) == 0 {
 		return make(map[types.StorePSAdditiveKey]*data.ProductSizeAdditive), nil
 	}
 
-	// 5) Convert the set of pairs to a slice of tuple pairs for querying.
 	var tuples [][2]uint
 	for pair := range keyMapping {
 		tuples = append(tuples, [2]uint{pair.ProductSizeID, pair.AdditiveID})
 	}
 
-	// 6) Query product_size_additives using the tuple pairs.
 	var psas []data.ProductSizeAdditive
 	err = r.db.
 		Model(&data.ProductSizeAdditive{}).
@@ -666,7 +553,6 @@ func (r *storeAdditiveRepository) GetPSAByProductSizeAndAdditive(
 		return nil, fmt.Errorf("failed to load product_size_additives: %w", err)
 	}
 
-	// 7) Build a lookup: (ProductSizeID, AdditiveID) pair -> *ProductSizeAdditive.
 	psaLookup := make(map[psAddPair]*data.ProductSizeAdditive, len(psas))
 	for i := range psas {
 		psa := &psas[i]
@@ -674,7 +560,6 @@ func (r *storeAdditiveRepository) GetPSAByProductSizeAndAdditive(
 		psaLookup[pair] = psa
 	}
 
-	// 8) Finally, map each original key to its corresponding ProductSizeAdditive via the translated pair.
 	result := make(map[types.StorePSAdditiveKey]*data.ProductSizeAdditive)
 	for pair, keysSlice := range keyMapping {
 		psa, exists := psaLookup[pair]
@@ -687,12 +572,4 @@ func (r *storeAdditiveRepository) GetPSAByProductSizeAndAdditive(
 	}
 
 	return result, nil
-}
-
-func toTuplePairs(arr []psAddKey) [][2]uint {
-	tuples := make([][2]uint, 0, len(arr))
-	for _, x := range arr {
-		tuples = append(tuples, [2]uint{x.ProductSizeID, x.AdditiveID})
-	}
-	return tuples
 }
