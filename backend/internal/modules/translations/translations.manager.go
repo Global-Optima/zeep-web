@@ -1,6 +1,7 @@
 package translations
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -8,6 +9,8 @@ import (
 )
 
 type TranslationManager interface {
+	UpsertGroup(current *uint, loc FieldLocale) (uint, error)
+
 	CreateTranslations(translations []data.AppTranslations) error
 	FindTranslation(groupID uint, language data.LanguageCode) (data.AppTranslations, error)
 	UpdateTranslation(t *data.AppTranslations) error
@@ -38,6 +41,115 @@ func (r *translationManager) CloneWithTransaction(tx *gorm.DB) TranslationManage
 	return &translationManager{
 		db: tx,
 	}
+}
+
+func (m *translationManager) UpsertGroup(
+	current *uint,
+	loc FieldLocale,
+) (uint, error) {
+
+	entries := m.buildEntries(loc)
+	if len(entries) == 0 { // nothing to do
+		if current != nil {
+			return *current, nil
+		}
+		return 0, nil
+	}
+
+	if current == nil || *current == 0 { // no group yet
+		return m.createGroup(entries)
+	}
+	return m.updateGroup(*current, entries)
+}
+
+type langEntry struct {
+	lang data.LanguageCode
+	text string
+}
+
+func (m *translationManager) buildEntries(loc FieldLocale) []langEntry {
+	entries := make([]langEntry, 0, 3)
+	if loc.En != "" {
+		entries = append(entries, langEntry{data.LanguageCodeEN, loc.En})
+	}
+	if loc.Ru != "" {
+		entries = append(entries, langEntry{data.LanguageCodeRU, loc.Ru})
+	}
+	if loc.Kk != "" {
+		entries = append(entries, langEntry{data.LanguageCodeKK, loc.Kk})
+	}
+	return entries
+}
+
+func (m *translationManager) createGroup(entries []langEntry) (uint, error) {
+	first := entries[0]
+	rec := data.AppTranslations{
+		LanguageCode:   first.lang,
+		TranslatedText: first.text,
+	}
+	if err := m.CreateTranslation(&rec); err != nil {
+		return 0, fmt.Errorf("create first translation: %w", err)
+	}
+	groupID := rec.ID
+
+	// back‑patch its own group‑id and insert the rest
+	rec.TranslationID = groupID
+	if err := m.UpdateTranslation(&rec); err != nil {
+		return 0, fmt.Errorf("patch group id: %w", err)
+	}
+	for _, e := range entries[1:] {
+		if err := m.CreateTranslation(&data.AppTranslations{
+			TranslationID:  groupID,
+			LanguageCode:   e.lang,
+			TranslatedText: e.text,
+		}); err != nil {
+			return 0, fmt.Errorf("insert %s: %w", e.lang, err)
+		}
+	}
+	return groupID, nil
+}
+
+func (m *translationManager) updateGroup(
+	groupID uint, entries []langEntry,
+) (uint, error) {
+	for _, e := range entries {
+		if err := m.upsertSingle(groupID, e); err != nil {
+			return 0, err
+		}
+	}
+
+	valid := make([]data.LanguageCode, len(entries))
+	for i, e := range entries {
+		valid[i] = e.lang
+	}
+
+	if err := m.DeleteObsoleteTranslations(groupID, valid); err != nil {
+		return 0, fmt.Errorf("purge obsolete: %w", err)
+	}
+	return groupID, nil
+}
+
+func (m *translationManager) upsertSingle(
+	groupID uint, e langEntry,
+) error {
+	ex, err := m.FindTranslation(groupID, e.lang)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return fmt.Errorf("read %s: %w", e.lang, err)
+	}
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return m.CreateTranslation(&data.AppTranslations{
+			TranslationID:  groupID,
+			LanguageCode:   e.lang,
+			TranslatedText: e.text,
+		})
+	}
+
+	if ex.TranslatedText != e.text {
+		ex.TranslatedText = e.text
+		return m.UpdateTranslation(&ex)
+	}
+	return nil
 }
 
 func (r *translationManager) CreateTranslations(translations []data.AppTranslations) error {

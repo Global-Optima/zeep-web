@@ -84,15 +84,15 @@ func (c *Container) mustInit() {
 	c.Franchisees = modules.NewFranchiseesModule(baseModule, c.Audits.Service)
 	c.Regions = modules.NewRegionsModule(baseModule, c.Audits.Service)
 	c.Notifications = modules.NewNotificationModule(baseModule)
-	c.Categories = modules.NewCategoriesModule(baseModule, c.Audits.Service)
+	c.Categories = modules.NewCategoriesModule(baseModule, c.Audits.Service, *c.translationsManager)
 	c.Customers = modules.NewCustomersModule(baseModule)
 	c.Employees = modules.NewEmployeesModule(baseModule, c.Audits.Service, c.Franchisees.Service, c.Regions.Service, *c.employeeTokenManager)
-	c.Ingredients = modules.NewIngredientsModule(baseModule, c.Audits.Service)
+	c.Ingredients = modules.NewIngredientsModule(baseModule, c.Audits.Service, *c.translationsManager)
 	c.Suppliers = modules.NewSuppliersModule(baseModule, c.Audits.Service)
 	c.StockMaterials = modules.NewStockMaterialsModule(baseModule, c.Audits.Service)
 	c.StockMaterialCategories = modules.NewStockMaterialCategoriesModule(baseModule, c.Audits.Service)
 	c.Units = modules.NewUnitsModule(baseModule, c.Audits.Service)
-	c.IngredientCategories = modules.NewIngredientCategoriesModule(baseModule, c.Audits.Service)
+	c.IngredientCategories = modules.NewIngredientCategoriesModule(baseModule, c.Audits.Service, *c.translationsManager)
 	c.Warehouses = modules.NewWarehousesModule(baseModule, c.StockMaterials.Repo, c.Notifications.Service, cronManager, c.Regions.Service, c.Franchisees.Service, c.Audits.Service)
 	c.Stores = modules.NewStoresModule(baseModule, c.Franchisees.Service, c.Audits.Service)
 
@@ -100,7 +100,7 @@ func (c *Container) mustInit() {
 
 	c.StoreStocks = modules.NewStoreStockModule(baseModule, c.Ingredients.Service, c.Franchisees.Service, c.Audits.Service, c.Notifications.Service, c.Stores.Service, c.StoreInventoryManager.Repo, cronManager)
 	c.Additives = modules.NewAdditivesModule(baseModule, c.Audits.Service, c.Franchisees.Service, c.Ingredients.Repo, c.StoreStocks.Repo, c.StoreInventoryManager.Repo, *c.storageRepo, c.Notifications.Service, *c.translationsManager)
-	c.Products = modules.NewProductsModule(baseModule, c.Audits.Service, c.Franchisees.Service, c.Ingredients.Repo, c.Additives.StoreAdditivesModule.Repo, c.StoreStocks.Repo, c.StoreInventoryManager.Repo, *c.storageRepo, c.Notifications.Service)
+	c.Products = modules.NewProductsModule(baseModule, c.Audits.Service, c.Franchisees.Service, c.Ingredients.Repo, c.Additives.StoreAdditivesModule.Repo, c.StoreStocks.Repo, c.StoreInventoryManager.Repo, *c.storageRepo, c.Notifications.Service, *c.translationsManager)
 	c.Provisions = modules.NewProvisionsModule(baseModule, c.Audits.Service, c.Franchisees.Service, c.Stores.Service, c.Notifications.Service, c.Ingredients.Repo, c.StoreStocks.Repo, c.StoreInventoryManager.Repo, cronManager)
 	c.Auth = modules.NewAuthModule(baseModule, c.Customers.Repo, c.Employees.Repo, *c.employeeTokenManager)
 

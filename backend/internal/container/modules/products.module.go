@@ -14,6 +14,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/technicalMap"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/translations"
 )
 
 type ProductsModule struct {
@@ -36,9 +37,11 @@ func NewProductsModule(
 	storeInventoryManagerRepo storeInventoryManagers.StoreInventoryManagerRepository,
 	storageRepo storage.StorageRepository,
 	notificationService notifications.NotificationService,
+	translationManager translations.TranslationManager,
 ) *ProductsModule {
 	repo := product.NewProductRepository(base.DB)
-	service := product.NewProductService(repo, notificationService, storageRepo, base.Logger)
+	transactionManager := product.NewTransactionManager(base.DB, repo, translationManager)
+	service := product.NewProductService(repo, notificationService, storageRepo, transactionManager, base.Logger)
 	handler := product.NewProductHandler(service, auditService, base.Logger)
 
 	recipeModule := NewRecipeModule(base, auditService)

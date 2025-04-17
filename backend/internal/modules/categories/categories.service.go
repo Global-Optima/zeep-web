@@ -1,33 +1,39 @@
 package categories
 
 import (
+	"fmt"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/categories/types"
 	"go.uber.org/zap"
 )
 
 type CategoryService interface {
-	GetCategories(filter *types.ProductCategoriesFilterDTO) ([]types.ProductCategoryDTO, error)
+	GetCategories(locale data.LanguageCode, filter *types.ProductCategoriesFilterDTO) ([]types.ProductCategoryDTO, error)
 	GetCategoryByID(id uint) (*types.ProductCategoryDTO, error)
+	GetTranslatedCategoryByID(locale data.LanguageCode, id uint) (*types.ProductCategoryDTO, error)
 	CreateCategory(dto *types.CreateProductCategoryDTO) (uint, error)
 	UpdateCategory(id uint, dto *types.UpdateProductCategoryDTO) error
 	DeleteCategory(id uint) error
+	UpsertProductCategoryTranslations(id uint, dto *types.ProductCategoryTranslationsDTO) error
 }
 
 type categoryService struct {
-	repo   CategoryRepository
-	logger *zap.SugaredLogger
+	repo               CategoryRepository
+	transactionManager TransactionManager
+	logger             *zap.SugaredLogger
 }
 
-func NewCategoryService(repo CategoryRepository, logger *zap.SugaredLogger) CategoryService {
+func NewCategoryService(repo CategoryRepository, transactionManager TransactionManager, logger *zap.SugaredLogger) CategoryService {
 	return &categoryService{
-		repo:   repo,
-		logger: logger,
+		repo:               repo,
+		transactionManager: transactionManager,
+		logger:             logger,
 	}
 }
 
-func (s *categoryService) GetCategories(filter *types.ProductCategoriesFilterDTO) ([]types.ProductCategoryDTO, error) {
-	categories, err := s.repo.GetCategories(filter)
+func (s *categoryService) GetCategories(locale data.LanguageCode, filter *types.ProductCategoriesFilterDTO) ([]types.ProductCategoryDTO, error) {
+	categories, err := s.repo.GetCategories(locale, filter)
 	if err != nil {
 		return nil, err
 	}
@@ -42,6 +48,15 @@ func (s *categoryService) GetCategories(filter *types.ProductCategoriesFilterDTO
 
 func (s *categoryService) GetCategoryByID(id uint) (*types.ProductCategoryDTO, error) {
 	category, err := s.repo.GetCategoryByID(id)
+	if err != nil {
+		return nil, err
+	}
+
+	return types.MapCategoryToDTO(*category), nil
+}
+
+func (s *categoryService) GetTranslatedCategoryByID(locale data.LanguageCode, id uint) (*types.ProductCategoryDTO, error) {
+	category, err := s.repo.GetTranslatedCategoryByID(locale, id)
 	if err != nil {
 		return nil, err
 	}
@@ -84,4 +99,18 @@ func (s *categoryService) UpdateCategory(id uint, dto *types.UpdateProductCatego
 
 func (s *categoryService) DeleteCategory(id uint) error {
 	return s.repo.DeleteCategory(id)
+}
+
+func (s *categoryService) UpsertProductCategoryTranslations(productCategoryID uint, dto *types.ProductCategoryTranslationsDTO) error {
+	if dto == nil {
+		return fmt.Errorf("translations DTO is nil")
+	}
+
+	if err := s.transactionManager.UpsertProductCategoryTranslations(productCategoryID, dto); err != nil {
+		wrappedErr := fmt.Errorf("failed to upsert product category translations: %w", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
+	}
+
+	return nil
 }

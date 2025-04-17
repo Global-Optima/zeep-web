@@ -369,7 +369,7 @@ func (h *AdditiveHandler) CreateOrUpdateAdditiveTranslation(c *gin.Context) {
 			localization.SendLocalizedResponseWithKey(c, types.Response404Additive)
 			return
 		}
-		localization.SendLocalizedResponseWithKey(c, types.Response500AdditiveTranslationsCreate)
+		localization.SendLocalizedResponseWithKey(c, types.Response500AdditiveTranslationsUpdate)
 		return
 	}
 
@@ -394,9 +394,9 @@ func (h *AdditiveHandler) CreateOrUpdateAdditiveCategoryTranslation(c *gin.Conte
 			localization.SendLocalizedResponseWithKey(c, types.Response404AdditiveCategory)
 			return
 		}
-		localization.SendLocalizedResponseWithKey(c, types.Response500AdditiveTranslationsCreate)
+		localization.SendLocalizedResponseWithKey(c, types.Response500AdditiveTranslationsUpdate)
 		return
 	}
 
-	utils.SendSuccessCreatedResponse(c, "successfully created translations")
+	localization.SendLocalizedResponseWithKey(c, types.Response200AdditiveTranslationsUpdate)
 }

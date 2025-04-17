@@ -2,6 +2,7 @@ package types
 
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/translations"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
@@ -27,4 +28,9 @@ type UpdateProductCategoryDTO struct {
 	Name            *string               `json:"name,omitempty" binding:"min=2,omitempty"`
 	Description     *string               `json:"description" binding:"omitempty"`
 	MachineCategory *data.MachineCategory `json:"machineCategory,omitempty" binding:"omitempty"`
+}
+
+type ProductCategoryTranslationsDTO struct {
+	Name        translations.FieldLocale `json:"name" binding:"omitempty"`
+	Description translations.FieldLocale `json:"description" binding:"omitempty"`
 }

@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/media"
 	"go.uber.org/zap"
@@ -37,7 +38,9 @@ func (h *ProductHandler) GetProducts(c *gin.Context) {
 		return
 	}
 
-	products, err := h.service.GetProducts(&filter)
+	locale := contexts.GetLocaleFromCtx(c)
+
+	products, err := h.service.GetProducts(locale, &filter)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500ProductGet)
 		return
@@ -53,7 +56,9 @@ func (h *ProductHandler) GetProductDetails(c *gin.Context) {
 		return
 	}
 
-	productDetails, err := h.service.GetProductByID(productID)
+	locale := contexts.GetLocaleFromCtx(c)
+
+	productDetails, err := h.service.GetTranslatedProductByID(locale, productID)
 	if err != nil {
 		switch {
 		case errors.Is(err, types.ErrProductNotFound):
@@ -342,4 +347,32 @@ func (h *ProductHandler) DeleteProductSize(c *gin.Context) {
 	}()
 
 	localization.SendLocalizedResponseWithKey(c, types.Response200ProductSizeDelete)
+}
+
+func (h *ProductHandler) UpdateOrCreateProductTranslations(c *gin.Context) {
+	productID, err := utils.ParseParam(c, "id")
+	if err != nil {
+		localization.SendLocalizedResponseWithKey(c, types.Response400Product)
+		return
+	}
+
+	var dto types.ProductTranslationsDTO
+	if err := c.ShouldBindJSON(&dto); err != nil {
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
+		return
+	}
+
+	err = h.service.UpsertProductTranslations(productID, &dto)
+	if err != nil {
+		switch {
+		case errors.Is(err, types.ErrProductNotFound):
+			localization.SendLocalizedResponseWithKey(c, types.Response404Product)
+			return
+		default:
+			localization.SendLocalizedResponseWithKey(c, types.Response500ProductTranslationsUpdate)
+			return
+		}
+	}
+
+	localization.SendLocalizedResponseWithKey(c, types.Response200ProductTranslationsUpdate)
 }

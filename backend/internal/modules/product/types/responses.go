@@ -28,4 +28,7 @@ var (
 	Response201ProductSize            = localization.NewResponseKey(201, data.ProductSizeComponent)
 	Response200ProductSizeUpdate      = localization.NewResponseKey(200, data.ProductSizeComponent, data.UpdateOperation.ToString())
 	Response200ProductSizeDelete      = localization.NewResponseKey(200, data.ProductSizeComponent, data.DeleteOperation.ToString())
+
+	Response500ProductTranslationsUpdate = localization.NewResponseKey(500, data.ProductComponent, data.UpdateOperation.ToString(), "translations")
+	Response200ProductTranslationsUpdate = localization.NewResponseKey(200, data.ProductComponent, data.UpdateOperation.ToString(), "translations")
 )

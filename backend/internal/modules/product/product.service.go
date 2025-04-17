@@ -15,7 +15,8 @@ import (
 
 type ProductService interface {
 	GetProductByID(productID uint) (*types.ProductDetailsDTO, error)
-	GetProducts(filter *types.ProductsFilterDto) ([]types.ProductDetailsDTO, error)
+	GetTranslatedProductByID(locale data.LanguageCode, productID uint) (*types.ProductDetailsDTO, error)
+	GetProducts(locale data.LanguageCode, filter *types.ProductsFilterDto) ([]types.ProductDetailsDTO, error)
 	CreateProduct(dto *types.CreateProductDTO) (uint, error)
 	UpdateProduct(productID uint, dto *types.UpdateProductDTO) (*types.ProductDTO, error)
 	DeleteProduct(productID uint) (*data.Product, error)
@@ -25,26 +26,35 @@ type ProductService interface {
 	CreateProductSize(dto *types.CreateProductSizeDTO) (uint, error)
 	UpdateProductSize(productSizeID uint, dto *types.UpdateProductSizeDTO) error
 	DeleteProductSize(productSizeID uint) error
+
+	UpsertProductTranslations(productID uint, dto *types.ProductTranslationsDTO) error
 }
 
 type productService struct {
 	repo                ProductRepository
 	notificationService notifications.NotificationService
 	storageRepo         storage.StorageRepository
+	transactionManager  TransactionManager
 	logger              *zap.SugaredLogger
 }
 
-func NewProductService(repo ProductRepository, notificationService notifications.NotificationService, storageRepo storage.StorageRepository, logger *zap.SugaredLogger) ProductService {
+func NewProductService(
+	repo ProductRepository,
+	notificationService notifications.NotificationService,
+	storageRepo storage.StorageRepository,
+	transactionManager TransactionManager,
+	logger *zap.SugaredLogger) ProductService {
 	return &productService{
 		repo:                repo,
 		logger:              logger,
 		storageRepo:         storageRepo,
+		transactionManager:  transactionManager,
 		notificationService: notificationService,
 	}
 }
 
-func (s *productService) GetProducts(filter *types.ProductsFilterDto) ([]types.ProductDetailsDTO, error) {
-	products, err := s.repo.GetProducts(filter)
+func (s *productService) GetProducts(locale data.LanguageCode, filter *types.ProductsFilterDto) ([]types.ProductDetailsDTO, error) {
+	products, err := s.repo.GetProducts(locale, filter)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to retrieve products", err)
 		s.logger.Error(wrappedErr)
@@ -61,6 +71,17 @@ func (s *productService) GetProducts(filter *types.ProductsFilterDto) ([]types.P
 
 func (s *productService) GetProductByID(productID uint) (*types.ProductDetailsDTO, error) {
 	product, err := s.repo.GetProductByID(productID)
+	if err != nil {
+		wrappedErr := fmt.Errorf("failed to retrieve product for productID = %d: %w", productID, err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+
+	return types.MapToProductDetailsDTO(product), nil
+}
+
+func (s *productService) GetTranslatedProductByID(locale data.LanguageCode, productID uint) (*types.ProductDetailsDTO, error) {
+	product, err := s.repo.GetTranslatedProductByID(locale, productID)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to retrieve product for productID = %d: %w", productID, err)
 		s.logger.Error(wrappedErr)
@@ -373,5 +394,19 @@ func (s *productService) DeleteProductSize(productSizeID uint) error {
 		s.logger.Error(wrappedErr)
 		return wrappedErr
 	}
+	return nil
+}
+
+func (s *productService) UpsertProductTranslations(productID uint, dto *types.ProductTranslationsDTO) error {
+	if dto == nil {
+		return fmt.Errorf("translations DTO is nil")
+	}
+
+	if err := s.transactionManager.UpsertProductTranslations(productID, dto); err != nil {
+		wrappedErr := fmt.Errorf("failed to upsert product translations: %w", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
+	}
+
 	return nil
 }

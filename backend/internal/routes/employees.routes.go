@@ -84,13 +84,15 @@ func (r *Router) RegisterNotificationsRoutes(handler *notifications.Notification
 func (r *Router) RegisterProductRoutes(handler *product.ProductHandler, productTechMapHandler *productTechnicalMap.TechnicalMapHandler) {
 	router := r.EmployeeRoutes.Group("/products")
 	{
-		router.GET("", handler.GetProducts)
-		router.GET("/:id", handler.GetProductDetails)
+		router.GET("", middleware.LocaleMiddleware(), handler.GetProducts)
+		router.GET("/:id", middleware.LocaleMiddleware(), handler.GetProductDetails)
 		router.GET(":id/sizes", handler.GetProductSizesByProductID)
 		router.GET("/sizes/:id", handler.GetProductSizeByID)
 		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateProduct)
 		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateProduct)
 		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteProduct)
+		router.POST(":id/translations", middleware.EmployeeRoleMiddleware(), handler.UpdateOrCreateProductTranslations)
+
 		router.DELETE("sizes/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteProductSize)
 		router.POST("/sizes", middleware.EmployeeRoleMiddleware(), handler.CreateProductSize)
 		router.PUT("/sizes/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateProductSize)
@@ -161,11 +163,12 @@ func (r *Router) RegisterStoresRoutes(handler *stores.StoreHandler) {
 func (r *Router) RegisterProductCategoriesRoutes(handler *categories.CategoryHandler) {
 	router := r.EmployeeRoutes.Group("/product-categories") // merge with products routes, like in additives (/products/categories)
 	{
-		router.GET("", handler.GetAllCategories)
-		router.GET("/:id", handler.GetCategoryByID)
+		router.GET("", middleware.LocaleMiddleware(), handler.GetAllCategories)
+		router.GET("/:id", middleware.LocaleMiddleware(), handler.GetCategoryByID)
 		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateCategory)
 		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateCategory)
 		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteCategory)
+		router.POST("/:id/translations", middleware.EmployeeRoleMiddleware(), handler.CreateOrUpdateCategoryTranslation)
 	}
 }
 

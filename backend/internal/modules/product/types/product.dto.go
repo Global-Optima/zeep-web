@@ -137,8 +137,3 @@ type ProductTranslationsDTO struct {
 	Name        translations.FieldLocale `json:"name" binding:"omitempty"`
 	Description translations.FieldLocale `json:"description" binding:"omitempty"`
 }
-
-type ProductCategoryTranslationsDTO struct {
-	Name        translations.FieldLocale `json:"name" binding:"omitempty"`
-	Description translations.FieldLocale `json:"description" binding:"omitempty"`
-}
