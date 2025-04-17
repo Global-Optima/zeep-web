@@ -1,8 +1,7 @@
 package units
 
 import (
-	"strconv"
-
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/pkg/errors"
 
@@ -58,7 +57,9 @@ func (h *UnitHandler) GetAllUnits(c *gin.Context) {
 		return
 	}
 
-	units, err := h.service.GetAll(&filter)
+	locale := contexts.GetLocaleFromCtx(c)
+
+	units, err := h.service.GetAll(locale, &filter)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500UnitGet)
 		return
@@ -68,13 +69,15 @@ func (h *UnitHandler) GetAllUnits(c *gin.Context) {
 }
 
 func (h *UnitHandler) GetUnitByID(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	id, err := utils.ParseParam(c, "id")
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400Unit)
 		return
 	}
 
-	unit, err := h.service.GetByID(uint(id))
+	locale := contexts.GetLocaleFromCtx(c)
+
+	unit, err := h.service.GetTranslatedByID(locale, id)
 	if err != nil {
 		if errors.Is(err, types.ErrUnitNotFound) {
 			localization.SendLocalizedResponseWithKey(c, types.Response404Unit)
@@ -88,7 +91,7 @@ func (h *UnitHandler) GetUnitByID(c *gin.Context) {
 }
 
 func (h *UnitHandler) UpdateUnit(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	id, err := utils.ParseParam(c, "id")
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400Unit)
 		return
@@ -100,7 +103,7 @@ func (h *UnitHandler) UpdateUnit(c *gin.Context) {
 		return
 	}
 
-	unit, err := h.service.GetByID(uint(id))
+	unit, err := h.service.GetByID(id)
 	if err != nil {
 		if errors.Is(err, types.ErrUnitNotFound) {
 			localization.SendLocalizedResponseWithKey(c, types.Response404Unit)
@@ -110,14 +113,14 @@ func (h *UnitHandler) UpdateUnit(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.Update(uint(id), dto); err != nil {
+	if err := h.service.Update(id, dto); err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500UnitUpdate)
 		return
 	}
 
 	action := types.UpdateUnitAuditFactory(
 		&data.BaseDetails{
-			ID:   uint(id),
+			ID:   id,
 			Name: unit.Name,
 		}, &dto)
 
@@ -129,13 +132,13 @@ func (h *UnitHandler) UpdateUnit(c *gin.Context) {
 }
 
 func (h *UnitHandler) DeleteUnit(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	id, err := utils.ParseParam(c, "id")
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400Unit)
 		return
 	}
 
-	unit, err := h.service.GetByID(uint(id))
+	unit, err := h.service.GetByID(id)
 	if err != nil {
 		if errors.Is(err, types.ErrUnitNotFound) {
 			localization.SendLocalizedResponseWithKey(c, types.Response404Unit)
@@ -145,7 +148,7 @@ func (h *UnitHandler) DeleteUnit(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.Delete(uint(id)); err != nil {
+	if err := h.service.Delete(id); err != nil {
 		if errors.Is(err, types.ErrUnitIsInUse) {
 			localization.SendLocalizedResponseWithKey(c, types.Response409UnitDeleteInUse)
 			return
@@ -156,7 +159,7 @@ func (h *UnitHandler) DeleteUnit(c *gin.Context) {
 
 	action := types.DeleteUnitAuditFactory(
 		&data.BaseDetails{
-			ID:   uint(id),
+			ID:   id,
 			Name: unit.Name,
 		})
 
@@ -165,4 +168,29 @@ func (h *UnitHandler) DeleteUnit(c *gin.Context) {
 	}()
 
 	localization.SendLocalizedResponseWithKey(c, types.Response200UnitDelete)
+}
+
+func (h *UnitHandler) CreateOrUpdateUnitTranslation(c *gin.Context) {
+	id, err := utils.ParseParam(c, "id")
+	if err != nil {
+		localization.SendLocalizedResponseWithKey(c, types.Response400Unit)
+		return
+	}
+
+	var dto types.UnitTranslationsDTO
+	if err := c.ShouldBindJSON(&dto); err != nil {
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
+		return
+	}
+
+	if err := h.service.UpsertUnitTranslations(id, &dto); err != nil {
+		if errors.Is(err, types.ErrUnitNotFound) {
+			localization.SendLocalizedResponseWithKey(c, types.Response404Unit)
+			return
+		}
+		localization.SendLocalizedResponseWithKey(c, types.Response500UnitTranslationUpdate)
+		return
+	}
+
+	localization.SendLocalizedResponseWithKey(c, types.Response200UnitTranslationUpdate)
 }

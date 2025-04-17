@@ -101,3 +101,14 @@ ALTER TABLE ingredient_categories
 ALTER TABLE ingredient_categories
   ADD COLUMN name_translation_id BIGINT NULL,
   ADD COLUMN description_translation_id BIGINT NULL;
+
+
+-- Units
+ALTER TABLE units 
+  DROP CONSTRAINT IF EXISTS fk_units_name_translation;
+
+ALTER TABLE units 
+  DROP COLUMN IF EXISTS name_translation_id;
+
+ALTER TABLE units
+  ADD COLUMN name_translation_id BIGINT NULL;

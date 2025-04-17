@@ -12,10 +12,14 @@ import (
 
 type UnitRepository interface {
 	Create(unit *data.Unit) error
-	GetAll(filter *types.UnitFilter) ([]data.Unit, error)
+	GetAll(locale data.LanguageCode, filter *types.UnitFilter) ([]data.Unit, error)
 	GetByID(id uint) (*data.Unit, error)
+	GetTranslatedByID(locale data.LanguageCode, id uint) (*data.Unit, error)
 	Update(id uint, updates data.Unit) error
 	Delete(id uint) error
+	FindRawUnitByID(id uint, unit *data.Unit) error
+
+	CloneWithTransaction(tx *gorm.DB) UnitRepository
 }
 
 type unitRepository struct {
@@ -26,27 +30,58 @@ func NewUnitRepository(db *gorm.DB) UnitRepository {
 	return &unitRepository{db: db}
 }
 
+func (r *unitRepository) CloneWithTransaction(tx *gorm.DB) UnitRepository {
+	return &unitRepository{db: tx}
+}
+
+func (r *unitRepository) FindRawUnitByID(id uint, unit *data.Unit) error {
+	err := r.db.
+		Where("id = ?", id).
+		First(unit).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return types.ErrUnitNotFound
+		}
+		return fmt.Errorf("failed to find unit by ID: %w", err)
+	}
+	return nil
+}
+
 func (r *unitRepository) Create(unit *data.Unit) error {
 	return r.db.Create(unit).Error
 }
 
-func (r *unitRepository) GetAll(filter *types.UnitFilter) ([]data.Unit, error) {
+func (r *unitRepository) GetAll(locale data.LanguageCode, filter *types.UnitFilter) ([]data.Unit, error) {
 	var units []data.Unit
-	query := r.db.Model(&data.Unit{})
 
-	query, err := utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &units)
+	q := r.db.Model(&data.Unit{})
+
+	if filter.Search != nil && *filter.Search != "" {
+		q = q.Where("name ILIKE ?", "%"+*filter.Search+"%")
+	}
+
+	paged, err := utils.ApplySortedPaginationForModel(
+		q,
+		filter.Pagination,
+		filter.Sort,
+		&data.Unit{},
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch units: %w", err)
 	}
 
-	if filter.Search != nil {
-		query = query.Where("name ILIKE ?", "%"+*filter.Search+"%")
-	}
+	paged = utils.ApplyLocalizedPreloads(
+		paged,
+		locale,
+		types.UnitPreloadMap,
+	)
 
-	if err := query.Find(&units).Error; err != nil {
+	if err := paged.Find(&units).Error; err != nil {
 		return nil, err
 	}
-
+	if units == nil {
+		units = []data.Unit{}
+	}
 	return units, nil
 }
 
@@ -54,6 +89,24 @@ func (r *unitRepository) GetByID(id uint) (*data.Unit, error) {
 	var unit data.Unit
 	err := r.db.First(&unit, id).Error
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, types.ErrUnitNotFound
+		}
+		return nil, err
+	}
+	return &unit, nil
+}
+
+func (r *unitRepository) GetTranslatedByID(locale data.LanguageCode, id uint) (*data.Unit, error) {
+	var unit data.Unit
+
+	q := r.db.Model(&data.Unit{}).
+		Where("id = ?", id)
+
+	q = utils.ApplyLocalizedPreloads(
+		q, locale, types.UnitPreloadMap)
+
+	if err := q.First(&unit).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, types.ErrUnitNotFound
 		}

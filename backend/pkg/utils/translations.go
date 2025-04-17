@@ -31,7 +31,8 @@ type LocalizedPreload struct {
 }
 
 func ApplyLocalizedPreloads(db *gorm.DB, locale data.LanguageCode,
-	preloads []LocalizedPreload) *gorm.DB {
+	preloads []LocalizedPreload,
+) *gorm.DB {
 	for _, p := range preloads {
 		if len(p.Nested) == 0 {
 			if p.Localized {

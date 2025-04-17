@@ -23,6 +23,7 @@ type TranslationManager interface {
 	UpdateProductCategoryTranslationIDs(productCategoryID, nameGroupID, descGroupID uint) error
 	UpdateIngredientTranslationIDs(ingredientID, nameGroupID uint) error
 	UpdateIngredientCategoryTranslationIDs(ingredientCategoryID, nameGroupID, descGroupID uint) error
+	UpdateUnitTranslationIDs(unitID, nameGroupID uint) error
 
 	CloneWithTransaction(tx *gorm.DB) TranslationManager
 }
@@ -241,6 +242,16 @@ func (r *translationManager) UpdateIngredientCategoryTranslationIDs(ingredientCa
 	}
 	if err := r.db.Model(&data.IngredientCategory{}).Where("id = ?", ingredientCategoryID).Updates(updates).Error; err != nil {
 		return fmt.Errorf("failed to update ingredient category translation IDs: %w", err)
+	}
+	return nil
+}
+
+func (r *translationManager) UpdateUnitTranslationIDs(unitID, nameGroupID uint) error {
+	updates := &data.Unit{
+		NameTranslationID: &nameGroupID,
+	}
+	if err := r.db.Model(&data.Unit{}).Where("id = ?", unitID).Updates(updates).Error; err != nil {
+		return fmt.Errorf("failed to update unit translation IDs: %w", err)
 	}
 	return nil
 }

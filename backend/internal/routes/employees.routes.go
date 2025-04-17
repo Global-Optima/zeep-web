@@ -353,11 +353,12 @@ func (r *Router) RegisterStockMaterialCategoryRoutes(handler *stockMaterialCateg
 func (r *Router) RegisterUnitRoutes(handler *units.UnitHandler) {
 	router := r.EmployeeRoutes.Group("/units")
 	{
-		router.GET("", handler.GetAllUnits)
-		router.GET("/:id", handler.GetUnitByID)
+		router.GET("", middleware.LocaleMiddleware(), handler.GetAllUnits)
+		router.GET("/:id", middleware.LocaleMiddleware(), handler.GetUnitByID)
 		router.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateUnit)
 		router.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateUnit)
 		router.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteUnit)
+		router.POST("/:id/translations", middleware.EmployeeRoleMiddleware(), handler.CreateOrUpdateUnitTranslation)
 	}
 }
 
