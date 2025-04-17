@@ -4,6 +4,7 @@
 	<AdminProvisionUpdateForm
 		v-else
 		:provision="ingredientDetails"
+		:readonly="!canUpdate"
 		@onSubmit="handleUpdate"
 		@onCancel="handleCancel"
 	/>
@@ -12,6 +13,8 @@
 <script lang="ts" setup>
 import { useToast } from '@/core/components/ui/toast/use-toast'
 import { useAxiosLocaleToast, type AxiosLocalizedError } from '@/core/hooks/use-axios-locale-toast.hooks'
+import { useHasRole } from '@/core/hooks/use-has-roles.hook'
+import { EmployeeRole } from '@/modules/admin/employees/models/employees.models'
 import AdminProvisionUpdateForm from "@/modules/admin/provisions/components/details/admin-provision-update-form.vue"
 import type { UpdateProvisionDTO } from "@/modules/admin/provisions/models/provision.models"
 import { provisionsService } from "@/modules/admin/provisions/services/provisions.service"
@@ -23,6 +26,8 @@ const route = useRoute()
 const router = useRouter()
 const queryClient = useQueryClient()
 const { toast } = useToast()
+
+const canUpdate = useHasRole([EmployeeRole.ADMIN])
 
 const provisionId = route.params.id as string
 
