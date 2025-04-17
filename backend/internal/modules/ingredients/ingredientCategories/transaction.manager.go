@@ -24,7 +24,6 @@ func NewTransactionManager(
 	db *gorm.DB,
 	ingredientCategoryRepo IngredientCategoryRepository,
 	translationsManager translations.TranslationManager,
-
 ) TransactionManager {
 	return &transactionManager{
 		db:                     db,

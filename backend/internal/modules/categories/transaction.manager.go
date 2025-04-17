@@ -23,7 +23,6 @@ func NewTransactionManager(
 	db *gorm.DB,
 	productCategoryRepo CategoryRepository,
 	translationsManager translations.TranslationManager,
-
 ) TransactionManager {
 	return &transactionManager{
 		db:                  db,
@@ -33,8 +32,8 @@ func NewTransactionManager(
 }
 
 func (m *transactionManager) UpsertProductCategoryTranslations(
-	categoryID uint, dto *types.ProductCategoryTranslationsDTO) error {
-
+	categoryID uint, dto *types.ProductCategoryTranslationsDTO,
+) error {
 	return m.db.Transaction(func(tx *gorm.DB) error {
 		repoTx := m.productCategoryRepo.CloneWithTransaction(tx)
 

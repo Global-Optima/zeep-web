@@ -48,7 +48,8 @@ func NewAdditiveService(
 	storageRepo storage.StorageRepository,
 	transactionManager TransactionManager,
 	notificationService notifications.NotificationService,
-	logger *zap.SugaredLogger) AdditiveService {
+	logger *zap.SugaredLogger,
+) AdditiveService {
 	return &additiveService{
 		repo:                repo,
 		storageRepo:         storageRepo,

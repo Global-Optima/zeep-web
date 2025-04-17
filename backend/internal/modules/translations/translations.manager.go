@@ -47,7 +47,6 @@ func (m *translationManager) UpsertGroup(
 	current *uint,
 	loc FieldLocale,
 ) (uint, error) {
-
 	entries := m.buildEntries(loc)
 	if len(entries) == 0 { // nothing to do
 		if current != nil {

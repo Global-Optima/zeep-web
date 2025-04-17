@@ -33,6 +33,7 @@ func NewIngredientCategoryRepository(db *gorm.DB) IngredientCategoryRepository {
 func (r *ingredientCategoryRepository) CloneWithTransaction(tx *gorm.DB) IngredientCategoryRepository {
 	return &ingredientCategoryRepository{db: tx}
 }
+
 func (r *ingredientCategoryRepository) FindRawIngredientCategoryByID(id uint, category *data.IngredientCategory) error {
 	err := r.db.Where("id = ?", id).First(category).Error
 	if err != nil {

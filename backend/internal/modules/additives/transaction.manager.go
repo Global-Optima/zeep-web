@@ -33,8 +33,8 @@ func NewTransactionManager(
 }
 
 func (m *transactionManager) UpsertAdditiveTranslations(
-	additiveID uint, dto *types.AdditiveTranslationsDTO) error {
-
+	additiveID uint, dto *types.AdditiveTranslationsDTO,
+) error {
 	return m.db.Transaction(func(tx *gorm.DB) error {
 		repoTx := m.additiveRepo.CloneWithTransaction(tx)
 
@@ -60,8 +60,8 @@ func (m *transactionManager) UpsertAdditiveTranslations(
 }
 
 func (m *transactionManager) UpsertAdditiveCategoryTranslations(
-	categoryID uint, dto *types.AdditiveCategoryTranslationsDTO) error {
-
+	categoryID uint, dto *types.AdditiveCategoryTranslationsDTO,
+) error {
 	return m.db.Transaction(func(tx *gorm.DB) error {
 		repoTx := m.additiveRepo.CloneWithTransaction(tx)
 

@@ -43,7 +43,8 @@ func NewProductService(
 	notificationService notifications.NotificationService,
 	storageRepo storage.StorageRepository,
 	transactionManager TransactionManager,
-	logger *zap.SugaredLogger) ProductService {
+	logger *zap.SugaredLogger,
+) ProductService {
 	return &productService{
 		repo:                repo,
 		logger:              logger,

@@ -23,7 +23,6 @@ func NewTransactionManager(
 	db *gorm.DB,
 	ingredientRepo IngredientRepository,
 	translationsManager translations.TranslationManager,
-
 ) TransactionManager {
 	return &transactionManager{
 		db:                  db,

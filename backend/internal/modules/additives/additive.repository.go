@@ -246,7 +246,6 @@ func (r *additiveRepository) GetTranslatedAdditiveByID(locale data.LanguageCode,
 		locale,
 		types.AdditivePreloadMap,
 	).First(&additive).Error
-
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, types.ErrAdditiveNotFound
@@ -600,7 +599,6 @@ func (r *additiveRepository) GetTranslatedAdditiveCategoryByID(locale data.Langu
 		locale,
 		types.AdditiveCategoryPreloadMap,
 	).First(&category).Error
-
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, types.ErrAdditiveCategoryNotFound
