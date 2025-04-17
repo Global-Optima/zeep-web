@@ -12,7 +12,8 @@
 		"type-check": "vue-tsc --build --force",
 		"lint": "eslint . --fix",
 		"format": "prettier --write src/",
-		"check:locales": "bun run scripts/check-locales.ts"
+		"check:locales": "bun run scripts/check-locales.ts",
+		"test:e2e": "playwright test"
 	},
 	"dependencies": {
 		"@intlify/unplugin-vue-i18n": "^5.2.0",
@@ -65,6 +66,7 @@
 	"devDependencies": {
 		"@iconify-json/mingcute": "^1.2.1",
 		"@iconify/vue": "^4.1.2",
+		"@playwright/test": "^1.51.1",
 		"@tsconfig/node20": "^20.1.4",
 		"@types/bun": "latest",
 		"@types/file-saver": "^2.0.7",
