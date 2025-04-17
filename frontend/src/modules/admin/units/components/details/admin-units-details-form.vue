@@ -10,6 +10,9 @@ import { FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/core
 import { Input } from '@/core/components/ui/input'
 import type { UnitDTO, UpdateUnitDTO } from '@/modules/admin/units/models/units.model'
 import { ChevronLeft } from 'lucide-vue-next'
+import { defineAsyncComponent } from 'vue'
+
+const AdminUnitTranslationsDialog = defineAsyncComponent(() => import("@/modules/admin/units/components/admin-unit-translations-dialog.vue"))
 
 // Props & Events
 const props = defineProps<{
@@ -65,9 +68,10 @@ const onCancel = () => {
 			</h1>
 
 			<div
-				class="md:flex items-center gap-2 hidden md:ml-auto"
+				class="hidden md:flex items-center gap-2 md:ml-auto"
 				v-if="!readonly"
 			>
+				<AdminUnitTranslationsDialog :unit-id="unit.id" />
 				<Button
 					variant="outline"
 					type="button"
@@ -135,7 +139,7 @@ const onCancel = () => {
 
 		<!-- Footer -->
 		<div
-			class="flex justify-center items-center gap-2 md:hidden"
+			class="md:hidden flex justify-center items-center gap-2"
 			v-if="!readonly"
 		>
 			<Button

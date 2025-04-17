@@ -190,3 +190,8 @@ export interface ProductTranslationsDTO {
 	name?: TranslationLocalizedField
 	description?: TranslationLocalizedField
 }
+
+export interface ProductCategoryTranslationsDTO {
+	name?: TranslationLocalizedField
+	description?: TranslationLocalizedField
+}

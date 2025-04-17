@@ -127,3 +127,8 @@ export interface AdditiveTranslationsDTO {
 	name?: TranslationLocalizedField
 	description?: TranslationLocalizedField
 }
+
+export interface AdditiveCategoryTranslationsDTO {
+	name?: TranslationLocalizedField
+	description?: TranslationLocalizedField
+}

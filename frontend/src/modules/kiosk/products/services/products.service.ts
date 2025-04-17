@@ -8,6 +8,7 @@ import type {
 	CreateProductSizeDTO,
 	ProductCategoriesFilterDTO,
 	ProductCategoryDTO,
+	ProductCategoryTranslationsDTO,
 	ProductDetailsDTO,
 	ProductSizeDTO,
 	ProductSizeDetailsDTO,
@@ -181,6 +182,28 @@ class ProductsService {
 			return response.data
 		} catch (error) {
 			console.error('Failed to get product translations: ', error)
+			throw error
+		}
+	}
+
+	async upsertProductCategoryTranslations(id: number, data: ProductCategoryTranslationsDTO) {
+		try {
+			const response = await apiClient.post<void>(`/product-categories/${id}/translations`, data)
+			return response.data
+		} catch (error) {
+			console.error('Failed to upsert product category translations: ', error)
+			throw error
+		}
+	}
+
+	async getProductCategoryTranslations(id: number) {
+		try {
+			const response = await apiClient.get<ProductCategoryTranslationsDTO>(
+				`/product-categories/${id}/translations`,
+			)
+			return response.data
+		} catch (error) {
+			console.error('Failed to get product category translations: ', error)
 			throw error
 		}
 	}
