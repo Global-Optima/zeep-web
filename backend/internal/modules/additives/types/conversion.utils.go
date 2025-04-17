@@ -2,6 +2,7 @@ package types
 
 import (
 	provisionsTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/pkg/errors"
 
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
@@ -179,44 +180,28 @@ func ConvertToAdditiveDetailsDTO(additive *data.Additive) *AdditiveDetailsDTO {
 }
 
 func ConvertToBaseAdditiveDTO(additive *data.Additive) *BaseAdditiveDTO {
-	name := additive.Name
-	description := additive.Description
-
-	if len(additive.NameTranslation) > 0 {
-		name = additive.NameTranslation[0].TranslatedText
-	}
-	if len(additive.DescriptionTranslation) > 0 {
-		description = additive.DescriptionTranslation[0].TranslatedText
-	}
-
 	return &BaseAdditiveDTO{
-		Name:        name,
-		Description: description,
-		BasePrice:   additive.BasePrice,
-		ImageURL:    additive.ImageKey.GetURL(),
-		Size:        additive.Size,
-		Unit:        unitTypes.ToUnitResponse(additive.Unit),
-		Category:    *ConvertToAdditiveCategoryDTO(&additive.Category),
-		MachineId:   additive.MachineId,
+		Name:                  additive.Name,
+		TranslatedName:        utils.FirstTranslation(additive.NameTranslation),
+		Description:           additive.Description,
+		TranslatedDescription: utils.FirstTranslation(additive.DescriptionTranslation),
+		BasePrice:             additive.BasePrice,
+		ImageURL:              additive.ImageKey.GetURL(),
+		Size:                  additive.Size,
+		Unit:                  unitTypes.ToUnitResponse(additive.Unit),
+		Category:              *ConvertToAdditiveCategoryDTO(&additive.Category),
+		MachineId:             additive.MachineId,
 	}
 }
 
 func ConvertToBaseAdditiveCategoryDTO(category *data.AdditiveCategory) *BaseAdditiveCategoryDTO {
-	name := category.Name
-	description := category.Description
-
-	if len(category.NameTranslation) > 0 {
-		name = category.NameTranslation[0].TranslatedText
-	}
-	if len(category.DescriptionTranslation) > 0 {
-		description = category.DescriptionTranslation[0].TranslatedText
-	}
-
 	return &BaseAdditiveCategoryDTO{
-		Name:             name,
-		Description:      description,
-		IsMultipleSelect: category.IsMultipleSelect,
-		IsRequired:       category.IsRequired,
+		Name:                  category.Name,
+		TranslatedName:        utils.FirstTranslation(category.NameTranslation),
+		Description:           category.Description,
+		TranslatedDescription: utils.FirstTranslation(category.DescriptionTranslation),
+		IsMultipleSelect:      category.IsMultipleSelect,
+		IsRequired:            category.IsRequired,
 	}
 }
 

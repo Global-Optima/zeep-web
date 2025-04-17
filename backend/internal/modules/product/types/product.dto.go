@@ -14,11 +14,13 @@ import (
 )
 
 type BaseProductDTO struct {
-	Name        string                             `json:"name"`
-	Description string                             `json:"description"`
-	ImageURL    string                             `json:"imageUrl"`
-	VideoURL    string                             `json:"videoUrl"`
-	Category    categoriesTypes.ProductCategoryDTO `json:"category"`
+	Name                  string                             `json:"name"`
+	TranslatedName        string                             `json:"translatedName,omitempty"`
+	Description           string                             `json:"description"`
+	TranslatedDescription string                             `json:"translatedDescription,omitempty"`
+	ImageURL              string                             `json:"imageUrl"`
+	VideoURL              string                             `json:"videoUrl"`
+	Category              categoriesTypes.ProductCategoryDTO `json:"category"`
 }
 
 type ProductDTO struct {

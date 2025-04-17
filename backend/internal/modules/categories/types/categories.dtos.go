@@ -7,10 +7,12 @@ import (
 )
 
 type ProductCategoryDTO struct {
-	ID              uint                 `json:"id"`
-	Name            string               `json:"name"`
-	Description     string               `json:"description"`
-	MachineCategory data.MachineCategory `json:"machineCategory"`
+	ID                    uint                 `json:"id"`
+	Name                  string               `json:"name"`
+	TranslatedName        string               `json:"translatedName,omitempty"`
+	Description           string               `json:"description"`
+	TranslatedDescription string               `json:"translatedDescription,omitempty"`
+	MachineCategory       data.MachineCategory `json:"machineCategory"`
 }
 
 type ProductCategoriesFilterDTO struct {

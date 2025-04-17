@@ -29,22 +29,14 @@ func MapToBaseProductDTO(product *data.Product) BaseProductDTO {
 		return BaseProductDTO{}
 	}
 
-	name := product.Name
-	description := product.Description
-
-	if len(product.NameTranslation) > 0 {
-		name = product.NameTranslation[0].TranslatedText
-	}
-	if len(product.DescriptionTranslation) > 0 {
-		description = product.DescriptionTranslation[0].TranslatedText
-	}
-
 	return BaseProductDTO{
-		Name:        name,
-		Description: description,
-		ImageURL:    product.ImageKey.GetURL(),
-		VideoURL:    product.VideoKey.GetURL(),
-		Category:    *categoriesTypes.MapCategoryToDTO(product.Category),
+		Name:                  product.Name,
+		TranslatedName:        utils.FirstTranslation(product.NameTranslation),
+		Description:           product.Description,
+		TranslatedDescription: utils.FirstTranslation(product.DescriptionTranslation),
+		ImageURL:              product.ImageKey.GetURL(),
+		VideoURL:              product.VideoKey.GetURL(),
+		Category:              *categoriesTypes.MapCategoryToDTO(product.Category),
 	}
 }
 

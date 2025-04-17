@@ -35,23 +35,27 @@ type AdditiveFilterQuery struct {
 }
 
 type BaseAdditiveCategoryDTO struct {
-	Name             string `json:"name"`
-	Description      string `json:"description"`
-	IsMultipleSelect bool   `json:"isMultipleSelect"`
-	IsRequired       bool   `json:"isRequired"`
+	Name                  string `json:"name"`
+	TranslatedName        string `json:"translatedName,omitempty"`
+	Description           string `json:"description"`
+	TranslatedDescription string `json:"translatedDescription,omitempty"`
+	IsMultipleSelect      bool   `json:"isMultipleSelect"`
+	IsRequired            bool   `json:"isRequired"`
 }
 
 // BaseAdditiveDTO should not be returned directly as a response,
 // instead wrap it into another struct with more info like ID and etc
 type BaseAdditiveDTO struct {
-	Name        string              `json:"name"`
-	Description string              `json:"description"`
-	BasePrice   float64             `json:"basePrice"`
-	ImageURL    string              `json:"imageUrl"`
-	Size        float64             `json:"size"`
-	Unit        unitTypes.UnitsDTO  `json:"unit"`
-	Category    AdditiveCategoryDTO `json:"category"`
-	MachineId   string              `json:"machineId"`
+	Name                  string              `json:"name"`
+	TranslatedName        string              `json:"translatedName,omitempty"`
+	Description           string              `json:"description"`
+	TranslatedDescription string              `json:"translatedDescription,omitempty"`
+	BasePrice             float64             `json:"basePrice"`
+	ImageURL              string              `json:"imageUrl"`
+	Size                  float64             `json:"size"`
+	Unit                  unitTypes.UnitsDTO  `json:"unit"`
+	Category              AdditiveCategoryDTO `json:"category"`
+	MachineId             string              `json:"machineId"`
 }
 
 type AdditiveDTO struct {
