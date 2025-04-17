@@ -113,10 +113,10 @@ func (m *transactionManager) handleSuborderCompletion(repoTx OrderRepository, st
 		}
 	}
 
-	ingredientIDs, provisionIDs := inventoryMap.GetIDs()
+	inventory := inventoryMap.GetIDs()
 	err = storeInventoryManagerRepoTx.RecalculateStoreInventory(order.StoreID, &storeInventoryManagersTypes.RecalculateInput{
-		IngredientIDs: ingredientIDs,
-		ProvisionIDs:  provisionIDs,
+		IngredientIDs: inventory.IngredientIDs,
+		ProvisionIDs:  inventory.ProvisionIDs,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to recalculate out of stock: %w", err)

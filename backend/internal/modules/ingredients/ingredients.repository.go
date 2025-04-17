@@ -14,6 +14,7 @@ type IngredientRepository interface {
 	CreateIngredient(ingredient *data.Ingredient) (uint, error)
 	SaveIngredient(ingredientID uint, ingredient *data.Ingredient) error
 	DeleteIngredient(ingredientID uint) error
+
 	GetIngredientByID(ingredientID uint) (*data.Ingredient, error)
 	GetRawIngredientByID(ingredientID uint) (*data.Ingredient, error)
 	GetIngredientsWithDetailsByIDs(ingredientIDs []uint) ([]data.Ingredient, error)

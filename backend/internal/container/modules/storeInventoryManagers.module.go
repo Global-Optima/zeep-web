@@ -25,6 +25,8 @@ func NewStoreInventoryManagersModule(
 	)
 	handler := storeInventoryManagers.NewStoreInventoryManagerHandler(service)
 
+	base.Router.RegisterStoreInventoryManagerRoutes(handler)
+
 	return &StoreInventoryManagerModule{
 		BaseModule: base,
 		Repo:       repo,

@@ -2,6 +2,8 @@ package storeInventoryManagers
 
 import (
 	"fmt"
+	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
+	provisionsTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/types"
 	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -16,6 +18,9 @@ import (
 
 type StoreInventoryManagerRepository interface {
 	GetSuborderInventoryUsage(suborder *data.Suborder) (*types.InventoryUsage, error)
+	GetIngredientsByIDs(ingredientIDs []uint) ([]data.Ingredient, error)
+	GetProvisionsByIDs(provisionIDs []uint) ([]data.Provision, error)
+
 	CheckStoreStocks(
 		storeID uint,
 		requiredIngredientQuantityMap map[uint]float64,
@@ -53,6 +58,41 @@ func (r *storeInventoryManagerRepository) CloneWithTransaction(tx *gorm.DB) Stor
 	return &storeInventoryManagerRepository{
 		db: tx,
 	}
+}
+
+func (r *storeInventoryManagerRepository) GetIngredientsByIDs(ingredientIDs []uint) ([]data.Ingredient, error) {
+	var ingredients []data.Ingredient
+	err := r.db.Model(&data.Ingredient{}).
+		Where("id IN (?)", ingredientIDs).
+		Preload("Unit").
+		Preload("IngredientCategory").
+		Find(&ingredients).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ingredientTypes.ErrIngredientNotFound
+		}
+		return nil, err
+	}
+
+	return ingredients, nil
+}
+
+func (r *storeInventoryManagerRepository) GetProvisionsByIDs(provisionIDs []uint) ([]data.Provision, error) {
+	var provisions []data.Provision
+
+	err := r.db.Model(&data.Provision{}).
+		Where("id IN ?", provisionIDs).
+		Preload("Unit").
+		Find(&provisions).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, provisionsTypes.ErrProvisionNotFound
+		}
+		return nil, err
+	}
+
+	return provisions, nil
 }
 
 func (r *storeInventoryManagerRepository) DeductStoreInventory(storeID uint, inventory *types.InventoryUsage) (*types.DeductedInventoryMap, error) {

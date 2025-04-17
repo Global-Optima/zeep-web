@@ -104,16 +104,8 @@ func ConvertToIngredientResponseDTO(ingredient *data.Ingredient) *IngredientDTO 
 		Proteins:         ingredient.Proteins,
 		ExpirationInDays: ingredient.ExpirationInDays,
 		IsAllergen:       ingredient.IsAllergen,
-		Unit: unitType.UnitsDTO{
-			ID:               ingredient.Unit.ID,
-			Name:             ingredient.Unit.Name,
-			ConversionFactor: ingredient.Unit.ConversionFactor,
-		},
-		Category: ingredientCategoryTypes.IngredientCategoryResponse{
-			ID:          ingredient.IngredientCategory.ID,
-			Name:        ingredient.IngredientCategory.Name,
-			Description: ingredient.IngredientCategory.Description,
-		},
+		Unit:             unitType.ToUnitResponse(ingredient.Unit),
+		Category:         *ingredientCategoryTypes.ToIngredientCategoryResponse(&ingredient.IngredientCategory),
 	}
 }
 

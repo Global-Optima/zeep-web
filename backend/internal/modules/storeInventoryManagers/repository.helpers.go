@@ -423,7 +423,6 @@ func getOutOfStockStoreProductIDs(
 	return outOfStockIDs, nil
 }
 
-// Same as the helper from before; no changes needed
 func buildStockMaps(
 	tx *gorm.DB,
 	storeID uint,

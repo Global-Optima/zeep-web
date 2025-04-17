@@ -30,6 +30,7 @@ const (
 	ProvisionComponent             ComponentName = "PROVISION"
 	StoreProductComponent          ComponentName = "STORE_PRODUCT"
 	StoreProvisionComponent        ComponentName = "STORE_PROVISION"
+	StoreInventoryManagerComponent ComponentName = "STORE_INVENTORY_MANAGER"
 	EmployeeComponent              ComponentName = "EMPLOYEE"
 	StoreEmployeeComponent         ComponentName = "STORE_EMPLOYEE"
 	WarehouseEmployeeComponent     ComponentName = "WAREHOUSE_EMPLOYEE"
