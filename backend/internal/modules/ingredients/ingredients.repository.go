@@ -90,7 +90,7 @@ func (r *ingredientRepository) GetIngredientByID(ingredientID uint) (*data.Ingre
 func (r *ingredientRepository) GetTranslatedIngredientByID(locale data.LanguageCode, ingredientID uint) (*data.Ingredient, error) {
 	var ingredient data.Ingredient
 
-	q := r.db.Model(&data.ProductCategory{}).Where("id = ?", ingredientID)
+	q := r.db.Model(&data.Ingredient{}).Where("id = ?", ingredientID)
 
 	q = utils.ApplyLocalizedPreloads(q, locale, types.IngredientPreloadMap)
 

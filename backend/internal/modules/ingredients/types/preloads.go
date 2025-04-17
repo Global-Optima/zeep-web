@@ -7,7 +7,6 @@ import (
 
 var IngredientPreloadMap = []utils.LocalizedPreload{
 	utils.Translation("NameTranslation"),
-	utils.Translation("DescriptionTranslation"),
 
 	{Relation: "Unit"},
 
