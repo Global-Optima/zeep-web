@@ -317,24 +317,24 @@ watch(initialProvision, (newVal) => {
 						</FormItem>
 					</FormField>
 
-          <!-- Default Expiration Time (Minutes) -->
-          <FormField
-            name="defaultExpirationInMinutes"
-            v-slot="{ componentField }"
-          >
-            <FormItem>
-              <FormLabel>Срок годности по умолчанию (минут)</FormLabel>
-              <FormControl>
-                <Input
-                  id="defaultExpirationInMinutes"
-                  type="number"
-                  v-bind="componentField"
-                  placeholder="Введите срок годности"
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          </FormField>
+					<!-- Default Expiration Time (Minutes) -->
+					<FormField
+						name="defaultExpirationInMinutes"
+						v-slot="{ componentField }"
+					>
+						<FormItem>
+							<FormLabel>Срок годности по умолчанию (минут)</FormLabel>
+							<FormControl>
+								<Input
+									id="defaultExpirationInMinutes"
+									type="number"
+									v-bind="componentField"
+									placeholder="Введите срок годности"
+								/>
+							</FormControl>
+							<FormMessage />
+						</FormItem>
+					</FormField>
 
 					<!-- Limit Per Day -->
 					<FormField

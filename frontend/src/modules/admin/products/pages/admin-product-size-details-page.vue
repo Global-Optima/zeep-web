@@ -4,7 +4,7 @@
 	<AdminProductSizeUpdateForm
 		v-else
 		:productSize="productSizeDetails"
-    :readonly='!canUpdate'
+		:readonly="!canUpdate"
 		@onSubmit="handleUpdate"
 		@onCancel="handleCancel"
 	/>

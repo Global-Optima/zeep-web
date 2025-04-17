@@ -13,10 +13,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { ChevronLeft } from 'lucide-vue-next'
 
 // Types
-import type { ProvisionDetailsDTO } from '@/modules/admin/provisions/models/provision.models'
 import type {
   StoreProvisionDetailsDTO,
-  StoreProvisionDTO,
   UpdateStoreProvisionDTO
 } from '@/modules/admin/store-provisions/models/store-provision.models'
 

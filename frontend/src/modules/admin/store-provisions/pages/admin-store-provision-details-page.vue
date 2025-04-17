@@ -7,8 +7,8 @@
 	>
 		<!-- Header -->
 		<div class="flex items-center gap-4">
-    <Button
-      variant="outline"
+			<Button
+				variant="outline"
 				size="icon"
 				@click="onCancel"
 			>
