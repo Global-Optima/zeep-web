@@ -6,7 +6,6 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 	provisionsTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/types"
-	"github.com/sirupsen/logrus"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
@@ -265,8 +264,6 @@ func (h *AdditiveHandler) UpdateAdditive(c *gin.Context) {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageGettingImage)
 		return
 	}
-
-	logrus.Info(dto.Provisions)
 
 	additive, err := h.service.UpdateAdditive(additiveID, &dto)
 	if err != nil {

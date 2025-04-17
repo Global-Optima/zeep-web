@@ -40,10 +40,6 @@ func LocaleMiddleware() gin.HandlerFunc {
 			}
 		}
 
-		if locale == "" {
-			locale = "ru"
-		}
-
 		contexts.SetLocaleCtx(c, locale)
 		c.Header("Content-Language", locale.String())
 		c.Next()

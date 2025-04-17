@@ -10,14 +10,14 @@ var LocaleKey = "locale"
 func GetLocaleFromCtx(c *gin.Context) data.LanguageCode {
 	locale, ok := c.Get(LocaleKey)
 	if !ok {
-		return data.LanguageCodeRU
+		return ""
 	}
 
 	if lang, ok := locale.(data.LanguageCode); ok && lang.IsValid() {
 		return lang
 	}
 
-	return data.LanguageCodeRU
+	return ""
 }
 
 func SetLocaleCtx(c *gin.Context, locale data.LanguageCode) {

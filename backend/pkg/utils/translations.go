@@ -19,7 +19,7 @@ func WithLocalePreloads(locale data.LanguageCode, relations ...string) func(*gor
 type LocalizedPreload struct {
 	Relation  string
 	Localized bool
-	Model     interface{} // NEW – scope WHERE to correct table
+	Model     interface{} // scope WHERE to correct table
 	Nested    []LocalizedPreload
 }
 
