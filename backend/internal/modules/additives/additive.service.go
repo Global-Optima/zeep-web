@@ -16,20 +16,23 @@ import (
 
 type AdditiveService interface {
 	GetAdditivesByProductSizeIDs(productSizeIDs []uint) ([]uint, error)
-	GetAdditiveCategories(filter *types.AdditiveCategoriesFilterQuery) ([]types.AdditiveCategoryDetailsDTO, error)
+	GetAdditiveCategories(locale data.LanguageCode, filter *types.AdditiveCategoriesFilterQuery) ([]types.AdditiveCategoryDetailsDTO, error)
 	CreateAdditiveCategory(dto *types.CreateAdditiveCategoryDTO) (uint, error)
 	UpdateAdditiveCategory(id uint, dto *types.UpdateAdditiveCategoryDTO) error
 	DeleteAdditiveCategory(categoryID uint) error
 	GetAdditiveCategoryByID(categoryID uint) (*types.AdditiveCategoryDetailsDTO, error)
+	GetTranlsatedAdditiveCategoryByID(locale data.LanguageCode, categoryID uint) (*types.AdditiveCategoryDetailsDTO, error)
 
 	GetAdditives(locale data.LanguageCode, filter *types.AdditiveFilterQuery) ([]types.AdditiveDTO, error)
-	GetAdditiveByID(locale data.LanguageCode, additiveID uint) (*types.AdditiveDetailsDTO, error)
+	GetAdditiveByID(additiveID uint) (*types.AdditiveDetailsDTO, error)
+	GetTranslatedAdditiveByID(locale data.LanguageCode, additiveID uint) (*types.AdditiveDetailsDTO, error)
 	GetAdditivesByIDs(additiveIDs []uint) ([]types.AdditiveDTO, error)
 	CreateAdditive(dto *types.CreateAdditiveDTO) (uint, error)
 	UpdateAdditive(additiveID uint, dto *types.UpdateAdditiveDTO) (*types.AdditiveDTO, error)
 	DeleteAdditive(additiveID uint) error
 
 	UpsertAdditiveTranslations(additiveID uint, dto *types.AdditiveTranslationsDTO) error
+	UpsertAdditiveCategoryTranslations(additiveCategoryID uint, dto *types.AdditiveCategoryTranslationsDTO) error
 }
 
 type additiveService struct {
@@ -55,8 +58,8 @@ func NewAdditiveService(
 	}
 }
 
-func (s *additiveService) GetAdditiveCategories(filter *types.AdditiveCategoriesFilterQuery) ([]types.AdditiveCategoryDetailsDTO, error) {
-	categories, err := s.repo.GetAdditiveCategories(filter)
+func (s *additiveService) GetAdditiveCategories(locale data.LanguageCode, filter *types.AdditiveCategoriesFilterQuery) ([]types.AdditiveCategoryDetailsDTO, error) {
+	categories, err := s.repo.GetAdditiveCategories(locale, filter)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to retrieve additives", err)
 		s.logger.Error(wrappedErr)
@@ -73,6 +76,36 @@ func (s *additiveService) GetAdditiveCategories(filter *types.AdditiveCategories
 	}
 
 	return categoryDTOs, nil
+}
+
+func (s *additiveService) GetAdditiveCategoryByID(categoryID uint) (*types.AdditiveCategoryDetailsDTO, error) {
+	category, err := s.repo.GetAdditiveCategoryByID(categoryID)
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to fetch additive category", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+
+	if category == nil {
+		return nil, fmt.Errorf("additive category with ID %d not found", categoryID)
+	}
+
+	return types.ConvertToAdditiveCategoryDetailsDTO(category), nil
+}
+
+func (s *additiveService) GetTranlsatedAdditiveCategoryByID(locale data.LanguageCode, categoryID uint) (*types.AdditiveCategoryDetailsDTO, error) {
+	category, err := s.repo.GetTranslatedAdditiveCategoryByID(locale, categoryID)
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to fetch additive category", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+
+	if category == nil {
+		return nil, fmt.Errorf("additive category with ID %d not found", categoryID)
+	}
+
+	return types.ConvertToAdditiveCategoryDetailsDTO(category), nil
 }
 
 func (s *additiveService) GetAdditivesByProductSizeIDs(productSizeIDs []uint) ([]uint, error) {
@@ -134,21 +167,6 @@ func (s *additiveService) DeleteAdditiveCategory(categoryID uint) error {
 	return nil
 }
 
-func (s *additiveService) GetAdditiveCategoryByID(categoryID uint) (*types.AdditiveCategoryDetailsDTO, error) {
-	category, err := s.repo.GetAdditiveCategoryByID(categoryID)
-	if err != nil {
-		wrappedErr := utils.WrapError("failed to fetch additive category", err)
-		s.logger.Error(wrappedErr)
-		return nil, wrappedErr
-	}
-
-	if category == nil {
-		return nil, fmt.Errorf("additive category with ID %d not found", categoryID)
-	}
-
-	return types.ConvertToAdditiveCategoryDetailsDTO(category), nil
-}
-
 func (s *additiveService) GetAdditives(locale data.LanguageCode, filter *types.AdditiveFilterQuery) ([]types.AdditiveDTO, error) {
 	additives, err := s.repo.GetAdditives(locale, filter)
 	if err != nil {
@@ -163,6 +181,32 @@ func (s *additiveService) GetAdditives(locale data.LanguageCode, filter *types.A
 	}
 
 	return additiveDTOs, nil
+}
+
+func (s *additiveService) GetAdditiveByID(additiveID uint) (*types.AdditiveDetailsDTO, error) {
+	additive, err := s.repo.GetAdditiveWithDetailsByID(additiveID)
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to fetch additive by ID", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+
+	return types.ConvertToAdditiveDetailsDTO(additive), nil
+}
+
+func (s *additiveService) GetTranslatedAdditiveByID(locale data.LanguageCode, additiveID uint) (*types.AdditiveDetailsDTO, error) {
+	additive, err := s.repo.GetTranslatedAdditiveByID(locale, additiveID)
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to fetch translated additive by ID", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+
+	if additive == nil {
+		return nil, fmt.Errorf("additive with ID %d not found", additiveID)
+	}
+
+	return types.ConvertToAdditiveDetailsDTO(additive), nil
 }
 
 func (s *additiveService) GetAdditivesByIDs(additiveIDs []uint) ([]types.AdditiveDTO, error) {
@@ -321,17 +365,6 @@ func (s *additiveService) DeleteAdditive(additiveID uint) error {
 	return nil
 }
 
-func (s *additiveService) GetAdditiveByID(locale data.LanguageCode, additiveID uint) (*types.AdditiveDetailsDTO, error) {
-	additive, err := s.repo.GetAdditiveWithDetailsByID(locale, additiveID)
-	if err != nil {
-		wrappedErr := utils.WrapError("failed to fetch additive by ID", err)
-		s.logger.Error(wrappedErr)
-		return nil, wrappedErr
-	}
-
-	return types.ConvertToAdditiveDetailsDTO(additive), nil
-}
-
 func (s *additiveService) UpsertAdditiveTranslations(additiveID uint, dto *types.AdditiveTranslationsDTO) error {
 	if dto == nil {
 		return fmt.Errorf("translations DTO is nil")
@@ -339,6 +372,20 @@ func (s *additiveService) UpsertAdditiveTranslations(additiveID uint, dto *types
 
 	if err := s.transactionManager.UpsertAdditiveTranslations(additiveID, dto); err != nil {
 		wrappedErr := fmt.Errorf("failed to upsert additive translations: %w", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
+	}
+
+	return nil
+}
+
+func (s *additiveService) UpsertAdditiveCategoryTranslations(additiveCategoryID uint, dto *types.AdditiveCategoryTranslationsDTO) error {
+	if dto == nil {
+		return fmt.Errorf("translations DTO is nil")
+	}
+
+	if err := s.transactionManager.UpsertAdditiveCategoryTranslations(additiveCategoryID, dto); err != nil {
+		wrappedErr := fmt.Errorf("failed to upsert additive category translations: %w", err)
 		s.logger.Error(wrappedErr)
 		return wrappedErr
 	}

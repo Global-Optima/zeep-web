@@ -1,44 +1,43 @@
-package additives
+package product
 
 import (
 	"fmt"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/translations"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
 type TransactionManager interface {
-	UpsertAdditiveTranslations(additiveID uint, dto *types.AdditiveTranslationsDTO) error
-	UpsertAdditiveCategoryTranslations(categoryID uint, dto *types.AdditiveCategoryTranslationsDTO) error
+	UpsertProductTranslations(additiveID uint, dto *types.ProductTranslationsDTO) error
 }
 
 type transactionManager struct {
 	db                  *gorm.DB
-	additiveRepo        AdditiveRepository
+	productRepo         ProductRepository
 	translationsManager translations.TranslationManager
 }
 
 func NewTransactionManager(
 	db *gorm.DB,
-	additiveRepo AdditiveRepository,
+	productRepo ProductRepository,
 	translationsManager translations.TranslationManager,
 ) TransactionManager {
 	return &transactionManager{
 		db:                  db,
-		additiveRepo:        additiveRepo,
+		productRepo:         productRepo,
 		translationsManager: translationsManager,
 	}
 }
 
-func (m *transactionManager) UpsertAdditiveTranslations(additiveID uint, dto *types.AdditiveTranslationsDTO) error {
+func (m *transactionManager) UpsertProductTranslations(additiveID uint, dto *types.ProductTranslationsDTO) error {
 	err := m.db.Transaction(func(tx *gorm.DB) error {
-		repoTx := m.additiveRepo.CloneWithTransaction(tx)
+		repoTx := m.productRepo.CloneWithTransaction(tx)
 
-		var additive data.Additive
-		if err := repoTx.FindRawAdditiveByID(additiveID, &additive); err != nil {
+		var additive data.Product
+		if err := repoTx.FindRawProductByID(additiveID, &additive); err != nil {
 			return fmt.Errorf("failed to load additive: %w", err)
 		}
 
@@ -54,39 +53,8 @@ func (m *transactionManager) UpsertAdditiveTranslations(additiveID uint, dto *ty
 			return fmt.Errorf("failed upserting description translations: %w", err)
 		}
 
-		if err := translationTx.UpdateAdditiveTranslationIDs(additiveID, nameGroupID, descGroupID); err != nil {
+		if err := translationTx.UpdateProductTranslationIDs(additiveID, nameGroupID, descGroupID); err != nil {
 			return fmt.Errorf("failed to update additive with translation group IDs: %w", err)
-		}
-
-		return nil
-	})
-
-	return err
-}
-
-func (m *transactionManager) UpsertAdditiveCategoryTranslations(categoryID uint, dto *types.AdditiveCategoryTranslationsDTO) error {
-	err := m.db.Transaction(func(tx *gorm.DB) error {
-		repoTx := m.additiveRepo.CloneWithTransaction(tx)
-
-		var category data.AdditiveCategory
-		if err := repoTx.FindRawAdditiveCategoryByID(categoryID, &category); err != nil {
-			return fmt.Errorf("failed to load additive category: %w", err)
-		}
-
-		translationTx := m.translationsManager.CloneWithTransaction(tx)
-
-		nameGroupID, err := m.upsertFieldTranslations(translationTx, category.NameTranslationID, dto.Name)
-		if err != nil {
-			return fmt.Errorf("failed upserting name translations: %w", err)
-		}
-
-		descGroupID, err := m.upsertFieldTranslations(translationTx, category.DescriptionTranslationID, dto.Description)
-		if err != nil {
-			return fmt.Errorf("failed upserting description translations: %w", err)
-		}
-
-		if err := translationTx.UpdateAdditiveCategoryTranslationIDs(categoryID, nameGroupID, descGroupID); err != nil {
-			return fmt.Errorf("failed to update additive category with translation group IDs: %w", err)
 		}
 
 		return nil

@@ -28,11 +28,11 @@ type Product struct {
 	RecipeSteps  []RecipeStep     `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
 	ProductSizes []ProductSize    `gorm:"foreignKey:ProductID;constraint:OnDelete:CASCADE"`
 
-	NameTranslationID *uint             `gorm:"index"`
-	NameTranslation   []AppTranslations `gorm:"foreignKey:TranslationID;constraint:OnDelete:CASCADE"`
+	NameTranslationID *uint
+	NameTranslation   []AppTranslations `gorm:"foreignKey:TranslationID;references:NameTranslationID"`
 
-	DescriptionTranslationID *uint             `gorm:"index"`
-	DescriptionTranslation   []AppTranslations `gorm:"foreignKey:TranslationID;constraint:OnDelete:CASCADE"`
+	DescriptionTranslationID *uint
+	DescriptionTranslation   []AppTranslations `gorm:"foreignKey:TranslationID;references:DescriptionTranslationID"`
 }
 
 type Franchisee struct {

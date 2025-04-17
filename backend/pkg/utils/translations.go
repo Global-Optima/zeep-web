@@ -18,16 +18,22 @@ func WithLocalePreloads(locale data.LanguageCode, relations ...string) func(*gor
 
 type LocalizedPreload struct {
 	Relation  string
-	Localized bool               // true = WHERE language_code = ?, false = just preload
-	Nested    []LocalizedPreload // for recursive preloads
+	Localized bool
+	Model     interface{} // NEW – scope WHERE to correct table
+	Nested    []LocalizedPreload
 }
 
-func ApplyLocalizedPreloads(db *gorm.DB, locale data.LanguageCode, preloads []LocalizedPreload) *gorm.DB {
+func ApplyLocalizedPreloads(db *gorm.DB, locale data.LanguageCode,
+	preloads []LocalizedPreload) *gorm.DB {
 	for _, p := range preloads {
 		if len(p.Nested) == 0 {
 			if p.Localized {
+				if p.Model == nil {
+					panic("missing Model for localized preload: " + p.Relation)
+				}
 				db = db.Preload(p.Relation, func(d *gorm.DB) *gorm.DB {
-					return d.Where("language_code = ?", locale)
+					return d.Model(p.Model).
+						Where("language_code = ?", locale)
 				})
 			} else {
 				db = db.Preload(p.Relation)
@@ -39,4 +45,12 @@ func ApplyLocalizedPreloads(db *gorm.DB, locale data.LanguageCode, preloads []Lo
 		}
 	}
 	return db
+}
+
+func Translation(rel string) LocalizedPreload {
+	return LocalizedPreload{
+		Relation:  rel,
+		Localized: true,
+		Model:     &data.AppTranslations{},
+	}
 }

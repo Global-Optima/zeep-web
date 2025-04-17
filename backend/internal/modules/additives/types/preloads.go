@@ -3,17 +3,31 @@ package types
 import "github.com/Global-Optima/zeep-web/backend/pkg/utils"
 
 var AdditivePreloadMap = []utils.LocalizedPreload{
-	{Relation: "NameTranslation", Localized: true},
-	{Relation: "DescriptionTranslation", Localized: true},
+	utils.Translation("NameTranslation"),
+	utils.Translation("DescriptionTranslation"),
+
 	{Relation: "Category", Localized: false, Nested: []utils.LocalizedPreload{
-		{Relation: "NameTranslation", Localized: true},
-		{Relation: "DescriptionTranslation", Localized: true},
+		utils.Translation("NameTranslation"),
+		utils.Translation("DescriptionTranslation"),
 	}},
-	{Relation: "Unit", Localized: false},
-	{Relation: "Ingredients.Ingredient.Unit", Localized: false},
-	{Relation: "Ingredients.Ingredient.IngredientCategory", Localized: false, Nested: []utils.LocalizedPreload{
-		{Relation: "NameTranslation", Localized: true},
-		{Relation: "DescriptionTranslation", Localized: true},
+
+	{Relation: "Unit"},
+
+	{Relation: "Ingredients.Ingredient.Unit"},
+	{Relation: "Ingredients.Ingredient.IngredientCategory", Nested: []utils.LocalizedPreload{
+		utils.Translation("NameTranslation"),
+		utils.Translation("DescriptionTranslation"),
 	}},
-	{Relation: "AdditiveProvisions.Provision.Unit", Localized: false},
+
+	{Relation: "AdditiveProvisions.Provision.Unit"},
+}
+
+var AdditiveCategoryPreloadMap = []utils.LocalizedPreload{
+	utils.Translation("NameTranslation"),
+	utils.Translation("DescriptionTranslation"),
+
+	{Relation: "Additives", Localized: false, Nested: []utils.LocalizedPreload{
+		utils.Translation("NameTranslation"),
+		utils.Translation("DescriptionTranslation"),
+	}},
 }

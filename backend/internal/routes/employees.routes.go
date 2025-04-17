@@ -182,11 +182,12 @@ func (r *Router) RegisterAdditivesRoutes(handler *additives.AdditiveHandler, add
 
 		additiveCategories := router.Group("/categories")
 		{
-			additiveCategories.GET("", handler.GetAdditiveCategories)
-			additiveCategories.GET("/:id", handler.GetAdditiveCategoryByID)
+			additiveCategories.GET("", middleware.LocaleMiddleware(), handler.GetAdditiveCategories)
+			additiveCategories.GET("/:id", middleware.LocaleMiddleware(), handler.GetAdditiveCategoryByID)
 			additiveCategories.POST("", middleware.EmployeeRoleMiddleware(), handler.CreateAdditiveCategory)
 			additiveCategories.PUT("/:id", middleware.EmployeeRoleMiddleware(), handler.UpdateAdditiveCategory)
 			additiveCategories.DELETE("/:id", middleware.EmployeeRoleMiddleware(), handler.DeleteAdditiveCategory)
+			additiveCategories.POST(":id/translations", middleware.EmployeeRoleMiddleware(), handler.CreateOrUpdateAdditiveCategoryTranslation)
 		}
 	}
 }

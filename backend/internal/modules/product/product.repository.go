@@ -28,6 +28,7 @@ type ProductRepository interface {
 	GetProductSizeDetailsByID(productSizeID uint) (*data.ProductSize, error)
 	UpdateProductSizeWithAssociations(id uint, updateModels *types.ProductSizeModels) error
 	DeleteProductSize(productID uint) error
+	FindRawProductByID(productID uint, product *data.Product) error
 
 	CloneWithTransaction(tx *gorm.DB) ProductRepository
 }
@@ -557,6 +558,20 @@ func checkProductSizeInActiveOrders(db *gorm.DB, productSizeID uint) error {
 
 	if exists {
 		return types.ErrProductSizeIsInUse // Custom error indicating the ProductSize is in use
+	}
+
+	return nil
+}
+
+func (r *productRepository) FindRawProductByID(productID uint, product *data.Product) error {
+	err := r.db.
+		Where("id = ?", productID).
+		First(product).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return types.ErrProductNotFound
+		}
+		return err
 	}
 
 	return nil

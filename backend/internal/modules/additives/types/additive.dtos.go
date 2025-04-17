@@ -4,6 +4,7 @@ import (
 	"mime/multipart"
 
 	provisionsTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/types"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/translations"
 
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 	unitTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/units/types"
@@ -130,13 +131,12 @@ type CreateAdditiveDTO struct {
 	Image              *multipart.FileHeader
 }
 
-type FieldLocale struct {
-	En string `json:"en" binding:"omitempty"`
-	Ru string `json:"ru" binding:"omitempty"`
-	Kk string `json:"kk" binding:"omitempty"`
+type AdditiveTranslationsDTO struct {
+	Name        translations.FieldLocale `json:"name" binding:"omitempty"`
+	Description translations.FieldLocale `json:"description" binding:"omitempty"`
 }
 
-type AdditiveTranslationsDTO struct {
-	Name        FieldLocale `json:"name" binding:"omitempty"`
-	Description FieldLocale `json:"description" binding:"omitempty"`
+type AdditiveCategoryTranslationsDTO struct {
+	Name        translations.FieldLocale `json:"name" binding:"omitempty"`
+	Description translations.FieldLocale `json:"description" binding:"omitempty"`
 }

@@ -37,7 +37,9 @@ func (h *AdditiveHandler) GetAdditiveCategories(c *gin.Context) {
 		return
 	}
 
-	additives, err := h.service.GetAdditiveCategories(&filter)
+	locale := contexts.GetLocaleFromCtx(c)
+
+	additives, err := h.service.GetAdditiveCategories(locale, &filter)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500AdditiveCategoryGet)
 		return
@@ -92,7 +94,7 @@ func (h *AdditiveHandler) UpdateAdditiveCategory(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.UpdateAdditiveCategory(uint(categoryID), &dto); err != nil {
+	if err := h.service.UpdateAdditiveCategory(categoryID, &dto); err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500AdditiveCategoryUpdate)
 		return
 	}
@@ -155,7 +157,9 @@ func (h *AdditiveHandler) GetAdditiveCategoryByID(c *gin.Context) {
 		return
 	}
 
-	category, err := h.service.GetAdditiveCategoryByID(categoryID)
+	locale := contexts.GetLocaleFromCtx(c)
+
+	category, err := h.service.GetTranlsatedAdditiveCategoryByID(locale, categoryID)
 	if err != nil {
 		switch {
 		case errors.Is(err, types.ErrAdditiveCategoryNotFound):
@@ -292,9 +296,7 @@ func (h *AdditiveHandler) DeleteAdditive(c *gin.Context) {
 		return
 	}
 
-	locale := contexts.GetLocaleFromCtx(c)
-
-	additive, err := h.service.GetAdditiveByID(locale, additiveID)
+	additive, err := h.service.GetAdditiveByID(additiveID)
 	if err != nil {
 		if errors.Is(err, types.ErrAdditiveNotFound) {
 			localization.SendLocalizedResponseWithKey(c, types.Response404Additive)
@@ -336,9 +338,8 @@ func (h *AdditiveHandler) GetAdditiveByID(c *gin.Context) {
 	}
 
 	locale := contexts.GetLocaleFromCtx(c)
-	logrus.Info(locale)
 
-	additive, err := h.service.GetAdditiveByID(locale, additiveID)
+	additive, err := h.service.GetTranslatedAdditiveByID(locale, additiveID)
 	if err != nil {
 		switch {
 		case errors.Is(err, types.ErrAdditiveNotFound):
@@ -369,6 +370,31 @@ func (h *AdditiveHandler) CreateOrUpdateAdditiveTranslation(c *gin.Context) {
 	if err := h.service.UpsertAdditiveTranslations(additiveID, &dto); err != nil {
 		if errors.Is(err, types.ErrAdditiveNotFound) {
 			localization.SendLocalizedResponseWithKey(c, types.Response404Additive)
+			return
+		}
+		localization.SendLocalizedResponseWithKey(c, types.Response500AdditiveTranslationsCreate)
+		return
+	}
+
+	utils.SendSuccessCreatedResponse(c, "successfully created translations")
+}
+
+func (h *AdditiveHandler) CreateOrUpdateAdditiveCategoryTranslation(c *gin.Context) {
+	categoryID, err := utils.ParseParam(c, "id")
+	if err != nil {
+		localization.SendLocalizedResponseWithKey(c, types.Response400AdditiveCategory)
+		return
+	}
+
+	var dto types.AdditiveCategoryTranslationsDTO
+	if err := c.ShouldBindJSON(&dto); err != nil {
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
+		return
+	}
+
+	if err := h.service.UpsertAdditiveCategoryTranslations(categoryID, &dto); err != nil {
+		if errors.Is(err, types.ErrAdditiveCategoryNotFound) {
+			localization.SendLocalizedResponseWithKey(c, types.Response404AdditiveCategory)
 			return
 		}
 		localization.SendLocalizedResponseWithKey(c, types.Response500AdditiveTranslationsCreate)
