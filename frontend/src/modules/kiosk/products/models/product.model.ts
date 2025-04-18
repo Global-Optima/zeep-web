@@ -179,3 +179,19 @@ export interface TechnicalMapDTO {
 export interface ProductSizeTechnicalMap {
 	ingredients: TechnicalMapDTO[]
 }
+
+export interface TranslationLocalizedField {
+	en?: string
+	ru?: string
+	kk?: string
+}
+
+export interface ProductTranslationsDTO {
+	name?: TranslationLocalizedField
+	description?: TranslationLocalizedField
+}
+
+export interface ProductCategoryTranslationsDTO {
+	name?: TranslationLocalizedField
+	description?: TranslationLocalizedField
+}

@@ -1,6 +1,12 @@
 import { apiClient } from '@/core/config/axios-instance.config'
 import { buildRequestFilter } from '@/core/utils/request-filters.utils'
-import type { CreateUnitDTO, UnitDTO, UnitsFilterDTO, UpdateUnitDTO } from '../models/units.model'
+import type {
+	CreateUnitDTO,
+	UnitDTO,
+	UnitsFilterDTO,
+	UnitTranslationsDTO,
+	UpdateUnitDTO,
+} from '../models/units.model'
 import type { PaginatedResponse } from './../../../../core/utils/pagination.utils'
 
 class UnitsService {
@@ -66,6 +72,26 @@ class UnitsService {
 			await apiClient.delete<void>(`/units/${id}`)
 		} catch (error) {
 			console.error(`Failed to delete unit with ID ${id}: `, error)
+			throw error
+		}
+	}
+
+	async upsertUnitTranslations(id: number, data: UnitTranslationsDTO) {
+		try {
+			const response = await apiClient.post<void>(`/units/${id}/translations`, data)
+			return response.data
+		} catch (error) {
+			console.error('Failed to upsert unit translations: ', error)
+			throw error
+		}
+	}
+
+	async getUnitTranslations(id: number) {
+		try {
+			const response = await apiClient.get<UnitTranslationsDTO>(`/units/${id}/translations`)
+			return response.data
+		} catch (error) {
+			console.error('Failed to get unit translations: ', error)
 			throw error
 		}
 	}

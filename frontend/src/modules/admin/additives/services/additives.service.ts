@@ -5,10 +5,12 @@ import { buildFormData } from '@/core/utils/request-form-data-builder.utils'
 import type {
 	AdditiveCategoriesFilterQuery,
 	AdditiveCategoryDetailsDTO,
+	AdditiveCategoryTranslationsDTO,
 	AdditiveDetailsDTO,
 	AdditiveDTO,
 	AdditiveFilterQuery,
 	AdditiveTechnicalMap,
+	AdditiveTranslationsDTO,
 	CreateAdditiveCategoryDTO,
 	CreateAdditiveDTO,
 	UpdateAdditiveCategoryDTO,
@@ -95,6 +97,48 @@ class AdditiveService {
 	// Delete an additive category by ID
 	async deleteAdditiveCategory(id: number) {
 		await apiClient.delete(`/additives/categories/${id}`)
+	}
+
+	async upsertAdditiveTranslations(id: number, data: AdditiveTranslationsDTO) {
+		try {
+			const response = await apiClient.post<void>(`/additives/${id}/translations`, data)
+			return response.data
+		} catch (error) {
+			console.error('Failed to upsert additive translations: ', error)
+			throw error
+		}
+	}
+
+	async getAdditiveTranslations(id: number) {
+		try {
+			const response = await apiClient.get<AdditiveTranslationsDTO>(`/additives/${id}/translations`)
+			return response.data
+		} catch (error) {
+			console.error('Failed to get additive translations: ', error)
+			throw error
+		}
+	}
+
+	async upsertAdditiveCategoryTranslations(id: number, data: AdditiveCategoryTranslationsDTO) {
+		try {
+			const response = await apiClient.post<void>(`/additives/categories/${id}/translations`, data)
+			return response.data
+		} catch (error) {
+			console.error('Failed to upsert additive categories translations: ', error)
+			throw error
+		}
+	}
+
+	async getAdditiveCategoryTranslations(id: number) {
+		try {
+			const response = await apiClient.get<AdditiveCategoryTranslationsDTO>(
+				`/additives/categories/${id}/translations`,
+			)
+			return response.data
+		} catch (error) {
+			console.error('Failed to get additive categories translations: ', error)
+			throw error
+		}
 	}
 }
 

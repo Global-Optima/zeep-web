@@ -8,10 +8,12 @@ import type {
 	CreateProductSizeDTO,
 	ProductCategoriesFilterDTO,
 	ProductCategoryDTO,
+	ProductCategoryTranslationsDTO,
 	ProductDetailsDTO,
 	ProductSizeDTO,
 	ProductSizeDetailsDTO,
 	ProductSizeTechnicalMap,
+	ProductTranslationsDTO,
 	ProductsFilterDTO,
 	UpdateProductCategoryDTO,
 	UpdateProductDTO,
@@ -160,6 +162,50 @@ class ProductsService {
 
 	async deleteProductCategory(id: number) {
 		return (await apiClient.delete<void>(`/product-categories/${id}`)).data
+	}
+
+	async upsertProductTranslations(productId: number, data: ProductTranslationsDTO) {
+		try {
+			const response = await apiClient.post<void>(`/products/${productId}/translations`, data)
+			return response.data
+		} catch (error) {
+			console.error('Failed to upsert product translations: ', error)
+			throw error
+		}
+	}
+
+	async getProductTranslations(productId: number) {
+		try {
+			const response = await apiClient.get<ProductTranslationsDTO>(
+				`/products/${productId}/translations`,
+			)
+			return response.data
+		} catch (error) {
+			console.error('Failed to get product translations: ', error)
+			throw error
+		}
+	}
+
+	async upsertProductCategoryTranslations(id: number, data: ProductCategoryTranslationsDTO) {
+		try {
+			const response = await apiClient.post<void>(`/product-categories/${id}/translations`, data)
+			return response.data
+		} catch (error) {
+			console.error('Failed to upsert product category translations: ', error)
+			throw error
+		}
+	}
+
+	async getProductCategoryTranslations(id: number) {
+		try {
+			const response = await apiClient.get<ProductCategoryTranslationsDTO>(
+				`/product-categories/${id}/translations`,
+			)
+			return response.data
+		} catch (error) {
+			console.error('Failed to get product category translations: ', error)
+			throw error
+		}
 	}
 }
 

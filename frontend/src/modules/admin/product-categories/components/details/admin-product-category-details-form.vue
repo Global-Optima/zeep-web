@@ -17,6 +17,10 @@ import {
 } from '@/core/components/ui/select'
 import { MACHINE_CATEGORY_OPTIONS, MachineCategory, type ProductCategoryDTO, type UpdateProductCategoryDTO } from '@/modules/kiosk/products/models/product.model'
 import { ChevronLeft } from 'lucide-vue-next'
+import { defineAsyncComponent } from 'vue'
+
+const AdminProductCategoriesTranslationsDialog = defineAsyncComponent(() =>
+  import('@/modules/admin/product-categories/components/admin-product-categories-translations-dialog.vue'))
 
 const { productCategory, readonly = false } = defineProps<{
   productCategory: ProductCategoryDTO
@@ -77,6 +81,7 @@ const onCancel = () => {
 				v-if="!readonly"
 				class="hidden md:flex items-center gap-2 md:ml-auto"
 			>
+				<AdminProductCategoriesTranslationsDialog :category-id="productCategory.id" />
 				<Button
 					variant="outline"
 					type="button"

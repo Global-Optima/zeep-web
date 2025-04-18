@@ -12,6 +12,10 @@ import { Label } from '@/core/components/ui/label'
 import Switch from '@/core/components/ui/switch/Switch.vue'
 import type { AdditiveCategoryDetailsDTO, UpdateAdditiveCategoryDTO } from '@/modules/admin/additives/models/additives.model'
 import { ChevronLeft } from 'lucide-vue-next'
+import { defineAsyncComponent } from 'vue'
+
+const AdminAdditiveCategoriesTranslationsDialog = defineAsyncComponent(() =>
+  import('@/modules/admin/additive-categories/components/admin-additive-categories-translations-dialog.vue'))
 
 // Props
 const props = defineProps<{
@@ -73,6 +77,7 @@ const onCancel = () => {
 				class="hidden md:flex items-center gap-2 md:ml-auto"
 				v-if="!readonly"
 			>
+				<AdminAdditiveCategoriesTranslationsDialog :category-id="category.id" />
 				<Button
 					variant="outline"
 					type="button"

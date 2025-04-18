@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { AppTranslation, type LocaleTypes } from './locale.config'
 
 const apiUrl = `${import.meta.env.VITE_API_URL || 'http://example:8080'}/api/v1`
 
@@ -17,6 +18,12 @@ apiClient.interceptors.request.use(
 		if (token) {
 			config.headers['Authorization'] = `Bearer ${token}`
 		}
+
+		const persistedLocale = localStorage.getItem('ZEEP_LOCALE') as LocaleTypes
+		if (persistedLocale && AppTranslation.isLocaleSupported(persistedLocale)) {
+			config.headers['Accept-Language'] = persistedLocale
+		}
+
 		return config
 	},
 	error => {

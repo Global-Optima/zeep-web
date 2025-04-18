@@ -7,7 +7,7 @@ import { Input } from '@/core/components/ui/input'
 import { Textarea } from '@/core/components/ui/textarea'
 import type { ProductCategoryDTO, ProductDetailsDTO, UpdateProductDTO } from '@/modules/kiosk/products/models/product.model'
 import { toTypedSchema } from '@vee-validate/zod'
-import {Camera, ChevronLeft, Video, X} from 'lucide-vue-next'
+import { Camera, ChevronLeft, Video, X } from 'lucide-vue-next'
 import { useForm } from 'vee-validate'
 import { defineAsyncComponent, ref, useTemplateRef } from 'vue'
 import * as z from 'zod'
@@ -15,6 +15,9 @@ import * as z from 'zod'
 // Lazy-load the dialog component
 const AdminSelectProductCategory = defineAsyncComponent(() =>
   import('@/modules/admin/product-categories/components/admin-select-product-category.vue')
+);
+const AdminProductsTranslationsDialog = defineAsyncComponent(() =>
+  import('@/modules/admin/products/components/admin-products-translations-dialog.vue')
 );
 
 const {productDetails, readonly, isSubmitting} = defineProps<{
@@ -162,10 +165,13 @@ const triggerVideoInput = () => videoInputRef.value?.click();
 			<h1 class="flex-1 sm:grow-0 font-semibold text-xl tracking-tight whitespace-nowrap shrink-0">
 				{{ productDetails.name }}
 			</h1>
+
 			<div
 				class="hidden md:flex items-center gap-2 md:ml-auto"
 				v-if="!readonly"
 			>
+				<AdminProductsTranslationsDialog :productId="productDetails.id" />
+
 				<Button
 					variant="outline"
 					type="button"

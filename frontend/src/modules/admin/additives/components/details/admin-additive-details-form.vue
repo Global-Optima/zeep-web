@@ -36,6 +36,8 @@ const AdminSelectUnit = defineAsyncComponent(() =>
   import('@/modules/admin/units/components/admin-select-unit.vue'))
 const AdminSelectProvisionDialog = defineAsyncComponent(() =>
   import("@/modules/admin/provisions/components/admin-select-provision-dialog.vue"))
+const AdminAdditivesTranslationsDialog = defineAsyncComponent(() =>
+  import('@/modules/admin/additives/components/admin-additives-translations-dialog.vue'))
 
 interface SelectedIngredientsTypesDTO extends SelectedIngredientDTO {
   name: string
@@ -285,6 +287,8 @@ const onPasteTechMapClick = async () => {
 				v-if="!readonly"
 				class="hidden md:flex items-center gap-2 md:ml-auto"
 			>
+				<AdminAdditivesTranslationsDialog :additiveId="additive.id" />
+
 				<Button
 					variant="outline"
 					type="button"
