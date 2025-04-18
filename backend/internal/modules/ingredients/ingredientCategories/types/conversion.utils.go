@@ -9,8 +9,8 @@ func ConvertToIngredientCategoryResponse(category *data.IngredientCategory) *Ing
 	return &IngredientCategoryResponse{
 		ID:                     category.ID,
 		Name:                   category.Name,
-		NameTranslation:        utils.FirstTranslation(category.NameTranslation),
+		NameTranslation:        utils.TranslationOrDefault(category.Name, category.NameTranslation),
 		Description:            category.Description,
-		DescriptionTranslation: utils.FirstTranslation(category.DescriptionTranslation),
+		DescriptionTranslation: utils.TranslationOrDefault(category.Description, category.DescriptionTranslation),
 	}
 }

@@ -9,9 +9,9 @@ func MapCategoryToDTO(category data.ProductCategory) *ProductCategoryDTO {
 	return &ProductCategoryDTO{
 		ID:                    category.ID,
 		Name:                  category.Name,
-		TranslatedName:        utils.FirstTranslation(category.NameTranslation),
+		TranslatedName:        utils.TranslationOrDefault(category.Name, category.NameTranslation),
 		Description:           category.Description,
-		TranslatedDescription: utils.FirstTranslation(category.DescriptionTranslation),
+		TranslatedDescription: utils.TranslationOrDefault(category.Description, category.DescriptionTranslation),
 		MachineCategory:       category.MachineCategory,
 	}
 }

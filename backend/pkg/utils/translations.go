@@ -5,11 +5,11 @@ import (
 	"gorm.io/gorm"
 )
 
-func FirstTranslation(tr []data.AppTranslations) string {
-	if len(tr) > 0 {
+func TranslationOrDefault(orig string, tr []data.AppTranslations) string {
+	if len(tr) > 0 && tr[0].TranslatedText != "" {
 		return tr[0].TranslatedText
 	}
-	return ""
+	return orig
 }
 
 func WithLocalePreloads(locale data.LanguageCode, relations ...string) func(*gorm.DB) *gorm.DB {

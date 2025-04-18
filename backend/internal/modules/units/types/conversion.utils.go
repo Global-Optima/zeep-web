@@ -9,7 +9,7 @@ func ToUnitResponse(unit data.Unit) UnitsDTO {
 	return UnitsDTO{
 		ID:               unit.ID,
 		Name:             unit.Name,
-		TranslatedName:   utils.FirstTranslation(unit.NameTranslation),
+		TranslatedName:   utils.TranslationOrDefault(unit.Name, unit.NameTranslation),
 		ConversionFactor: unit.ConversionFactor,
 	}
 }

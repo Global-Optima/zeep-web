@@ -99,7 +99,7 @@ func ConvertToIngredientResponseDTO(ingredient *data.Ingredient) *IngredientDTO 
 	return &IngredientDTO{
 		ID:               ingredient.ID,
 		Name:             ingredient.Name,
-		NameTranslation:  utils.FirstTranslation(ingredient.NameTranslation),
+		NameTranslation:  utils.TranslationOrDefault(ingredient.Name, ingredient.NameTranslation),
 		Calories:         ingredient.Calories,
 		Fat:              ingredient.Fat,
 		Carbs:            ingredient.Carbs,
