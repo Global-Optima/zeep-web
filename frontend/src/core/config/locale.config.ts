@@ -28,7 +28,7 @@ export const AppTranslation = {
 
 	async switchLanguage(newLocale: LocaleTypes) {
 		AppTranslation.currentLocale = newLocale
-		localStorage.setItem('user-locale', newLocale)
+		localStorage.setItem('ZEEP_LOCALE', newLocale)
 	},
 
 	isLocaleSupported(locale: LocaleTypes) {
@@ -44,7 +44,7 @@ export const AppTranslation = {
 	},
 
 	getPersistedLocale() {
-		const persistedLocale = localStorage.getItem('user-locale') as LocaleTypes
+		const persistedLocale = localStorage.getItem('ZEEP_LOCALE') as LocaleTypes
 
 		if (persistedLocale && AppTranslation.isLocaleSupported(persistedLocale)) {
 			return persistedLocale
