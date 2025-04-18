@@ -2,8 +2,8 @@ package categories
 
 import (
 	"errors"
-	"strconv"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -34,7 +34,9 @@ func (h *CategoryHandler) GetAllCategories(c *gin.Context) {
 		return
 	}
 
-	categories, err := h.service.GetCategories(&filter)
+	locale := contexts.GetLocaleFromCtx(c)
+
+	categories, err := h.service.GetCategories(locale, &filter)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500ProductCategory)
 		return
@@ -44,13 +46,15 @@ func (h *CategoryHandler) GetAllCategories(c *gin.Context) {
 }
 
 func (h *CategoryHandler) GetCategoryByID(c *gin.Context) {
-	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	id, err := utils.ParseParam(c, "id")
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400ProductCategory)
 		return
 	}
 
-	category, err := h.service.GetCategoryByID(uint(id))
+	locale := contexts.GetLocaleFromCtx(c)
+
+	category, err := h.service.GetTranslatedCategoryByID(locale, id)
 	if err != nil {
 		if errors.Is(err, types.ErrCategoryNotFound) {
 			localization.SendLocalizedResponseWithKey(c, types.Response404ProductCategory)
@@ -92,7 +96,7 @@ func (h *CategoryHandler) CreateCategory(c *gin.Context) {
 }
 
 func (h *CategoryHandler) UpdateCategory(c *gin.Context) {
-	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	id, err := utils.ParseParam(c, "id")
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400ProductCategory)
 		return
@@ -104,7 +108,7 @@ func (h *CategoryHandler) UpdateCategory(c *gin.Context) {
 		return
 	}
 
-	existingCategory, err := h.service.GetCategoryByID(uint(id))
+	existingCategory, err := h.service.GetCategoryByID(id)
 	if err != nil {
 		if errors.Is(err, types.ErrCategoryNotFound) {
 			localization.SendLocalizedResponseWithKey(c, types.Response404ProductCategory)
@@ -115,7 +119,7 @@ func (h *CategoryHandler) UpdateCategory(c *gin.Context) {
 		return
 	}
 
-	err = h.service.UpdateCategory(uint(id), &dto)
+	err = h.service.UpdateCategory(id, &dto)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500ProductCategory)
 		return
@@ -137,13 +141,13 @@ func (h *CategoryHandler) UpdateCategory(c *gin.Context) {
 }
 
 func (h *CategoryHandler) DeleteCategory(c *gin.Context) {
-	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	id, err := utils.ParseParam(c, "id")
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400ProductCategory)
 		return
 	}
 
-	existingCategory, err := h.service.GetCategoryByID(uint(id))
+	existingCategory, err := h.service.GetCategoryByID(id)
 	if err != nil {
 		if errors.Is(err, types.ErrCategoryNotFound) {
 			localization.SendLocalizedResponseWithKey(c, types.Response404ProductCategory)
@@ -153,7 +157,7 @@ func (h *CategoryHandler) DeleteCategory(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.DeleteCategory(uint(id)); err != nil {
+	if err := h.service.DeleteCategory(id); err != nil {
 		if errors.Is(err, types.ErrCategoryIsInUse) {
 			localization.SendLocalizedResponseWithKey(c, types.Response409ProductCategoryDeleteInUse)
 			return
@@ -174,4 +178,27 @@ func (h *CategoryHandler) DeleteCategory(c *gin.Context) {
 	}()
 
 	localization.SendLocalizedResponseWithKey(c, types.Response200ProductCategoryDelete)
+}
+
+func (h *CategoryHandler) CreateOrUpdateCategoryTranslation(c *gin.Context) {
+	id, err := utils.ParseParam(c, "id")
+	if err != nil {
+		localization.SendLocalizedResponseWithKey(c, types.Response400ProductCategory)
+		return
+	}
+	var dto types.ProductCategoryTranslationsDTO
+	if err := c.ShouldBindJSON(&dto); err != nil {
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
+		return
+	}
+	if err := h.service.UpsertProductCategoryTranslations(id, &dto); err != nil {
+		if errors.Is(err, types.ErrCategoryNotFound) {
+			localization.SendLocalizedResponseWithKey(c, types.Response404ProductCategory)
+			return
+		}
+		localization.SendLocalizedResponseWithKey(c, types.Response500ProductCategoryTranslationsUpdate)
+		return
+	}
+
+	localization.SendLocalizedResponseWithKey(c, types.Response200ProductCategoryTranslationsUpdate)
 }

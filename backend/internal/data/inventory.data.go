@@ -128,6 +128,9 @@ type Unit struct {
 	Additives        []Additive      `gorm:"foreignKey:UnitID;constraint:OnDelete:CASCADE"`
 	ProductSizes     []ProductSize   `gorm:"foreignKey:UnitID;constraint:OnDelete:CASCADE"`
 	Ingredients      []Ingredient    `gorm:"foreignKey:UnitID;constraint:OnDelete:CASCADE"`
+
+	NameTranslationID *uint
+	NameTranslation   []AppTranslations `gorm:"foreignKey:TranslationID;references:NameTranslationID"`
 }
 
 type SupplierMaterial struct {

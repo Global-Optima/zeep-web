@@ -20,9 +20,11 @@ import (
 )
 
 type StoreProductService interface {
-	GetStoreProductCategories(storeID uint) ([]categoriesTypes.ProductCategoryDTO, error)
+	GetStoreProductCategories(locale data.LanguageCode, storeID uint) ([]categoriesTypes.ProductCategoryDTO, error)
 	GetStoreProductById(storeProductID uint, filter *contexts.StoreContextFilter) (*types.StoreProductDetailsDTO, error)
-	GetStoreProducts(storeID uint, filter *types.StoreProductsFilterDTO) ([]types.StoreProductDetailsDTO, error)
+	GetTranslatedStoreProductById(locale data.LanguageCode, storeProductID uint, filter *contexts.StoreContextFilter) (*types.StoreProductDetailsDTO, error)
+	GetStoreProducts(locale data.LanguageCode, storeID uint, filter *types.StoreProductsFilterDTO) ([]types.StoreProductDetailsDTO, error)
+
 	GetStoreProductsByStoreProductIDs(storeID uint, storeProductIDs []uint) ([]types.StoreProductDetailsDTO, error)
 	GetAvailableProductsToAdd(storeID uint, filter *productTypes.ProductsFilterDto) ([]productTypes.ProductDetailsDTO, error)
 	GetRecommendedStoreProducts(storeID uint, excludedStoreProductIDs []uint) ([]types.StoreProductDetailsDTO, error)
@@ -69,8 +71,8 @@ func NewStoreProductService(
 	}
 }
 
-func (s *storeProductService) GetStoreProductCategories(storeID uint) ([]categoriesTypes.ProductCategoryDTO, error) {
-	categories, err := s.repo.GetStoreProductCategories(storeID)
+func (s *storeProductService) GetStoreProductCategories(locale data.LanguageCode, storeID uint) ([]categoriesTypes.ProductCategoryDTO, error) {
+	categories, err := s.repo.GetStoreProductCategories(locale, storeID)
 	if err != nil {
 		wrappedErr := fmt.Errorf("error getting store product categories: %w", err)
 		s.logger.Errorw(wrappedErr.Error())
@@ -97,8 +99,21 @@ func (s *storeProductService) GetStoreProductById(storeProductID uint, filter *c
 	return &dto, nil
 }
 
-func (s *storeProductService) GetStoreProducts(storeID uint, filter *types.StoreProductsFilterDTO) ([]types.StoreProductDetailsDTO, error) {
-	storeProducts, err := s.repo.GetStoreProducts(storeID, filter)
+func (s *storeProductService) GetTranslatedStoreProductById(locale data.LanguageCode, storeProductID uint, filter *contexts.StoreContextFilter) (*types.StoreProductDetailsDTO, error) {
+	storeProduct, err := s.repo.GetTranslatedStoreProductById(locale, storeProductID, filter)
+	if err != nil {
+		wrappedErr := utils.WrapError("failed to get store product by ID", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+
+	dto := types.MapToStoreProductDetailsDTO(storeProduct)
+
+	return &dto, nil
+}
+
+func (s *storeProductService) GetStoreProducts(locale data.LanguageCode, storeID uint, filter *types.StoreProductsFilterDTO) ([]types.StoreProductDetailsDTO, error) {
+	storeProducts, err := s.repo.GetStoreProducts(locale, storeID, filter)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to get store products", err)
 		s.logger.Error(wrappedErr)

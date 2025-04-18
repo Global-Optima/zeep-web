@@ -2,7 +2,6 @@ package storeProducts
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
@@ -45,7 +44,7 @@ func NewStoreProductHandler(
 }
 
 func (h *StoreProductHandler) GetStoreProduct(c *gin.Context) {
-	storeProductID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	storeProductID, err := utils.ParseParam(c, "id")
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400StoreProduct)
 		return
@@ -57,7 +56,9 @@ func (h *StoreProductHandler) GetStoreProduct(c *gin.Context) {
 		return
 	}
 
-	productDetails, err := h.service.GetStoreProductById(uint(storeProductID), filter)
+	locale := contexts.GetLocaleFromCtx(c)
+
+	productDetails, err := h.service.GetTranslatedStoreProductById(locale, storeProductID, filter)
 	if err != nil {
 		switch {
 		case errors.Is(err, types.ErrStoreProductNotFound):
@@ -112,7 +113,9 @@ func (h *StoreProductHandler) GetStoreProductCategories(c *gin.Context) {
 		return
 	}
 
-	categories, err := h.service.GetStoreProductCategories(storeID)
+	locale := contexts.GetLocaleFromCtx(c)
+
+	categories, err := h.service.GetStoreProductCategories(locale, storeID)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500StoreProduct)
 		return
@@ -140,7 +143,9 @@ func (h *StoreProductHandler) GetStoreProducts(c *gin.Context) {
 		return
 	}
 
-	productDetails, err := h.service.GetStoreProducts(storeID, &filter)
+	locale := contexts.GetLocaleFromCtx(c)
+
+	productDetails, err := h.service.GetStoreProducts(locale, storeID, &filter)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500StoreProduct)
 		return
@@ -188,13 +193,13 @@ func (h *StoreProductHandler) GetStoreProductSizeByID(c *gin.Context) {
 		return
 	}
 
-	storeProductSizeID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	storeProductSizeID, err := utils.ParseParam(c, "id")
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400StoreProduct)
 		return
 	}
 
-	storeProductSize, err := h.service.GetStoreProductSizeByID(storeID, uint(storeProductSizeID))
+	storeProductSize, err := h.service.GetStoreProductSizeByID(storeID, storeProductSizeID)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500StoreProduct)
 		return
@@ -306,7 +311,7 @@ func (h *StoreProductHandler) CreateMultipleStoreProducts(c *gin.Context) {
 func (h *StoreProductHandler) UpdateStoreProduct(c *gin.Context) {
 	var dto types.UpdateStoreProductDTO
 
-	storeProductID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	storeProductID, err := utils.ParseParam(c, "id")
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400StoreProduct)
 		return
@@ -323,7 +328,7 @@ func (h *StoreProductHandler) UpdateStoreProduct(c *gin.Context) {
 		return
 	}
 
-	existingProduct, err := h.service.GetStoreProductById(uint(storeProductID), &contexts.StoreContextFilter{StoreID: &storeID})
+	existingProduct, err := h.service.GetStoreProductById(storeProductID, &contexts.StoreContextFilter{StoreID: &storeID})
 	if err != nil {
 		if errors.Is(err, types.ErrStoreProductNotFound) {
 			localization.SendLocalizedResponseWithKey(c, types.Response404StoreProduct)
@@ -333,7 +338,7 @@ func (h *StoreProductHandler) UpdateStoreProduct(c *gin.Context) {
 		return
 	}
 
-	err = h.service.UpdateStoreProduct(storeID, uint(storeProductID), &dto)
+	err = h.service.UpdateStoreProduct(storeID, storeProductID, &dto)
 	if err != nil {
 		if errors.Is(err, types.ErrStoreProductSizeIsInUse) {
 			localization.SendLocalizedResponseWithKey(c, types.Response409StoreProductInUseUpdate)
@@ -344,7 +349,7 @@ func (h *StoreProductHandler) UpdateStoreProduct(c *gin.Context) {
 	}
 	action := types.UpdateStoreProductAuditFactory(
 		&data.BaseDetails{
-			ID:   uint(storeProductID),
+			ID:   storeProductID,
 			Name: existingProduct.Name,
 		},
 		&dto, storeID)
@@ -357,7 +362,7 @@ func (h *StoreProductHandler) UpdateStoreProduct(c *gin.Context) {
 }
 
 func (h *StoreProductHandler) DeleteStoreProduct(c *gin.Context) {
-	storeProductID, err := strconv.ParseUint(c.Param("id"), 10, 64)
+	storeProductID, err := utils.ParseParam(c, "id")
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400StoreProduct)
 		return
@@ -369,7 +374,7 @@ func (h *StoreProductHandler) DeleteStoreProduct(c *gin.Context) {
 		return
 	}
 
-	existingProduct, err := h.service.GetStoreProductById(uint(storeProductID), &contexts.StoreContextFilter{StoreID: &storeID})
+	existingProduct, err := h.service.GetStoreProductById(storeProductID, &contexts.StoreContextFilter{StoreID: &storeID})
 	if err != nil {
 		switch {
 		case errors.Is(err, types.ErrStoreProductNotFound):
@@ -383,13 +388,13 @@ func (h *StoreProductHandler) DeleteStoreProduct(c *gin.Context) {
 
 	action := types.DeleteStoreProductAuditFactory(
 		&data.BaseDetails{
-			ID:   uint(storeProductID),
+			ID:   storeProductID,
 			Name: existingProduct.Name,
 		},
 		nil, storeID,
 	)
 
-	err = h.service.DeleteStoreProduct(storeID, uint(storeProductID))
+	err = h.service.DeleteStoreProduct(storeID, storeProductID)
 	if err != nil {
 		if errors.Is(err, types.ErrStoreProductIsInUse) {
 			localization.SendLocalizedResponseWithKey(c, types.Response409StoreProductInUse)

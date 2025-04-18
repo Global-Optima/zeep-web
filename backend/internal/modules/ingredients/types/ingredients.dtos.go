@@ -2,6 +2,7 @@ package types
 
 import (
 	ingredientCategoriesType "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/ingredientCategories/types"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/translations"
 	unitTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/units/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
@@ -33,6 +34,7 @@ type UpdateIngredientDTO struct {
 type IngredientDTO struct {
 	ID               uint                                                `json:"id"`
 	Name             string                                              `json:"name"`
+	NameTranslation  string                                              `json:"nameTranslation,omitempty"` // locale‑specific
 	Calories         float64                                             `json:"calories"`
 	Fat              float64                                             `json:"fat"`
 	Carbs            float64                                             `json:"carbs"`
@@ -55,4 +57,8 @@ type IngredientFilter struct {
 type SelectedIngredientDTO struct {
 	IngredientID uint    `json:"ingredientId" binding:"required,gt=0"`
 	Quantity     float64 `json:"quantity" binding:"required,gt=0"`
+}
+
+type IngredientTranslationsDTO struct {
+	Name translations.FieldLocale `json:"name" binding:"omitempty"`
 }

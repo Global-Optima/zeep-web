@@ -4,6 +4,7 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/container/common"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/translations"
 )
 
 type IngredientsModule struct {
@@ -13,9 +14,10 @@ type IngredientsModule struct {
 	Handler *ingredients.IngredientHandler
 }
 
-func NewIngredientsModule(base *common.BaseModule, auditService audit.AuditService) *IngredientsModule {
+func NewIngredientsModule(base *common.BaseModule, auditService audit.AuditService, translationManager translations.TranslationManager) *IngredientsModule {
 	repo := ingredients.NewIngredientRepository(base.DB)
-	service := ingredients.NewIngredientService(repo, base.Logger)
+	transactionManager := ingredients.NewTransactionManager(base.DB, repo, translationManager)
+	service := ingredients.NewIngredientService(repo, transactionManager, base.Logger)
 	handler := ingredients.NewIngredientHandler(service, auditService)
 
 	base.Router.RegisterIngredientRoutes(handler)

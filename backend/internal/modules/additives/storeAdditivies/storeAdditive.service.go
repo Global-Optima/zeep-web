@@ -22,7 +22,7 @@ type StoreAdditiveService interface {
 	GetStoreAdditives(storeID uint, filter *additiveTypes.AdditiveFilterQuery) ([]types.StoreAdditiveDTO, error)
 	GetAdditivesListToAdd(storeID uint, filter *additiveTypes.AdditiveFilterQuery) ([]additiveTypes.AdditiveDTO, error)
 	GetStoreAdditivesByIDs(storeID uint, IDs []uint) ([]types.StoreAdditiveDTO, error)
-	GetStoreAdditiveCategoriesByProductSize(storeID, productSizeID uint, filter *types.StoreAdditiveCategoriesFilter) ([]types.StoreAdditiveCategoryDTO, error)
+	GetStoreAdditiveCategoriesByProductSize(locale data.LanguageCode, storeID, productSizeID uint, filter *types.StoreAdditiveCategoriesFilter) ([]types.StoreAdditiveCategoryDTO, error)
 	GetStoreAdditiveByID(storeAdditiveID uint, filter *contexts.StoreContextFilter) (*types.StoreAdditiveDetailsDTO, error)
 	DeleteStoreAdditive(storeID, storeAdditiveID uint) error
 
@@ -84,8 +84,8 @@ func (s *storeAdditiveService) CreateStoreAdditives(storeID uint, dtos []types.C
 	return ids, nil
 }
 
-func (s *storeAdditiveService) GetStoreAdditiveCategoriesByProductSize(storeID, storeProductSizeID uint, filter *types.StoreAdditiveCategoriesFilter) ([]types.StoreAdditiveCategoryDTO, error) {
-	categories, err := s.repo.GetStoreAdditiveCategories(storeID, storeProductSizeID, filter)
+func (s *storeAdditiveService) GetStoreAdditiveCategoriesByProductSize(locale data.LanguageCode, storeID, storeProductSizeID uint, filter *types.StoreAdditiveCategoriesFilter) ([]types.StoreAdditiveCategoryDTO, error) {
+	categories, err := s.repo.GetStoreAdditiveCategories(locale, storeID, storeProductSizeID, filter)
 	if err != nil {
 		wrappedErr := utils.WrapError("failed to retrieve store additives", err)
 		s.logger.Error(wrappedErr)

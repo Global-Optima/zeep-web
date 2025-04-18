@@ -2,6 +2,7 @@ package types
 
 import (
 	provisionsTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/pkg/errors"
 
 	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
@@ -180,23 +181,27 @@ func ConvertToAdditiveDetailsDTO(additive *data.Additive) *AdditiveDetailsDTO {
 
 func ConvertToBaseAdditiveDTO(additive *data.Additive) *BaseAdditiveDTO {
 	return &BaseAdditiveDTO{
-		Name:        additive.Name,
-		Description: additive.Description,
-		BasePrice:   additive.BasePrice,
-		ImageURL:    additive.ImageKey.GetURL(),
-		Size:        additive.Size,
-		Unit:        unitTypes.ToUnitResponse(additive.Unit),
-		Category:    *ConvertToAdditiveCategoryDTO(&additive.Category),
-		MachineId:   additive.MachineId,
+		Name:                  additive.Name,
+		TranslatedName:        utils.TranslationOrDefault(additive.Name, additive.NameTranslation),
+		Description:           additive.Description,
+		TranslatedDescription: utils.TranslationOrDefault(additive.Description, additive.DescriptionTranslation),
+		BasePrice:             additive.BasePrice,
+		ImageURL:              additive.ImageKey.GetURL(),
+		Size:                  additive.Size,
+		Unit:                  unitTypes.ToUnitResponse(additive.Unit),
+		Category:              *ConvertToAdditiveCategoryDTO(&additive.Category),
+		MachineId:             additive.MachineId,
 	}
 }
 
 func ConvertToBaseAdditiveCategoryDTO(category *data.AdditiveCategory) *BaseAdditiveCategoryDTO {
 	return &BaseAdditiveCategoryDTO{
-		Name:             category.Name,
-		Description:      category.Description,
-		IsMultipleSelect: category.IsMultipleSelect,
-		IsRequired:       category.IsRequired,
+		Name:                  category.Name,
+		TranslatedName:        utils.TranslationOrDefault(category.Name, category.NameTranslation),
+		Description:           category.Description,
+		TranslatedDescription: utils.TranslationOrDefault(category.Description, category.DescriptionTranslation),
+		IsMultipleSelect:      category.IsMultipleSelect,
+		IsRequired:            category.IsRequired,
 	}
 }
 

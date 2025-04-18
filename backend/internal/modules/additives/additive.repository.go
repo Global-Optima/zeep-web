@@ -17,19 +17,24 @@ type AdditiveRepository interface {
 	CheckAdditiveExists(additiveName string) (bool, error)
 	GetAdditiveByID(additiveID uint) (*data.Additive, error)
 	GetAdditiveWithDetailsByID(additiveID uint) (*data.Additive, error)
+	GetTranslatedAdditiveByID(locale data.LanguageCode, additiveID uint) (*data.Additive, error)
 	GetAdditivesByIDs(additiveIDs []uint) ([]data.Additive, error)
-	GetAdditives(filter *types.AdditiveFilterQuery) ([]data.Additive, error)
+	GetAdditives(locale data.LanguageCode, filter *types.AdditiveFilterQuery) ([]data.Additive, error)
 	CreateAdditive(additive *data.Additive) (uint, error)
 	SaveAdditiveWithAssociations(additiveID uint, updateModels *types.AdditiveModels) error
 	DeleteAdditive(additiveID uint) (*data.Additive, error)
 
-	GetAdditiveCategories(filter *types.AdditiveCategoriesFilterQuery) ([]data.AdditiveCategory, error)
+	GetAdditiveCategories(locale data.LanguageCode, filter *types.AdditiveCategoriesFilterQuery) ([]data.AdditiveCategory, error)
 	CreateAdditiveCategory(category *data.AdditiveCategory) (uint, error)
 	SaveAdditiveCategory(category *data.AdditiveCategory) error
 	DeleteAdditiveCategory(categoryID uint) error
 	GetAdditiveCategoryByID(categoryID uint) (*data.AdditiveCategory, error)
+	GetTranslatedAdditiveCategoryByID(locale data.LanguageCode, categoryID uint) (*data.AdditiveCategory, error)
 
 	CloneWithTransaction(tx *gorm.DB) AdditiveRepository
+
+	FindRawAdditiveCategoryByID(id uint, category *data.AdditiveCategory) error
+	FindRawAdditiveByID(id uint, additive *data.Additive) error
 }
 
 type additiveRepository struct {
@@ -79,99 +84,122 @@ func (r *additiveRepository) CheckAdditiveExists(additiveName string) (bool, err
 	return true, nil
 }
 
-func (r *additiveRepository) GetAdditiveCategories(filter *types.AdditiveCategoriesFilterQuery) ([]data.AdditiveCategory, error) {
+func (r *additiveRepository) GetAdditiveCategories(
+	locale data.LanguageCode,
+	filter *types.AdditiveCategoriesFilterQuery,
+) ([]data.AdditiveCategory, error) {
 	var categories []data.AdditiveCategory
 
-	query := r.db.Model(&data.AdditiveCategory{}).
-		Preload("Additives").
-		Preload("Additives.Unit")
-
-	hasAdditivesCondition := "EXISTS (SELECT 1 FROM additives WHERE additives.additive_category_id = additive_categories.id)"
-
-	query = query.Joins("LEFT JOIN additives ON additives.additive_category_id = additive_categories.id").
+	base := r.db.Model(&data.AdditiveCategory{}).
+		Joins("LEFT JOIN additives ON additives.additive_category_id = additive_categories.id").
 		Joins("LEFT JOIN store_additives ON store_additives.additive_id = additives.id")
 
 	if filter.ProductSizeId != nil {
-		query = query.Where(
-			"EXISTS (SELECT 1 FROM product_size_additives WHERE product_size_additives.additive_id = additives.id AND product_size_additives.product_size_id = ?)",
-			*filter.ProductSizeId,
-		)
+		base = base.Where(`
+			EXISTS (
+				SELECT 1
+				FROM product_size_additives
+				WHERE product_size_additives.additive_id = additives.id
+				  AND product_size_additives.product_size_id = ?
+			)`, *filter.ProductSizeId)
 	}
 
 	if filter.IsMultipleSelect != nil {
-		query = query.Where("additives.is_multiple_select = ?", *filter.IsMultipleSelect)
+		base = base.Where("additive_categories.is_multiple_select = ?", *filter.IsMultipleSelect)
+	}
+	if filter.IsRequired != nil {
+		base = base.Where("additive_categories.is_required = ?", *filter.IsRequired)
 	}
 
-	if filter.IsRequired != nil {
-		query = query.Where("additives.is_required = ?", *filter.IsRequired)
-	}
+	hasAdditivesCond := `
+		EXISTS (
+			SELECT 1
+			FROM additives
+			WHERE additives.additive_category_id = additive_categories.id
+		)
+	`
 
 	if filter.IncludeEmpty != nil && *filter.IncludeEmpty {
-		query = query.Where(hasAdditivesCondition + " OR NOT " + hasAdditivesCondition)
+		base = base.Where(hasAdditivesCond + " OR NOT " + hasAdditivesCond)
 	} else {
-		query = query.Where(hasAdditivesCondition)
+		base = base.Where(hasAdditivesCond)
 	}
 
-	if filter.Search != nil && *filter.Search != "" {
-		searchTerm := "%" + *filter.Search + "%"
-		query = query.Where(
+	if s := filter.Search; s != nil && *s != "" {
+		term := "%" + *s + "%"
+		base = base.Where(
 			"additive_categories.name ILIKE ? OR additive_categories.description ILIKE ?",
-			searchTerm, searchTerm,
-		)
+			term, term)
 	}
 
-	query = query.Group("additive_categories.id")
+	base = base.Group("additive_categories.id")
 
-	query, err := utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.AdditiveCategory{})
+	sorted, err := utils.ApplySortedPaginationForModel(
+		base,
+		filter.Pagination,
+		filter.Sort,
+		&data.AdditiveCategory{},
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := query.Find(&categories).Error; err != nil {
+	sorted = utils.ApplyLocalizedPreloads(
+		sorted,
+		locale,
+		types.AdditiveCategoryPreloadMap,
+	)
+
+	if err := sorted.Find(&categories).Error; err != nil {
 		return nil, err
 	}
-
 	return categories, nil
 }
 
-func (r *additiveRepository) GetAdditives(filter *types.AdditiveFilterQuery) ([]data.Additive, error) {
+func (r *additiveRepository) GetAdditives(
+	locale data.LanguageCode,
+	filter *types.AdditiveFilterQuery,
+) ([]data.Additive, error) {
 	var additives []data.Additive
 
-	query := r.db.
-		Preload("Category").
-		Preload("Unit").
+	base := r.db.Model(&data.Additive{}).
 		Joins("JOIN additive_categories ON additives.additive_category_id = additive_categories.id")
 
-	var err error
-
-	if filter.Search != nil && *filter.Search != "" {
-		searchTerm := "%" + *filter.Search + "%"
-		query = query.Where("additives.name ILIKE ? OR additives.description ILIKE ?", searchTerm, searchTerm)
+	if s := filter.Search; s != nil && *s != "" {
+		term := "%" + *s + "%"
+		base = base.Where("additives.name ILIKE ? OR additives.description ILIKE ?", term, term)
 	}
-
 	if filter.MinPrice != nil {
-		query = query.Where("additives.base_price >= ?", *filter.MinPrice)
+		base = base.Where("additives.base_price >= ?", *filter.MinPrice)
 	}
 	if filter.MaxPrice != nil {
-		query = query.Where("additives.base_price <= ?", *filter.MaxPrice)
+		base = base.Where("additives.base_price <= ?", *filter.MaxPrice)
 	}
-
 	if filter.CategoryID != nil {
-		query = query.Where("additive_categories.id = ?", *filter.CategoryID)
+		base = base.Where("additive_categories.id = ?", *filter.CategoryID)
 	}
 	if filter.ProductSizeID != nil {
-		query = query.Where("product_additives.product_size_id = ?", *filter.ProductSizeID)
+		base = base.Joins(
+			"JOIN product_size_additives ON product_size_additives.additive_id = additives.id AND product_size_additives.product_size_id = ?",
+			*filter.ProductSizeID,
+		)
 	}
 
-	query, err = utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.Additive{})
+	sorted, err := utils.ApplySortedPaginationForModel(
+		base,
+		filter.Pagination,
+		filter.Sort,
+		&data.Additive{},
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := query.Find(&additives).Error; err != nil {
+	sorted = utils.ApplyLocalizedPreloads(sorted, locale, types.AdditivePreloadMap)
+
+	if err := sorted.Find(&additives).Error; err != nil {
 		return nil, err
 	}
-
 	return additives, nil
 }
 
@@ -200,6 +228,24 @@ func (r *additiveRepository) GetAdditiveWithDetailsByID(additiveID uint) (*data.
 		Preload("Ingredients.Ingredient.IngredientCategory").
 		Preload("AdditiveProvisions.Provision.Unit").
 		First(&additive).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, types.ErrAdditiveNotFound
+		}
+		return nil, fmt.Errorf("failed to fetch additive with ID %d: %w", additiveID, err)
+	}
+
+	return &additive, nil
+}
+
+func (r *additiveRepository) GetTranslatedAdditiveByID(locale data.LanguageCode, additiveID uint) (*data.Additive, error) {
+	var additive data.Additive
+
+	err := utils.ApplyLocalizedPreloads(
+		r.db.Model(&data.Additive{}).Where("id = ?", additiveID),
+		locale,
+		types.AdditivePreloadMap,
+	).First(&additive).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, types.ErrAdditiveNotFound
@@ -543,4 +589,46 @@ func (r *additiveRepository) GetAdditiveCategoryByID(categoryID uint) (*data.Add
 		return nil, err
 	}
 	return &category, nil
+}
+
+func (r *additiveRepository) GetTranslatedAdditiveCategoryByID(locale data.LanguageCode, categoryID uint) (*data.AdditiveCategory, error) {
+	var category data.AdditiveCategory
+
+	err := utils.ApplyLocalizedPreloads(
+		r.db.Model(&data.AdditiveCategory{}).Where("id = ?", categoryID),
+		locale,
+		types.AdditiveCategoryPreloadMap,
+	).First(&category).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, types.ErrAdditiveCategoryNotFound
+		}
+		return nil, fmt.Errorf("failed to fetch additive category with ID %d: %w", categoryID, err)
+	}
+
+	return &category, nil
+}
+
+func (r *additiveRepository) FindRawAdditiveByID(id uint, additive *data.Additive) error {
+	err := r.db.First(additive, id).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return types.ErrAdditiveNotFound
+		}
+		return fmt.Errorf("failed to fetch raw additive with ID %d: %w", id, err)
+	}
+
+	return nil
+}
+
+func (r *additiveRepository) FindRawAdditiveCategoryByID(id uint, category *data.AdditiveCategory) error {
+	err := r.db.First(category, id).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return types.ErrAdditiveCategoryNotFound
+		}
+		return fmt.Errorf("failed to fetch raw additive category with ID %d: %w", id, err)
+	}
+
+	return nil
 }

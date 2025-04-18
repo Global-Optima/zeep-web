@@ -1,8 +1,7 @@
 package ingredientCategories
 
 import (
-	"strconv"
-
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
 	"github.com/pkg/errors"
 
@@ -53,13 +52,15 @@ func (h *IngredientCategoryHandler) Create(c *gin.Context) {
 }
 
 func (h *IngredientCategoryHandler) GetByID(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	id, err := utils.ParseParam(c, "id")
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400IngredientCategory)
 		return
 	}
 
-	category, err := h.service.GetByID(uint(id))
+	locale := contexts.GetLocaleFromCtx(c)
+
+	category, err := h.service.GetTranslatedByID(locale, id)
 	if err != nil {
 		if errors.Is(err, types.ErrIngredientCategoryNotFound) {
 			localization.SendLocalizedResponseWithKey(c, types.Response404IngredientCategory)
@@ -73,7 +74,7 @@ func (h *IngredientCategoryHandler) GetByID(c *gin.Context) {
 }
 
 func (h *IngredientCategoryHandler) Update(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	id, err := utils.ParseParam(c, "id")
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400IngredientCategory)
 		return
@@ -85,7 +86,7 @@ func (h *IngredientCategoryHandler) Update(c *gin.Context) {
 		return
 	}
 
-	existingCategory, err := h.service.GetByID(uint(id))
+	existingCategory, err := h.service.GetByID(id)
 	if err != nil {
 		if errors.Is(err, types.ErrIngredientCategoryNotFound) {
 			localization.SendLocalizedResponseWithKey(c, types.Response404IngredientCategory)
@@ -95,7 +96,7 @@ func (h *IngredientCategoryHandler) Update(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.Update(uint(id), dto); err != nil {
+	if err := h.service.Update(id, dto); err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500IngredientCategoryUpdate)
 		return
 	}
@@ -116,13 +117,13 @@ func (h *IngredientCategoryHandler) Update(c *gin.Context) {
 }
 
 func (h *IngredientCategoryHandler) Delete(c *gin.Context) {
-	id, err := strconv.Atoi(c.Param("id"))
+	id, err := utils.ParseParam(c, "id")
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response400IngredientCategory)
 		return
 	}
 
-	existingCategory, err := h.service.GetByID(uint(id))
+	existingCategory, err := h.service.GetByID(id)
 	if err != nil {
 		if errors.Is(err, types.ErrIngredientCategoryNotFound) {
 			localization.SendLocalizedResponseWithKey(c, types.Response404IngredientCategory)
@@ -132,7 +133,7 @@ func (h *IngredientCategoryHandler) Delete(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.Delete(uint(id)); err != nil {
+	if err := h.service.Delete(id); err != nil {
 		if errors.Is(err, types.ErrIngredientCategoryIsInUse) {
 			localization.SendLocalizedResponseWithKey(c, types.Response409IngredientCategoryDeleteInUse)
 			return
@@ -143,7 +144,7 @@ func (h *IngredientCategoryHandler) Delete(c *gin.Context) {
 
 	action := types.DeleteIngredientCategoryAuditFactory(
 		&data.BaseDetails{
-			ID:   uint(id),
+			ID:   id,
 			Name: existingCategory.Name,
 		},
 	)
@@ -162,11 +163,36 @@ func (h *IngredientCategoryHandler) GetAll(c *gin.Context) {
 		return
 	}
 
-	categories, err := h.service.GetAll(&filter)
+	locale := contexts.GetLocaleFromCtx(c)
+
+	categories, err := h.service.GetAll(locale, &filter)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500IngredientCategoryGet)
 		return
 	}
 
 	utils.SendSuccessResponseWithPagination(c, categories, filter.GetPagination())
+}
+
+func (h *IngredientCategoryHandler) CreateOrUpdateIngredientCategoryTranslation(c *gin.Context) {
+	id, err := utils.ParseParam(c, "id")
+	if err != nil {
+		localization.SendLocalizedResponseWithKey(c, types.Response400IngredientCategory)
+		return
+	}
+	var dto types.IngredientCategoryTranslationDTO
+	if err := c.ShouldBindJSON(&dto); err != nil {
+		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
+		return
+	}
+	if err := h.service.UpsertIngredientCategoryTranslations(id, &dto); err != nil {
+		if errors.Is(err, types.ErrIngredientCategoryNotFound) {
+			localization.SendLocalizedResponseWithKey(c, types.Response404IngredientCategory)
+			return
+		}
+		localization.SendLocalizedResponseWithKey(c, types.Response500IngredientCategoryTranslationsUpdate)
+		return
+	}
+
+	localization.SendLocalizedResponseWithKey(c, types.Response200IngredientCategoryTranslationsUpdate)
 }

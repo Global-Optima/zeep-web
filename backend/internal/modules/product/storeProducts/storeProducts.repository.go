@@ -8,19 +8,22 @@ import (
 	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/product/storeProducts/types"
 	productTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/product/types"
+	unitTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/units/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
 type StoreProductRepository interface {
-	GetStoreProductCategories(storeID uint) ([]data.ProductCategory, error)
-	GetStoreProductById(storeProductID uint, filter *contexts.StoreContextFilter) (*data.StoreProduct, error)
+	GetStoreProductCategories(locale data.LanguageCode, storeID uint) ([]data.ProductCategory, error)
+	GetTranslatedStoreProductById(locale data.LanguageCode, storeProductID uint, filter *contexts.StoreContextFilter) (*data.StoreProduct, error)
 	GetStoreProductsByStoreProductIDs(storeID uint, storeProductIDs []uint) ([]data.StoreProduct, error)
-	GetStoreProducts(storeID uint, filter *types.StoreProductsFilterDTO) ([]data.StoreProduct, error)
+	GetStoreProducts(locale data.LanguageCode, storeID uint, filter *types.StoreProductsFilterDTO) ([]data.StoreProduct, error)
 
+	GetStoreProductById(storeProductID uint, filter *contexts.StoreContextFilter) (*data.StoreProduct, error)
 	GetAvailableProductsToAdd(storeID uint, filter *productTypes.ProductsFilterDto) ([]data.Product, error)
 	GetRecommendedStoreProducts(storeID uint, excludedStoreProductIDs []uint) ([]data.StoreProduct, error)
 	CreateStoreProduct(product *data.StoreProduct) (uint, error)
@@ -52,21 +55,29 @@ func (r *storeProductRepository) CloneWithTransaction(tx *gorm.DB) StoreProductR
 	}
 }
 
-func (r *storeProductRepository) GetStoreProductCategories(storeID uint) ([]data.ProductCategory, error) {
+func (r *storeProductRepository) GetStoreProductCategories(
+	locale data.LanguageCode,
+	storeID uint,
+) ([]data.ProductCategory, error) {
 	var categories []data.ProductCategory
 
-	err := r.db.Model(&data.ProductCategory{}).
-		Joins("JOIN products ON products.category_id = product_categories.id").
-		Joins("JOIN store_products ON store_products.product_id = products.id").
+	q := r.db.Model(&data.ProductCategory{}).
+		Joins("JOIN products          ON products.category_id       = product_categories.id").
+		Joins("JOIN store_products    ON store_products.product_id   = products.id").
 		Joins("JOIN store_product_sizes ON store_product_sizes.store_product_id = store_products.id").
 		Where("store_products.deleted_at IS NULL").
-		Where("store_products.store_id = ? AND store_products.is_available = ?", storeID, true).
-		Group("product_categories.id").
-		Find(&categories).Error
-	if err != nil {
+		Where("store_products.store_id = ? AND store_products.is_available = TRUE", storeID).
+		Group("product_categories.id")
+
+	q = utils.ApplyLocalizedPreloads(
+		q, locale, types.StoreProductCategoryPreloadMap)
+
+	if err := q.Find(&categories).Error; err != nil {
 		return nil, err
 	}
-
+	if categories == nil {
+		categories = []data.ProductCategory{}
+	}
 	return categories, nil
 }
 
@@ -106,6 +117,51 @@ func (r *storeProductRepository) GetStoreProductById(storeProductID uint, filter
 	return &storeProduct, nil
 }
 
+func (r *storeProductRepository) GetTranslatedStoreProductById(
+	locale data.LanguageCode,
+	storeProductID uint,
+	ctxFilter *contexts.StoreContextFilter,
+) (*data.StoreProduct, error) {
+	var sp data.StoreProduct
+
+	q := r.db.Model(&data.StoreProduct{}).
+		Where("id = ?", storeProductID)
+
+	if ctxFilter != nil {
+		if ctxFilter.StoreID != nil {
+			q = q.Where("store_id = ?", *ctxFilter.StoreID)
+		}
+		if ctxFilter.FranchiseeID != nil {
+			q = q.Joins("JOIN stores ON stores.id = store_products.store_id").
+				Where("stores.franchisee_id = ?", *ctxFilter.FranchiseeID)
+		}
+	}
+	q = q.Preload("Product", func(d *gorm.DB) *gorm.DB {
+		d = utils.ApplyLocalizedPreloads(
+			d, locale, productTypes.ProductPreloadMap)
+		return d
+	})
+
+	q = q.Preload("StoreProductSizes.ProductSize", func(d *gorm.DB) *gorm.DB {
+		d = d.Preload("Unit", func(u *gorm.DB) *gorm.DB {
+			return utils.ApplyLocalizedPreloads(u, locale, unitTypes.UnitPreloadMap)
+		})
+
+		d = d.Preload("ProductSizeIngredients.Ingredient", func(d2 *gorm.DB) *gorm.DB {
+			return utils.ApplyLocalizedPreloads(d2, locale, ingredientTypes.IngredientPreloadMap)
+		})
+		return d
+	})
+
+	if err := q.First(&sp).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, types.ErrStoreProductNotFound
+		}
+		return nil, err
+	}
+	return &sp, nil
+}
+
 func (r *storeProductRepository) GetStoreProductsByStoreProductIDs(storeID uint, storeProductIDs []uint) ([]data.StoreProduct, error) {
 	var storeProducts []data.StoreProduct
 	query := r.db.Model(&data.StoreProduct{}).
@@ -124,53 +180,81 @@ func (r *storeProductRepository) GetStoreProductsByStoreProductIDs(storeID uint,
 	return storeProducts, nil
 }
 
-func (r *storeProductRepository) GetStoreProducts(storeID uint, filter *types.StoreProductsFilterDTO) ([]data.StoreProduct, error) {
-	var storeProducts []data.StoreProduct
-	query := r.db.Model(&data.StoreProduct{}).
-		Where("store_id = ?", storeID).
-		Joins("JOIN products ON store_products.product_id = products.id").
-		Preload("Product.ProductSizes").
-		Preload("Product.Category").
-		Preload("StoreProductSizes.ProductSize.Unit").
-		Preload("StoreProductSizes.ProductSize.ProductSizeIngredients.Ingredient.Unit").
-		Preload("StoreProductSizes.ProductSize.ProductSizeIngredients.Ingredient.IngredientCategory")
-
-	if filter != nil {
-		if filter.Search != nil {
-			query = query.Where("products.name ILIKE ? OR products.description ILIKE ?", "%"+*filter.Search+"%", "%"+*filter.Search+"%")
-		}
-		if filter.IsAvailable != nil {
-			query = query.Where("is_available = ?", *filter.IsAvailable).
-				Where("EXISTS (SELECT 1 FROM store_product_sizes sps WHERE sps.store_product_id = store_products.id)")
-		}
-		if filter.IsOutOfStock != nil {
-			query = query.Where("is_out_of_stock = ?", *filter.IsOutOfStock)
-		}
-		if filter.CategoryID != nil {
-			query = query.Where("products.category_id = ?", *filter.CategoryID)
-		}
-		if filter.MinPrice != nil {
-			query = query.Where("store_product_sizes.price >= ", *filter.MinPrice)
-		}
-		if filter.MaxPrice != nil {
-			query = query.Where("store_product_sizes.price >= ", *filter.MaxPrice)
-		}
-	}
-
+func (r *storeProductRepository) GetStoreProducts(
+	locale data.LanguageCode,
+	storeID uint,
+	filter *types.StoreProductsFilterDTO,
+) ([]data.StoreProduct, error) {
 	if filter == nil {
 		return nil, fmt.Errorf("filter is not binded")
 	}
 
-	var err error
-	query, err = utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.StoreProduct{})
+	var storeProducts []data.StoreProduct
+
+	q := r.db.Model(&data.StoreProduct{}).
+		Select("DISTINCT store_products.*").
+		Where("store_products.store_id = ?", storeID).
+		Joins("JOIN products ON products.id = store_products.product_id")
+
+	if s := filter.Search; s != nil && *s != "" {
+		term := "%" + *s + "%"
+		q = q.Where("products.name ILIKE ? OR products.description ILIKE ?", term, term)
+	}
+	if filter.IsAvailable != nil {
+		q = q.Where("store_products.is_available = ?", *filter.IsAvailable).
+			Where("EXISTS (SELECT 1 FROM store_product_sizes sps WHERE sps.store_product_id = store_products.id)")
+	}
+	if filter.IsOutOfStock != nil {
+		q = q.Where("store_products.is_out_of_stock = ?", *filter.IsOutOfStock)
+	}
+	if filter.CategoryID != nil {
+		q = q.Where("products.category_id = ?", *filter.CategoryID)
+	}
+
+	if filter.MinPrice != nil || filter.MaxPrice != nil {
+		q = q.Joins(`
+			JOIN store_product_sizes sps
+			  ON sps.store_product_id = store_products.id`)
+		if filter.MinPrice != nil {
+			q = q.Where("sps.price >= ?", *filter.MinPrice)
+		}
+		if filter.MaxPrice != nil {
+			q = q.Where("sps.price <= ?", *filter.MaxPrice)
+		}
+	}
+
+	paged, err := utils.ApplySortedPaginationForModel(
+		q, filter.Pagination, filter.Sort, &data.StoreProduct{},
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := query.Find(&storeProducts).Error; err != nil {
+	paged = paged.Preload("Product", func(d *gorm.DB) *gorm.DB {
+		d = utils.ApplyLocalizedPreloads(d, locale, productTypes.ProductPreloadMap)
+		d = d.Preload("ProductSizes.Unit", func(u *gorm.DB) *gorm.DB {
+			return utils.ApplyLocalizedPreloads(u, locale, unitTypes.UnitPreloadMap)
+		})
+		return d
+	})
+
+	paged = paged.Preload("StoreProductSizes.ProductSize", func(d *gorm.DB) *gorm.DB {
+		d = d.Preload("Unit", func(u *gorm.DB) *gorm.DB {
+			return utils.ApplyLocalizedPreloads(u, locale, unitTypes.UnitPreloadMap)
+		})
+
+		d = d.Preload("ProductSizeIngredients.Ingredient", func(d2 *gorm.DB) *gorm.DB {
+			return utils.ApplyLocalizedPreloads(d2, locale, ingredientTypes.IngredientPreloadMap)
+		})
+		return d
+	})
+
+	if err := paged.Find(&storeProducts).Error; err != nil {
 		return nil, err
 	}
-
+	if storeProducts == nil {
+		storeProducts = []data.StoreProduct{}
+	}
 	return storeProducts, nil
 }
 
@@ -189,29 +273,28 @@ func (r *storeProductRepository) FilterProductsWithSufficientStock(storeID uint,
 }
 
 func (r *storeProductRepository) hasSufficientStockForProduct(storeID uint, sp *data.StoreProduct) (bool, error) {
-	// Loop through each product size (which is associated via StoreProductSizes -> ProductSize)
 	for _, sps := range sp.StoreProductSizes {
 		productSize := sps.ProductSize
 		allIngredientsAvailable := true
-		// For each ingredient in this product size, check the store stock.
+
 		for _, psi := range productSize.ProductSizeIngredients {
 			var storeStock data.StoreStock
-			// Find the stock for this ingredient in the store.
+
 			err := r.db.
 				Where("store_id = ? AND ingredient_id = ?", storeID, psi.IngredientID).
 				First(&storeStock).Error
 			if err != nil {
-				// if not found or any error then treat as insufficient stock
+
 				allIngredientsAvailable = false
 				break
 			}
-			// If store stock is less than what is required, mark as insufficient.
+
 			if storeStock.Quantity < psi.Quantity {
 				allIngredientsAvailable = false
 				break
 			}
 		}
-		// If one product size has all ingredients available, then the product is available.
+
 		if allIngredientsAvailable {
 			return true, nil
 		}
@@ -300,7 +383,6 @@ func (r *storeProductRepository) CreateMultipleStoreProducts(storeProducts []dat
 	return ids, nil
 }
 
-// UpdateStoreProductByID updates the main product fields as well as delta-updates its sizes.
 func (r *storeProductRepository) UpdateStoreProductByID(
 	storeID, storeProductID uint,
 	updateModels *types.StoreProductModels,
@@ -374,7 +456,7 @@ func processIncomingSizes(
 		newSizeIDs = append(newSizeIDs, dto.ProductSizeID)
 
 		if existingRow, found := existingMap[dto.ProductSizeID]; found {
-			// If the StorePrice changes, check if the record is referenced in active orders.
+
 			if !utils.IsEqualPrice(existingRow.StorePrice, dto.StorePrice) {
 				active, err := checkStoreProductSizeInActiveOrders(tx, existingRow.ID)
 				if err != nil {
@@ -384,7 +466,7 @@ func processIncomingSizes(
 					return nil, nil, types.ErrStoreProductSizeIsInUse
 				}
 			}
-			// Update using the actual primary key.
+
 			if err := tx.Model(&data.StoreProductSize{}).
 				Where("id = ?", existingRow.ID).
 				Updates(data.StoreProductSize{
@@ -393,7 +475,6 @@ func processIncomingSizes(
 				return nil, nil, err
 			}
 		} else {
-			// Prepare a new record for insertion.
 			sizesToInsert = append(sizesToInsert, data.StoreProductSize{
 				StoreProductID: storeProductID,
 				ProductSizeID:  dto.ProductSizeID,
@@ -492,7 +573,7 @@ func checkStoreProductSizesInActiveOrders(db *gorm.DB, storeProductID uint) erro
 	}
 
 	if exists {
-		return types.ErrStoreProductIsInUse // Custom error indicating the StoreProduct or its sizes are in use
+		return types.ErrStoreProductIsInUse
 	}
 
 	return nil
@@ -562,12 +643,11 @@ func (r *storeProductRepository) GetSufficientStoreProductSizeById(
 	}
 
 	usedIngredientQuantity := make(map[uint]float64)
-	// Check base ingredients
+
 	for _, usage := range storeProductSize.ProductSize.ProductSizeIngredients {
 		usedIngredientQuantity[usage.IngredientID] += usage.Quantity
 	}
 
-	// Check ingredients from default additives
 	for _, psa := range storeProductSize.ProductSize.Additives {
 		if !psa.IsDefault {
 			continue

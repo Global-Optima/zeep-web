@@ -18,4 +18,7 @@ var (
 	Response201Unit       = localization.NewResponseKey(201, data.UnitComponent)
 	Response200UnitUpdate = localization.NewResponseKey(200, data.UnitComponent, data.UpdateOperation.ToString())
 	Response200UnitDelete = localization.NewResponseKey(200, data.UnitComponent, data.DeleteOperation.ToString())
+
+	Response500UnitTranslationUpdate = localization.NewResponseKey(500, data.UnitComponent, data.UpdateOperation.ToString(), "translation")
+	Response200UnitTranslationUpdate = localization.NewResponseKey(200, data.UnitComponent, data.UpdateOperation.ToString(), "translation")
 )

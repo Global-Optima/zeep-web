@@ -30,11 +30,13 @@ func MapToBaseProductDTO(product *data.Product) BaseProductDTO {
 	}
 
 	return BaseProductDTO{
-		Name:        product.Name,
-		Description: product.Description,
-		ImageURL:    product.ImageKey.GetURL(),
-		VideoURL:    product.VideoKey.GetURL(),
-		Category:    *categoriesTypes.MapCategoryToDTO(product.Category),
+		Name:                  product.Name,
+		TranslatedName:        utils.TranslationOrDefault(product.Name, product.NameTranslation),
+		Description:           product.Description,
+		TranslatedDescription: utils.TranslationOrDefault(product.Description, product.DescriptionTranslation),
+		ImageURL:              product.ImageKey.GetURL(),
+		VideoURL:              product.VideoKey.GetURL(),
+		Category:              *categoriesTypes.MapCategoryToDTO(product.Category),
 	}
 }
 

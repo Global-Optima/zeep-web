@@ -13,4 +13,7 @@ var (
 	Response200ProductCategoryUpdate      = localization.NewResponseKey(200, data.ProductCategoryComponent, data.UpdateOperation.ToString())
 	Response200ProductCategoryDelete      = localization.NewResponseKey(200, data.ProductCategoryComponent, data.DeleteOperation.ToString())
 	Response201ProductCategory            = localization.NewResponseKey(201, data.ProductCategoryComponent)
+
+	Response200ProductCategoryTranslationsUpdate = localization.NewResponseKey(200, data.ProductCategoryComponent, data.UpdateOperation.ToString(), "translations")
+	Response500ProductCategoryTranslationsUpdate = localization.NewResponseKey(500, data.ProductCategoryComponent, data.UpdateOperation.ToString(), "translations")
 )

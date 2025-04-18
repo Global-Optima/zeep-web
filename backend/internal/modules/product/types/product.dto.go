@@ -4,6 +4,7 @@ import (
 	"mime/multipart"
 
 	provisionsTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/types"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/translations"
 
 	additiveTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
 	categoriesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/categories/types"
@@ -13,11 +14,13 @@ import (
 )
 
 type BaseProductDTO struct {
-	Name        string                             `json:"name"`
-	Description string                             `json:"description"`
-	ImageURL    string                             `json:"imageUrl"`
-	VideoURL    string                             `json:"videoUrl"`
-	Category    categoriesTypes.ProductCategoryDTO `json:"category"`
+	Name                  string                             `json:"name"`
+	TranslatedName        string                             `json:"translatedName,omitempty"`
+	Description           string                             `json:"description"`
+	TranslatedDescription string                             `json:"translatedDescription,omitempty"`
+	ImageURL              string                             `json:"imageUrl"`
+	VideoURL              string                             `json:"videoUrl"`
+	Category              categoriesTypes.ProductCategoryDTO `json:"category"`
 }
 
 type ProductDTO struct {
@@ -130,4 +133,9 @@ type TotalNutrition struct {
 	Proteins            float64  `json:"proteins"`
 	Fats                float64  `json:"fats"`
 	Carbs               float64  `json:"carbs"`
+}
+
+type ProductTranslationsDTO struct {
+	Name        translations.FieldLocale `json:"name" binding:"omitempty"`
+	Description translations.FieldLocale `json:"description" binding:"omitempty"`
 }

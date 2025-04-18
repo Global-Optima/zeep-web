@@ -15,4 +15,7 @@ var (
 	Response201IngredientCreate      = localization.NewResponseKey(201, data.IngredientComponent)
 	Response200IngredientUpdate      = localization.NewResponseKey(200, data.IngredientComponent, data.UpdateOperation.ToString())
 	Response200IngredientDelete      = localization.NewResponseKey(200, data.IngredientComponent, data.DeleteOperation.ToString())
+
+	Response200IngredientTranslationsUpdate = localization.NewResponseKey(200, data.IngredientComponent, data.UpdateOperation.ToString(), "TRANSLATIONS")
+	Response500IngredientTranslationsUpdate = localization.NewResponseKey(500, data.IngredientComponent, data.UpdateOperation.ToString(), "TRANSLATIONS")
 )

@@ -63,7 +63,9 @@ func (h *StoreAdditiveHandler) GetStoreAdditiveCategories(c *gin.Context) {
 		return
 	}
 
-	additivesList, err := h.service.GetStoreAdditiveCategoriesByProductSize(storeID, uint(storeProductSizeID), &filter)
+	locale := contexts.GetLocaleFromCtx(c)
+
+	additivesList, err := h.service.GetStoreAdditiveCategoriesByProductSize(locale, storeID, uint(storeProductSizeID), &filter)
 	if err != nil {
 		localization.SendLocalizedResponseWithKey(c, types.Response500StoreAdditive)
 		return

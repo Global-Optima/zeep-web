@@ -6,6 +6,7 @@ import (
 	asynqManager "github.com/Global-Optima/zeep-web/backend/internal/asynqTasks"
 	"github.com/Global-Optima/zeep-web/backend/internal/config"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/auth/employeeToken"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/translations"
 
 	"github.com/Global-Optima/zeep-web/backend/api/storage"
 
@@ -25,6 +26,7 @@ type Container struct {
 	AsynqManager            *asynqManager.AsynqManager
 	storageRepo             *storage.StorageRepository
 	employeeTokenManager    *employeeToken.EmployeeTokenManager
+	translationsManager     *translations.TranslationManager
 	router                  *routes.Router
 	logger                  *zap.SugaredLogger
 	Additives               *modules.AdditivesModule
@@ -69,6 +71,7 @@ func (c *Container) mustInit() {
 	cfg := config.GetConfig()
 	baseModule := common.NewBaseModule(c.DbHandler.DB, c.router, c.logger)
 	cronManager := scheduler.NewCronManager(*cfg.Server.CronJobsEnabled, c.logger)
+	translationsManager := translations.NewTranslationManager(c.DbHandler.DB)
 
 	var err error
 	c.AsynqManager, err = asynqManager.NewAsyncManager(c.RedisClient.Client, c.logger)
@@ -76,27 +79,28 @@ func (c *Container) mustInit() {
 		c.logger.Fatalf("Failed to create asynq manager: %v", err)
 	}
 
+	c.translationsManager = &translationsManager
 	c.Audits = modules.NewAuditsModule(baseModule)
 	c.Franchisees = modules.NewFranchiseesModule(baseModule, c.Audits.Service)
 	c.Regions = modules.NewRegionsModule(baseModule, c.Audits.Service)
 	c.Notifications = modules.NewNotificationModule(baseModule)
-	c.Categories = modules.NewCategoriesModule(baseModule, c.Audits.Service)
+	c.Categories = modules.NewCategoriesModule(baseModule, c.Audits.Service, *c.translationsManager)
 	c.Customers = modules.NewCustomersModule(baseModule)
 	c.Employees = modules.NewEmployeesModule(baseModule, c.Audits.Service, c.Franchisees.Service, c.Regions.Service, *c.employeeTokenManager)
-	c.Ingredients = modules.NewIngredientsModule(baseModule, c.Audits.Service)
+	c.Ingredients = modules.NewIngredientsModule(baseModule, c.Audits.Service, *c.translationsManager)
 	c.Suppliers = modules.NewSuppliersModule(baseModule, c.Audits.Service)
 	c.StockMaterials = modules.NewStockMaterialsModule(baseModule, c.Audits.Service)
 	c.StockMaterialCategories = modules.NewStockMaterialCategoriesModule(baseModule, c.Audits.Service)
-	c.Units = modules.NewUnitsModule(baseModule, c.Audits.Service)
-	c.IngredientCategories = modules.NewIngredientCategoriesModule(baseModule, c.Audits.Service)
+	c.Units = modules.NewUnitsModule(baseModule, c.Audits.Service, *c.translationsManager)
+	c.IngredientCategories = modules.NewIngredientCategoriesModule(baseModule, c.Audits.Service, *c.translationsManager)
 	c.Warehouses = modules.NewWarehousesModule(baseModule, c.StockMaterials.Repo, c.Notifications.Service, cronManager, c.Regions.Service, c.Franchisees.Service, c.Audits.Service)
 	c.Stores = modules.NewStoresModule(baseModule, c.Franchisees.Service, c.Audits.Service)
 
 	c.StoreInventoryManager = modules.NewStoreInventoryManagersModule(baseModule, c.Notifications.Service)
 
 	c.StoreStocks = modules.NewStoreStockModule(baseModule, c.Ingredients.Service, c.Franchisees.Service, c.Audits.Service, c.Notifications.Service, c.Stores.Service, c.StoreInventoryManager.Repo, cronManager)
-	c.Additives = modules.NewAdditivesModule(baseModule, c.Audits.Service, c.Franchisees.Service, c.Ingredients.Repo, c.StoreStocks.Repo, c.StoreInventoryManager.Repo, *c.storageRepo, c.Notifications.Service)
-	c.Products = modules.NewProductsModule(baseModule, c.Audits.Service, c.Franchisees.Service, c.Ingredients.Repo, c.Additives.StoreAdditivesModule.Repo, c.StoreStocks.Repo, c.StoreInventoryManager.Repo, *c.storageRepo, c.Notifications.Service)
+	c.Additives = modules.NewAdditivesModule(baseModule, c.Audits.Service, c.Franchisees.Service, c.Ingredients.Repo, c.StoreStocks.Repo, c.StoreInventoryManager.Repo, *c.storageRepo, c.Notifications.Service, *c.translationsManager)
+	c.Products = modules.NewProductsModule(baseModule, c.Audits.Service, c.Franchisees.Service, c.Ingredients.Repo, c.Additives.StoreAdditivesModule.Repo, c.StoreStocks.Repo, c.StoreInventoryManager.Repo, *c.storageRepo, c.Notifications.Service, *c.translationsManager)
 	c.Provisions = modules.NewProvisionsModule(baseModule, c.Audits.Service, c.Franchisees.Service, c.Stores.Service, c.Notifications.Service, c.Ingredients.Repo, c.StoreStocks.Repo, c.StoreInventoryManager.Repo, cronManager)
 	c.Auth = modules.NewAuthModule(baseModule, c.Customers.Repo, c.Employees.Repo, *c.employeeTokenManager)
 

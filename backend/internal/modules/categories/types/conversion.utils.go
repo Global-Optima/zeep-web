@@ -1,13 +1,18 @@
 package types
 
-import "github.com/Global-Optima/zeep-web/backend/internal/data"
+import (
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+)
 
 func MapCategoryToDTO(category data.ProductCategory) *ProductCategoryDTO {
 	return &ProductCategoryDTO{
-		ID:              category.ID,
-		Name:            category.Name,
-		Description:     category.Description,
-		MachineCategory: category.MachineCategory,
+		ID:                    category.ID,
+		Name:                  category.Name,
+		TranslatedName:        utils.TranslationOrDefault(category.Name, category.NameTranslation),
+		Description:           category.Description,
+		TranslatedDescription: utils.TranslationOrDefault(category.Description, category.DescriptionTranslation),
+		MachineCategory:       category.MachineCategory,
 	}
 }
 

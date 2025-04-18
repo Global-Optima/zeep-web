@@ -25,7 +25,7 @@ type StoreAdditiveRepository interface {
 	GetAvailableAdditivesToAdd(storeID uint, filter *additiveTypes.AdditiveFilterQuery) ([]data.Additive, error)
 	GetStoreAdditives(storeID uint, filter *additiveTypes.AdditiveFilterQuery) ([]data.StoreAdditive, error)
 	GetStoreAdditivesByIDs(storeID uint, IDs []uint) ([]data.StoreAdditive, error)
-	GetStoreAdditiveCategories(storeID, storeProductSizeID uint, filter *types.StoreAdditiveCategoriesFilter) ([]data.AdditiveCategory, error)
+	GetStoreAdditiveCategories(locale data.LanguageCode, storeID, storeProductSizeID uint, filter *types.StoreAdditiveCategoriesFilter) ([]data.AdditiveCategory, error)
 	UpdateStoreAdditive(storeID, storeAdditiveID uint, input *data.StoreAdditive) error
 	DeleteStoreAdditive(storeID, storeAdditiveID uint) error
 	GetStoreAdditiveWithProductSizeAdditive(
@@ -202,92 +202,60 @@ func (r *storeAdditiveRepository) GetAvailableAdditivesToAdd(storeID uint, filte
 }
 
 func (r *storeAdditiveRepository) GetStoreAdditiveCategories(
+	locale data.LanguageCode,
 	storeID, storeProductSizeID uint,
 	filter *types.StoreAdditiveCategoriesFilter,
 ) ([]data.AdditiveCategory, error) {
-	var categories []data.AdditiveCategory
-
-	// First, get the relevant product_size_id to limit the join scope
 	var productSizeID uint
-	err := r.db.Model(&data.StoreProductSize{}).
-		Select("product_size_id").
-		Where("id = ? AND EXISTS (SELECT 1 FROM store_products WHERE store_products.id = store_product_sizes.store_product_id AND store_products.store_id = ?)",
-			storeProductSizeID, storeID).
-		Limit(1).
-		Pluck("product_size_id", &productSizeID).Error
-	if err != nil {
+	if err := r.db.Model(&data.StoreProductSize{}).
+		Where(`id = ? AND EXISTS (SELECT 1 FROM store_products WHERE store_products.id = store_product_sizes.store_product_id AND store_products.store_id = ?)`, storeProductSizeID, storeID).
+		Pluck("product_size_id", &productSizeID).Error; err != nil {
 		return nil, err
 	}
 	if productSizeID == 0 {
 		return nil, moduleErrors.ErrNotFound
 	}
 
-	// Build the main query for categories
-	query := r.db.Model(&data.AdditiveCategory{}).
+	categoriesQuery := r.db.Model(&data.AdditiveCategory{}).
 		Select("DISTINCT additive_categories.*").
-		Joins("INNER JOIN additives ON additives.additive_category_id = additive_categories.id").
-		Joins("INNER JOIN store_additives ON store_additives.additive_id = additives.id AND store_additives.store_id = ?", storeID).
-		Joins("INNER JOIN product_size_additives ON product_size_additives.additive_id = additives.id AND product_size_additives.product_size_id = ?", productSizeID).
-		Where("additive_categories.deleted_at IS NULL").
-		Where("store_additives.deleted_at IS NULL")
+		Joins(`INNER JOIN additives ON additives.additive_category_id = additive_categories.id
+			INNER JOIN store_additives ON store_additives.additive_id = additives.id AND store_additives.store_id = ? AND store_additives.deleted_at IS NULL
+			INNER JOIN product_size_additives ON product_size_additives.additive_id = additives.id AND product_size_additives.product_size_id = ?
+		`, storeID, productSizeID).
+		Where("additive_categories.deleted_at IS NULL")
 
-	// Apply filters
 	if filter.IsMultipleSelect != nil {
-		query = query.Where("additive_categories.is_multiple_select = ?", *filter.IsMultipleSelect)
+		categoriesQuery = categoriesQuery.
+			Where("additive_categories.is_multiple_select = ?", *filter.IsMultipleSelect)
+	}
+	if search := filter.Search; search != nil && *search != "" {
+		pattern := "%" + *search + "%"
+		categoriesQuery = categoriesQuery.
+			Where("(additive_categories.name ILIKE ? OR additive_categories.description ILIKE ?)",
+				pattern, pattern)
 	}
 
-	if filter.Search != nil && *filter.Search != "" {
-		searchTerm := "%" + *filter.Search + "%"
-		query = query.Where("(additive_categories.name ILIKE ? OR additive_categories.description ILIKE ?)", searchTerm, searchTerm)
-	}
+	categoriesQuery = utils.ApplyLocalizedPreloads(categoriesQuery, locale, types.StoreAdditiveCategoryPreloadMap)
 
-	// Fetch categories first
-	err = query.Find(&categories).Error
-	if err != nil {
+	categoriesQuery = categoriesQuery.Preload("Additives", func(additiveQB *gorm.DB) *gorm.DB {
+		additiveQB = additiveQB.Joins(` INNER JOIN store_additives ON store_additives.additive_id = additives.id AND store_additives.store_id = ? AND store_additives.deleted_at IS NULL`, storeID).
+			Joins(`INNER JOIN product_size_additives ON product_size_additives.additive_id = additives.id AND product_size_additives.product_size_id = ?`, productSizeID).
+			Where("additives.deleted_at IS NULL")
+
+		additiveQB = utils.ApplyLocalizedPreloads(additiveQB, locale, types.StoreAdditivePreloadMap).
+			Preload("StoreAdditives", "store_id = ? AND deleted_at IS NULL", storeID).
+			Preload("ProductSizeAdditives", "product_size_id = ?", productSizeID)
+
+		return additiveQB
+	})
+
+	var categories []data.AdditiveCategory
+	if err := categoriesQuery.Find(&categories).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, moduleErrors.ErrNotFound
 		}
 		return nil, err
 	}
-
-	if len(categories) == 0 {
-		return categories, nil
-	}
-
-	// Extract category IDs
-	var categoryIDs []uint
-	for _, cat := range categories {
-		categoryIDs = append(categoryIDs, cat.ID)
-	}
-
-	// Get additives for these categories with a separate query
-	var additives []data.Additive
-	err = r.db.Model(&data.Additive{}).
-		Joins("INNER JOIN store_additives ON store_additives.additive_id = additives.id AND store_additives.store_id = ? AND store_additives.deleted_at IS NULL", storeID).
-		Preload("Unit").
-		Preload("Category").
-		Preload("StoreAdditives", "store_id = ? AND deleted_at IS NULL", storeID).
-		Preload("ProductSizeAdditives", "product_size_id = ?", productSizeID).
-		Where("additives.additive_category_id IN ?", categoryIDs).
-		Where("additives.deleted_at IS NULL").
-		Find(&additives).Error
-	if err != nil {
-		return nil, err
-	}
-
-	// Organize additives by category
-	additivesByCategoryID := make(map[uint][]data.Additive)
-	for _, additive := range additives {
-		additivesByCategoryID[additive.AdditiveCategoryID] = append(additivesByCategoryID[additive.AdditiveCategoryID], additive)
-	}
-
-	// Assign additives to their categories
-	for i := range categories {
-		if additiveList, ok := additivesByCategoryID[categories[i].ID]; ok {
-			categories[i].Additives = additiveList
-		}
-	}
-
 	return categories, nil
 }
 
@@ -501,7 +469,6 @@ func (r *storeAdditiveRepository) DeleteStoreAdditive(storeID, storeAdditiveID u
 		return types.ErrStoreAdditiveInUse
 	}
 
-	// Proceed with deletion if not in use
 	result := r.db.Where("store_id = ? AND id = ?", storeID, storeAdditiveID).Delete(&data.StoreAdditive{})
 	if result.Error != nil {
 		return errors.Wrap(result.Error, "failed to delete store additive")

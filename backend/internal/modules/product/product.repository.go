@@ -16,9 +16,11 @@ import (
 type ProductRepository interface {
 	CheckProductExists(productName string) (bool, error)
 	CreateProduct(product *data.Product) (uint, error)
-	GetProducts(filter *types.ProductsFilterDto) ([]data.Product, error)
+	GetProducts(locale data.LanguageCode, filter *types.ProductsFilterDto) ([]data.Product, error)
 	GetRawProductByID(productID uint) (*data.Product, error)
 	GetProductByID(productID uint) (*data.Product, error)
+	GetTranslatedProductByID(locale data.LanguageCode, productID uint) (*data.Product, error)
+
 	SaveProduct(product *data.Product) error
 	DeleteProduct(productID uint) (*data.Product, error)
 
@@ -28,6 +30,7 @@ type ProductRepository interface {
 	GetProductSizeDetailsByID(productSizeID uint) (*data.ProductSize, error)
 	UpdateProductSizeWithAssociations(id uint, updateModels *types.ProductSizeModels) error
 	DeleteProductSize(productID uint) error
+	FindRawProductByID(productID uint, product *data.Product) error
 
 	CloneWithTransaction(tx *gorm.DB) ProductRepository
 }
@@ -97,39 +100,42 @@ func (r *productRepository) GetProductSizeDetailsByID(productSizeID uint) (*data
 	return &productSize, nil
 }
 
-func (r *productRepository) GetProducts(filter *types.ProductsFilterDto) ([]data.Product, error) {
+func (r *productRepository) GetProducts(locale data.LanguageCode, filter *types.ProductsFilterDto) ([]data.Product, error) {
 	var products []data.Product
 
-	query := r.db.
-		Model(&data.Product{}).
-		Preload("Category").
-		Preload("ProductSizes.Unit")
+	base := r.db.Model(&data.Product{})
 
 	if filter.CategoryID != nil {
-		query = query.Where("products.category_id = ?", *filter.CategoryID)
+		base = base.Where("products.category_id = ?", *filter.CategoryID)
 	}
 
-	if filter.Search != nil {
-		searchPattern := "%" + *filter.Search + "%"
-		query = query.Where("products.name ILIKE ? OR products.description ILIKE ?", searchPattern, searchPattern)
+	if filter.Search != nil && *filter.Search != "" {
+		term := "%" + *filter.Search + "%"
+		base = base.Where(
+			"products.name ILIKE ? OR products.description ILIKE ?",
+			term, term,
+		)
 	}
 
-	var err error
-	query, err = utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.Product{})
+	pg, err := utils.ApplySortedPaginationForModel(
+		base, filter.Pagination, filter.Sort, &data.Product{},
+	)
 	if err != nil {
 		return nil, fmt.Errorf("failed to apply pagination: %w", err)
 	}
 
-	err = query.
-		Find(&products).Error
-	if err != nil {
+	pg = utils.ApplyLocalizedPreloads(
+		pg,
+		locale,
+		types.ProductPreloadMap,
+	)
+
+	if err := pg.Find(&products).Error; err != nil {
 		return nil, err
 	}
-
 	if products == nil {
 		products = []data.Product{}
 	}
-
 	return products, nil
 }
 
@@ -167,6 +173,22 @@ func (r *productRepository) GetProductByID(productID uint) (*data.Product, error
 	}
 
 	return &product, nil
+}
+
+func (r *productRepository) GetTranslatedProductByID(locale data.LanguageCode, productID uint) (*data.Product, error) {
+	var prod data.Product
+
+	q := r.db.Model(&data.Product{}).Where("id = ?", productID)
+
+	q = utils.ApplyLocalizedPreloads(q, locale, types.ProductPreloadMap)
+
+	if err := q.First(&prod).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, types.ErrProductNotFound
+		}
+		return nil, err
+	}
+	return &prod, nil
 }
 
 func (r *productRepository) CreateProduct(product *data.Product) (uint, error) {
@@ -557,6 +579,20 @@ func checkProductSizeInActiveOrders(db *gorm.DB, productSizeID uint) error {
 
 	if exists {
 		return types.ErrProductSizeIsInUse // Custom error indicating the ProductSize is in use
+	}
+
+	return nil
+}
+
+func (r *productRepository) FindRawProductByID(productID uint, product *data.Product) error {
+	err := r.db.
+		Where("id = ?", productID).
+		First(product).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return types.ErrProductNotFound
+		}
+		return err
 	}
 
 	return nil

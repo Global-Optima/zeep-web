@@ -44,10 +44,12 @@ type StoreAdditiveCategoryItemDTO struct {
 }
 
 type StoreAdditiveCategoryDTO struct {
-	ID               uint                           `json:"id"`
-	Name             string                         `json:"name"`
-	Description      string                         `json:"description"`
-	Additives        []StoreAdditiveCategoryItemDTO `json:"additives"`
-	IsMultipleSelect bool                           `json:"isMultipleSelect"`
-	IsRequired       bool                           `json:"isRequired"`
+	ID                    uint                           `json:"id"`
+	Name                  string                         `json:"name"`
+	TranslatedName        string                         `json:"translatedName,omitempty"`
+	Description           string                         `json:"description"`
+	TranslatedDescription string                         `json:"translatedDescription,omitempty"`
+	Additives             []StoreAdditiveCategoryItemDTO `json:"additives"`
+	IsMultipleSelect      bool                           `json:"isMultipleSelect"`
+	IsRequired            bool                           `json:"isRequired"`
 }

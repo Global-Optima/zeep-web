@@ -1,6 +1,9 @@
 package ingredients
 
 import (
+	"fmt"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"go.uber.org/zap"
@@ -11,19 +14,24 @@ type IngredientService interface {
 	UpdateIngredient(ingredientID uint, dto *types.UpdateIngredientDTO) error
 	DeleteIngredient(ingredientID uint) error
 	GetIngredientByID(ingredientID uint) (*types.IngredientDTO, error)
+	GetTranslatedIngredientByID(locale data.LanguageCode, ingredientID uint) (*types.IngredientDTO, error)
 	GetIngredientsByIDs(ingredientIDs []uint) ([]types.IngredientDTO, error)
-	GetIngredients(filter *types.IngredientFilter) ([]types.IngredientDTO, error)
+	GetIngredients(locale data.LanguageCode, filter *types.IngredientFilter) ([]types.IngredientDTO, error)
+
+	UpsertIngredientTranslations(id uint, dto *types.IngredientTranslationsDTO) error
 }
 
 type ingredientService struct {
-	repo   IngredientRepository
-	logger *zap.SugaredLogger
+	repo               IngredientRepository
+	transactionManager TransactionManager
+	logger             *zap.SugaredLogger
 }
 
-func NewIngredientService(repo IngredientRepository, logger *zap.SugaredLogger) IngredientService {
+func NewIngredientService(repo IngredientRepository, transactionManager TransactionManager, logger *zap.SugaredLogger) IngredientService {
 	return &ingredientService{
-		repo:   repo,
-		logger: logger,
+		repo:               repo,
+		transactionManager: transactionManager,
+		logger:             logger,
 	}
 }
 
@@ -79,6 +87,15 @@ func (s *ingredientService) GetIngredientByID(ingredientID uint) (*types.Ingredi
 	return types.ConvertToIngredientResponseDTO(ingredient), nil
 }
 
+func (s *ingredientService) GetTranslatedIngredientByID(locale data.LanguageCode, ingredientID uint) (*types.IngredientDTO, error) {
+	ingredient, err := s.repo.GetTranslatedIngredientByID(locale, ingredientID)
+	if err != nil {
+		s.logger.Error("Failed to fetch translated ingredient by ID:", err)
+		return nil, err
+	}
+	return types.ConvertToIngredientResponseDTO(ingredient), nil
+}
+
 func (s *ingredientService) GetIngredientsByIDs(ingredientIDs []uint) ([]types.IngredientDTO, error) {
 	ingredients, err := s.repo.GetIngredientsWithDetailsByIDs(ingredientIDs)
 	if err != nil {
@@ -94,12 +111,26 @@ func (s *ingredientService) GetIngredientsByIDs(ingredientIDs []uint) ([]types.I
 	return dtos, nil
 }
 
-func (s *ingredientService) GetIngredients(filter *types.IngredientFilter) ([]types.IngredientDTO, error) {
-	ingredients, err := s.repo.GetIngredients(filter)
+func (s *ingredientService) GetIngredients(locale data.LanguageCode, filter *types.IngredientFilter) ([]types.IngredientDTO, error) {
+	ingredients, err := s.repo.GetIngredients(locale, filter)
 	if err != nil {
 		s.logger.Error("Failed to fetch ingredients:", err)
 		return nil, err
 	}
 
 	return types.ConvertToIngredientResponseDTOs(ingredients), nil
+}
+
+func (s *ingredientService) UpsertIngredientTranslations(id uint, dto *types.IngredientTranslationsDTO) error {
+	if dto == nil {
+		return fmt.Errorf("translations DTO is nil")
+	}
+
+	if err := s.transactionManager.UpsertIngredientTranslations(id, dto); err != nil {
+		wrappedErr := fmt.Errorf("failed to upsert ingredient translations: %w", err)
+		s.logger.Error(wrappedErr)
+		return wrappedErr
+	}
+
+	return nil
 }

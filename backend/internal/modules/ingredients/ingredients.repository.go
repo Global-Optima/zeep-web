@@ -15,13 +15,17 @@ type IngredientRepository interface {
 	SaveIngredient(ingredientID uint, ingredient *data.Ingredient) error
 	DeleteIngredient(ingredientID uint) error
 	GetIngredientByID(ingredientID uint) (*data.Ingredient, error)
+	GetTranslatedIngredientByID(locale data.LanguageCode, ingredientID uint) (*data.Ingredient, error)
 	GetRawIngredientByID(ingredientID uint) (*data.Ingredient, error)
 	GetIngredientsWithDetailsByIDs(ingredientIDs []uint) ([]data.Ingredient, error)
-	GetIngredients(filter *types.IngredientFilter) ([]data.Ingredient, error)
+	GetIngredients(locale data.LanguageCode, filter *types.IngredientFilter) ([]data.Ingredient, error)
 	GetIngredientsForProductSizes(productSizeIDs []uint) ([]data.Ingredient, error)
 	GetIngredientsForAdditives(additiveIDs []uint) ([]data.Ingredient, error)
 	GetIngredientsForProvisions(provisionIDs []uint) ([]data.Ingredient, error)
 	GetIngredientIDsForProvisions(provisionIDs []uint) ([]uint, error)
+	FindRawIngredientByID(ingredientID uint, ingredient *data.Ingredient) error
+
+	CloneWithTransaction(tx *gorm.DB) IngredientRepository
 }
 
 type ingredientRepository struct {
@@ -30,6 +34,18 @@ type ingredientRepository struct {
 
 func NewIngredientRepository(db *gorm.DB) IngredientRepository {
 	return &ingredientRepository{db: db}
+}
+
+func (r *ingredientRepository) CloneWithTransaction(tx *gorm.DB) IngredientRepository {
+	return &ingredientRepository{
+		db: tx,
+	}
+}
+
+func (r *ingredientRepository) FindRawIngredientByID(ingredientID uint, ingredient *data.Ingredient) error {
+	return r.db.
+		Where("id = ?", ingredientID).
+		First(ingredient).Error
 }
 
 func (r *ingredientRepository) CreateIngredient(ingredient *data.Ingredient) (uint, error) {
@@ -71,6 +87,22 @@ func (r *ingredientRepository) GetIngredientByID(ingredientID uint) (*data.Ingre
 	return &ingredient, nil
 }
 
+func (r *ingredientRepository) GetTranslatedIngredientByID(locale data.LanguageCode, ingredientID uint) (*data.Ingredient, error) {
+	var ingredient data.Ingredient
+
+	q := r.db.Model(&data.Ingredient{}).Where("id = ?", ingredientID)
+
+	q = utils.ApplyLocalizedPreloads(q, locale, types.IngredientPreloadMap)
+
+	if err := q.First(&ingredient).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, types.ErrIngredientNotFound
+		}
+		return nil, err
+	}
+	return &ingredient, nil
+}
+
 func (r *ingredientRepository) GetIngredientsWithDetailsByIDs(ingredientIDs []uint) ([]data.Ingredient, error) {
 	var ingredients []data.Ingredient
 	err := r.db.Model(&data.Ingredient{}).
@@ -85,40 +117,50 @@ func (r *ingredientRepository) GetIngredientsWithDetailsByIDs(ingredientIDs []ui
 	return ingredients, nil
 }
 
-func (r *ingredientRepository) GetIngredients(filter *types.IngredientFilter) ([]data.Ingredient, error) {
+func (r *ingredientRepository) GetIngredients(locale data.LanguageCode, filter *types.IngredientFilter) ([]data.Ingredient, error) {
 	var ingredients []data.Ingredient
-	query := r.db.Model(&data.Ingredient{}).Preload("Unit").Preload("IngredientCategory")
 
-	// Apply filtering
+	q := r.db.Model(&data.Ingredient{})
+
 	if filter.ProductSizeID != nil {
-		query = query.Joins("JOIN product_size_ingredients psi ON psi.ingredient_id = ingredients.id").
-			Where("psi.product_size_id = ?", *filter.ProductSizeID)
+		q = q.Joins(`
+			JOIN product_size_ingredients psi
+			  ON psi.ingredient_id = ingredients.id
+		`).Where("psi.product_size_id = ?", *filter.ProductSizeID)
 	}
 
-	if filter.Name != nil {
-		query = query.Where("name ILIKE ?", "%"+*filter.Name+"%")
+	if filter.Name != nil && *filter.Name != "" {
+		q = q.Where("ingredients.name ILIKE ?", "%"+*filter.Name+"%")
 	}
 	if filter.MinCalories != nil {
-		query = query.Where("calories >= ?", *filter.MinCalories)
+		q = q.Where("calories >= ?", *filter.MinCalories)
 	}
 	if filter.MaxCalories != nil {
-		query = query.Where("calories <= ?", *filter.MaxCalories)
+		q = q.Where("calories <= ?", *filter.MaxCalories)
 	}
 	if filter.IsAllergen != nil {
-		query = query.Where("is_allergen = ?", *filter.IsAllergen)
+		q = q.Where("is_allergen = ?", *filter.IsAllergen)
 	}
 
-	// Apply pagination
-	query, err := utils.ApplySortedPaginationForModel(query, filter.Pagination, filter.Sort, &data.Ingredient{})
+	paged, err := utils.ApplySortedPaginationForModel(
+		q, filter.Pagination, filter.Sort, &data.Ingredient{},
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	// Execute query
-	if err := query.Find(&ingredients).Error; err != nil {
+	paged = utils.ApplyLocalizedPreloads(
+		paged,
+		locale,
+		types.IngredientPreloadMap,
+	)
+
+	if err := paged.Find(&ingredients).Error; err != nil {
 		return nil, err
 	}
-
+	if ingredients == nil {
+		ingredients = []data.Ingredient{}
+	}
 	return ingredients, nil
 }
 
