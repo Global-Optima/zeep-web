@@ -30,9 +30,9 @@ type StoreAdditiveRepository interface {
 
 	UpdateStoreAdditive(storeID, storeAdditiveID uint, input *data.StoreAdditive) error
 	DeleteStoreAdditive(storeID, storeAdditiveID uint) error
-	GetProductSizeIDMap(storeProductSizeIDs []uint) (map[uint]uint, error)
-	GetAdditiveIDMap(storeAdditiveIDs []uint) (map[uint]uint, error)
-	GetPSAsByPSAndAdditive(productSizeIDs, additiveIDs []uint) ([]data.ProductSizeAdditive, error)
+	GetStoreProductSizeToProductSizeMap(storeProductSizeIDs []uint) (map[uint]uint, error)
+	GetStoreAdditiveToAdditiveMap(storeAdditiveIDs []uint) (map[uint]uint, error)
+	GetProductSizeAdditivesByProductSizeAndAdditive(productSizeIDs, additiveIDs []uint) ([]data.ProductSizeAdditive, error)
 
 	CloneWithTransaction(tx *gorm.DB) StoreAdditiveRepository
 }
@@ -458,7 +458,7 @@ func (r *storeAdditiveRepository) DeleteStoreAdditive(storeID, storeAdditiveID u
 	return nil
 }
 
-func (r *storeAdditiveRepository) GetProductSizeIDMap(storeProductSizeIDs []uint) (map[uint]uint, error) {
+func (r *storeAdditiveRepository) GetStoreProductSizeToProductSizeMap(storeProductSizeIDs []uint) (map[uint]uint, error) {
 	var spsList []data.StoreProductSize
 	if err := r.db.
 		Model(&data.StoreProductSize{}).
@@ -474,7 +474,7 @@ func (r *storeAdditiveRepository) GetProductSizeIDMap(storeProductSizeIDs []uint
 	return m, nil
 }
 
-func (r *storeAdditiveRepository) GetAdditiveIDMap(storeAdditiveIDs []uint) (map[uint]uint, error) {
+func (r *storeAdditiveRepository) GetStoreAdditiveToAdditiveMap(storeAdditiveIDs []uint) (map[uint]uint, error) {
 	var saList []data.StoreAdditive
 	if err := r.db.
 		Model(&data.StoreAdditive{}).
@@ -490,7 +490,7 @@ func (r *storeAdditiveRepository) GetAdditiveIDMap(storeAdditiveIDs []uint) (map
 	return m, nil
 }
 
-func (r *storeAdditiveRepository) GetPSAsByPSAndAdditive(productSizeIDs, additiveIDs []uint) ([]data.ProductSizeAdditive, error) {
+func (r *storeAdditiveRepository) GetProductSizeAdditivesByProductSizeAndAdditive(productSizeIDs, additiveIDs []uint) ([]data.ProductSizeAdditive, error) {
 	var psas []data.ProductSizeAdditive
 	if err := r.db.
 		Model(&data.ProductSizeAdditive{}).

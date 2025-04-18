@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	OrderPaymentFailure = "order-payment-failure"
+	OrderPaymentFailure = "ORDER_PAYMENT_FAILURE"
 )
 
 type subordersQuantities struct {

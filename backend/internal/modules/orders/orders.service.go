@@ -497,11 +497,11 @@ func getProductSizeAdditiveMapByKeys(
 	}
 
 	// --- 2) Fetch the ID maps from repo ---
-	spsToPs, err := storeAdditiveRepo.GetProductSizeIDMap(storePSIDs)
+	spsToPs, err := storeAdditiveRepo.GetStoreProductSizeToProductSizeMap(storePSIDs)
 	if err != nil {
 		return nil, err
 	}
-	addToAdd, err := storeAdditiveRepo.GetAdditiveIDMap(storeAddIDs)
+	addToAdd, err := storeAdditiveRepo.GetStoreAdditiveToAdditiveMap(storeAddIDs)
 	if err != nil {
 		return nil, err
 	}
@@ -526,7 +526,7 @@ func getProductSizeAdditiveMapByKeys(
 		productSizeIDs = append(productSizeIDs, p.productSizeID)
 		additiveIDs = append(additiveIDs, p.additiveID)
 	}
-	psas, err := storeAdditiveRepo.GetPSAsByPSAndAdditive(productSizeIDs, additiveIDs)
+	psas, err := storeAdditiveRepo.GetProductSizeAdditivesByProductSizeAndAdditive(productSizeIDs, additiveIDs)
 	if err != nil {
 		return nil, err
 	}
