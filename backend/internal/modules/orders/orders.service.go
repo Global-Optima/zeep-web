@@ -26,44 +26,6 @@ import (
 	"go.uber.org/zap"
 )
 
-const (
-	OrderPaymentFailure = "order-payment-failure"
-)
-
-type subordersQuantities struct {
-	storeProductSizesQty map[uint]uint
-	storeAdditivesQty    map[uint]uint
-}
-
-type preparedData struct {
-	storeProductSizeIDs       []uint
-	suborderStoreAdditivesCtx *suborderAdditivesContext
-	suborderQuantities        *subordersQuantities
-}
-
-type storeProductSizeValidationResults struct {
-	storeProductSizesList []data.StoreProductSize
-	prices                map[uint]float64
-	names                 map[uint]string
-}
-
-type storeAdditiveValidationResults struct {
-	storeAdditivesList []data.StoreAdditive
-	prices             map[uint]float64
-	names              map[uint]string
-}
-
-type suborderAdditivesContext struct {
-	storeAddKeys []storeAdditivesTypes.StorePStoAdditiveKey
-	storeAddIDs  []uint
-}
-
-type subordersContext struct {
-	subordersQuantities   *subordersQuantities
-	storeProductSizesList []data.StoreProductSize
-	storeAdditivesList    []data.StoreAdditive
-}
-
 type OrderService interface {
 	GetOrders(filter types.OrdersFilterQuery) ([]types.OrderDTO, error)
 	GetAllBaristaOrders(filter types.OrdersTimeZoneFilter) ([]types.OrderDTO, error)
@@ -79,14 +41,6 @@ type OrderService interface {
 
 	SuccessOrderPayment(orderID uint, dto *types.TransactionDTO) error
 	FailOrderPayment(orderID uint) error
-}
-
-type orderValidationResults struct {
-	ProductPrices  map[uint]float64
-	ProductNames   map[uint]string
-	AdditivePrices map[uint]float64
-	AdditiveNames  map[uint]string
-	subordersCtx   *subordersContext
 }
 
 type orderService struct {
@@ -226,8 +180,8 @@ func (s *orderService) CreateOrder(createOrderDTO *types.CreateOrderDTO) (*data.
 
 	order, total := types.ConvertCreateOrderDTOToOrder(
 		createOrderDTO,
-		validationRes.ProductPrices,
-		validationRes.AdditivePrices,
+		validationRes.productPrices,
+		validationRes.additivePrices,
 	)
 	order.Status = data.OrderStatusWaitingForPayment
 	order.Total = total
@@ -300,10 +254,10 @@ func validateSuborders(
 	}
 
 	return &orderValidationResults{
-		ProductPrices:  spsValRes.prices,
-		ProductNames:   spsValRes.names,
-		AdditivePrices: saValRes.prices,
-		AdditiveNames:  saValRes.names,
+		productPrices:  spsValRes.prices,
+		productNames:   spsValRes.names,
+		additivePrices: saValRes.prices,
+		additiveNames:  saValRes.names,
 		subordersCtx: &subordersContext{
 			subordersQuantities:   orderData.suborderQuantities,
 			storeProductSizesList: spsValRes.storeProductSizesList,
@@ -553,15 +507,14 @@ func getProductSizeAdditiveMapByKeys(
 	}
 
 	// --- 3) Build set of real (productSizeID, additiveID) pairs ---
-	type pair struct{ PS, A uint }
-	pairSet := map[pair]struct{}{}
+	pairSet := map[productSizeToAdditiveKey]struct{}{}
 	for _, k := range keys {
-		psID, ok1 := spsToPs[k.StoreProductSizeID]
-		addID, ok2 := addToAdd[k.StoreAdditiveID]
-		if !ok1 || !ok2 {
+		psID, successProductSize := spsToPs[k.StoreProductSizeID]
+		addID, successAdditive := addToAdd[k.StoreAdditiveID]
+		if !successProductSize || !successAdditive {
 			continue
 		}
-		pairSet[pair{psID, addID}] = struct{}{}
+		pairSet[productSizeToAdditiveKey{psID, addID}] = struct{}{}
 	}
 	if len(pairSet) == 0 {
 		return make(map[storeAdditivesTypes.StorePStoAdditiveKey]*data.ProductSizeAdditive), nil
@@ -570,8 +523,8 @@ func getProductSizeAdditiveMapByKeys(
 	// --- 4) Query PSAs for those pairs ---
 	var productSizeIDs, additiveIDs []uint
 	for p := range pairSet {
-		productSizeIDs = append(productSizeIDs, p.PS)
-		additiveIDs = append(additiveIDs, p.A)
+		productSizeIDs = append(productSizeIDs, p.productSizeID)
+		additiveIDs = append(additiveIDs, p.additiveID)
 	}
 	psas, err := storeAdditiveRepo.GetPSAsByPSAndAdditive(productSizeIDs, additiveIDs)
 	if err != nil {
@@ -579,10 +532,13 @@ func getProductSizeAdditiveMapByKeys(
 	}
 
 	// --- 5) Build a lookup from the DB rows ---
-	psaLookup := make(map[pair]*data.ProductSizeAdditive, len(psas))
+	psaLookup := make(map[productSizeToAdditiveKey]*data.ProductSizeAdditive, len(psas))
 	for i := range psas {
 		p := &psas[i]
-		psaLookup[pair{p.ProductSizeID, p.AdditiveID}] = p
+		psaLookup[productSizeToAdditiveKey{
+			productSizeID: p.ProductSizeID,
+			additiveID:    p.AdditiveID,
+		}] = p
 	}
 
 	// --- 6) Map back to the original keys ---
@@ -590,7 +546,10 @@ func getProductSizeAdditiveMapByKeys(
 	for _, k := range keys {
 		if psID, ok1 := spsToPs[k.StoreProductSizeID]; ok1 {
 			if addID, ok2 := addToAdd[k.StoreAdditiveID]; ok2 {
-				if psa, ok3 := psaLookup[pair{psID, addID}]; ok3 {
+				if psa, keyExists := psaLookup[productSizeToAdditiveKey{
+					productSizeID: psID,
+					additiveID:    addID,
+				}]; keyExists {
 					result[k] = psa
 				}
 			}

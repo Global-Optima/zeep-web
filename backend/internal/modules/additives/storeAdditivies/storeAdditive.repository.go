@@ -15,11 +15,6 @@ import (
 	"gorm.io/gorm"
 )
 
-type psAddKey struct {
-	ProductSizeID uint
-	AdditiveID    uint
-}
-
 type StoreAdditiveRepository interface {
 	GetMissingStoreAdditiveIDsForProductSizes(storeID uint, productSizeIDs []uint) ([]uint, error)
 	FilterMissingStoreAdditiveIDs(storeID uint, additivesIDs []uint) ([]uint, error)

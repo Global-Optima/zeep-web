@@ -30,13 +30,9 @@ func deductStoreStocks(
 		ids = append(ids, id)
 	}
 
-	var stocks []data.StoreStock
-	if err := tx.
-		Preload("Ingredient").
-		Preload("Ingredient.Unit").
-		Where("store_id = ? AND ingredient_id IN ?", storeID, ids).
-		Find(&stocks).Error; err != nil {
-		return nil, fmt.Errorf("failed to load store stocks: %w", err)
+	stocks, err := getRelevantStoreStocks(tx, storeID, ids)
+	if err != nil {
+		return nil, err
 	}
 
 	// Map for lookup.
@@ -100,13 +96,9 @@ func deductStoreProvisions(
 		provIDs = append(provIDs, id)
 	}
 
-	var allProv []data.StoreProvision
-	if err := tx.
-		Where("store_id = ? AND provision_id IN ? AND status = ? AND (expires_at IS NULL OR expires_at > ?)",
-			storeID, provIDs, data.STORE_PROVISION_STATUS_COMPLETED, time.Now().UTC()).
-		Order("created_at ASC").
-		Find(&allProv).Error; err != nil {
-		return nil, fmt.Errorf("failed to load store provisions: %w", err)
+	allProv, err := getRelevantStoreProvisions(tx, storeID, provIDs)
+	if err != nil {
+		return nil, err
 	}
 
 	// Group by provisionID
@@ -121,35 +113,9 @@ func deductStoreProvisions(
 	var toSave []data.StoreProvision
 
 	for provID, reqVol := range requiredProvisionVolMap {
-		remain := reqVol
-		var used []*data.StoreProvision
-
-		list := group[provID]
-		for i := range list {
-			if remain <= 0 {
-				break
-			}
-			p := list[i]
-			avail := p.Volume
-			delta := avail
-			if delta > remain {
-				delta = remain
-			}
-			if delta == 0 {
-				continue
-			}
-			p.Volume -= delta
-			remain -= delta
-			if p.Volume == 0 {
-				p.Status = data.STORE_PROVISION_STATUS_EMPTY
-			}
-			toSave = append(toSave, *p)
-			used = append(used, p)
-		}
-
-		if remain > 0 {
-			return nil, fmt.Errorf("%w: not enough volume for provision %d",
-				storeProvisionsTypes.ErrInsufficientStoreProvision, provID)
+		used, err := deductProvision(provID, reqVol, group[provID], &toSave)
+		if err != nil {
+			return nil, err
 		}
 		result[provID] = used
 	}
@@ -159,6 +125,44 @@ func deductStoreProvisions(
 	}
 
 	return result, nil
+}
+
+func deductProvision(
+	provID uint,
+	reqVol float64,
+	list []*data.StoreProvision,
+	toSave *[]data.StoreProvision,
+) ([]*data.StoreProvision, error) {
+	remain := reqVol
+	var used []*data.StoreProvision
+
+	for _, p := range list {
+		if remain <= 0 {
+			break
+		}
+		delta := p.Volume
+		if delta > remain {
+			delta = remain
+		}
+		if delta == 0 {
+			continue
+		}
+
+		p.Volume -= delta
+		remain -= delta
+		if p.Volume == 0 {
+			p.Status = data.STORE_PROVISION_STATUS_EMPTY
+		}
+
+		*toSave = append(*toSave, *p)
+		used = append(used, p)
+	}
+
+	if remain > 0 {
+		return nil, fmt.Errorf("%w: not enough volume for provision %d",
+			storeProvisionsTypes.ErrInsufficientStoreProvision, provID)
+	}
+	return used, nil
 }
 
 func bulkSaveStoreProvisions(
