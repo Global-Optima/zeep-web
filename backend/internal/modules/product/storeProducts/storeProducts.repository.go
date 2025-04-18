@@ -59,7 +59,6 @@ func (r *storeProductRepository) GetStoreProductCategories(
 	locale data.LanguageCode,
 	storeID uint,
 ) ([]data.ProductCategory, error) {
-
 	var categories []data.ProductCategory
 
 	q := r.db.Model(&data.ProductCategory{}).
@@ -272,7 +271,6 @@ func (r *storeProductRepository) FilterProductsWithSufficientStock(storeID uint,
 }
 
 func (r *storeProductRepository) hasSufficientStockForProduct(storeID uint, sp *data.StoreProduct) (bool, error) {
-
 	for _, sps := range sp.StoreProductSizes {
 		productSize := sps.ProductSize
 		allIngredientsAvailable := true
@@ -475,7 +473,6 @@ func processIncomingSizes(
 				return nil, nil, err
 			}
 		} else {
-
 			sizesToInsert = append(sizesToInsert, data.StoreProductSize{
 				StoreProductID: storeProductID,
 				ProductSizeID:  dto.ProductSizeID,
