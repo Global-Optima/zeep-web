@@ -5,6 +5,8 @@ import (
 	"slices"
 	"time"
 
+	"gorm.io/gorm/clause"
+
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	storeProvisionsTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/storeProvisions/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers/types"
@@ -45,6 +47,7 @@ func deductStoreStocks(
 	}
 
 	// 2) Deduct each required amount.
+	var toSave []data.StoreStock
 	result := make(map[uint]*data.StoreStock, len(requiredIngredientQtyMap))
 	for ingrID, reqQty := range requiredIngredientQtyMap {
 		s, ok := stockMap[ingrID]
@@ -56,19 +59,37 @@ func deductStoreStocks(
 				storeStocksTypes.ErrInsufficientStock, ingrID)
 		}
 		s.Quantity -= reqQty
-		if err := tx.Save(s).Error; err != nil {
-			return nil, fmt.Errorf("failed to save stock for ingredient %d: %w", ingrID, err)
-		}
+		toSave = append(toSave, *s)
 		result[ingrID] = s
 	}
+
+	if err := bulkSaveStoreStocks(tx, toSave); err != nil {
+		return nil, err
+	}
+
 	return result, nil
+}
+
+func bulkSaveStoreStocks(tx *gorm.DB, stocks []data.StoreStock) error {
+	if len(stocks) == 0 {
+		return nil
+	}
+
+	err := tx.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "id"}},
+		DoUpdates: clause.AssignmentColumns([]string{"quantity"}),
+	}).Create(&stocks).Error
+	if err != nil {
+		return fmt.Errorf("bulk upsert store_stocks failed: %w", err)
+	}
+	return nil
 }
 
 func deductStoreProvisions(
 	tx *gorm.DB,
 	storeID uint,
 	requiredProvisionVolMap map[uint]float64,
-) (map[uint][]data.StoreProvision, error) {
+) (map[uint][]*data.StoreProvision, error) {
 	if len(requiredProvisionVolMap) == 0 {
 		return nil, nil
 	}
@@ -89,23 +110,26 @@ func deductStoreProvisions(
 	}
 
 	// Group by provisionID
-	group := make(map[uint][]data.StoreProvision, len(requiredProvisionVolMap))
-	for _, p := range allProv {
+	group := make(map[uint][]*data.StoreProvision, len(requiredProvisionVolMap))
+	for i := range allProv {
+		p := &allProv[i]
 		group[p.ProvisionID] = append(group[p.ProvisionID], p)
 	}
 
 	// 2) Deduct for each provision ID
-	result := make(map[uint][]data.StoreProvision, len(requiredProvisionVolMap))
+	result := make(map[uint][]*data.StoreProvision, len(requiredProvisionVolMap))
+	var toSave []data.StoreProvision
+
 	for provID, reqVol := range requiredProvisionVolMap {
 		remain := reqVol
-		used := []data.StoreProvision{}
+		var used []*data.StoreProvision
 
 		list := group[provID]
 		for i := range list {
 			if remain <= 0 {
 				break
 			}
-			p := &list[i]
+			p := list[i]
 			avail := p.Volume
 			delta := avail
 			if delta > remain {
@@ -119,10 +143,8 @@ func deductStoreProvisions(
 			if p.Volume == 0 {
 				p.Status = data.STORE_PROVISION_STATUS_EMPTY
 			}
-			if err := tx.Save(p).Error; err != nil {
-				return nil, fmt.Errorf("failed to update provision %d: %w", p.ID, err)
-			}
-			used = append(used, *p)
+			toSave = append(toSave, *p)
+			used = append(used, p)
 		}
 
 		if remain > 0 {
@@ -131,7 +153,29 @@ func deductStoreProvisions(
 		}
 		result[provID] = used
 	}
+
+	if err := bulkSaveStoreProvisions(tx, toSave); err != nil {
+		return nil, err
+	}
+
 	return result, nil
+}
+
+func bulkSaveStoreProvisions(
+	tx *gorm.DB,
+	provisions []data.StoreProvision,
+) error {
+	if len(provisions) == 0 {
+		return nil
+	}
+
+	if err := tx.Clauses(clause.OnConflict{
+		Columns:   []clause.Column{{Name: "id"}},
+		DoUpdates: clause.AssignmentColumns([]string{"volume", "status"}),
+	}).Create(&provisions).Error; err != nil {
+		return fmt.Errorf("bulk upsert store_provisions failed: %w", err)
+	}
+	return nil
 }
 
 func recalculateStoreProducts(

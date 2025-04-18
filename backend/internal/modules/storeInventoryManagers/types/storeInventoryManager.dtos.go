@@ -58,7 +58,7 @@ type InventoryUsage struct {
 
 type DeductedInventoryMap struct {
 	IngredientStoreStockMap     map[uint]*data.StoreStock
-	ProvisionStoreProvisionsMap map[uint][]data.StoreProvision
+	ProvisionStoreProvisionsMap map[uint][]*data.StoreProvision
 }
 
 func (d *DeductedInventoryMap) GetIDs() *InventoryIDsList {

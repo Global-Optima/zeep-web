@@ -31,7 +31,8 @@ func NewStockRequestsModule(
 	service := stockRequests.NewStockRequestService(
 		repo,
 		stockMaterialRepo,
-		stockRequests.NewTransactionManager(base.DB, repo, stockMaterialRepo, storeInventoryManagerRepo),
+		storeInventoryManagerRepo,
+		stockRequests.NewTransactionManager(base.DB, repo, stockMaterialRepo),
 		notificationService,
 		base.Logger,
 	)

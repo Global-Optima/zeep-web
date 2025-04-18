@@ -54,7 +54,7 @@ type storeAdditiveValidationResults struct {
 }
 
 type suborderAdditivesContext struct {
-	storeAddKeys []storeAdditivesTypes.StorePSAdditiveKey
+	storeAddKeys []storeAdditivesTypes.StorePStoAdditiveKey
 	storeAddIDs  []uint
 }
 
@@ -315,10 +315,10 @@ func validateSuborders(
 func validateStoreAdditives(
 	storeID uint,
 	ctx *suborderAdditivesContext,
-	repo storeAdditives.StoreAdditiveRepository,
+	storeAdditiveRepo storeAdditives.StoreAdditiveRepository,
 ) (*storeAdditiveValidationResults, error) {
 	// 1) Batch fetch StoreAdditives by the collected additive IDs.
-	storeAdditivesList, err := repo.GetStoreAdditivesWithDetailsByIDs(storeID, ctx.storeAddIDs)
+	storeAdditivesList, err := storeAdditiveRepo.GetStoreAdditivesWithDetailsByIDs(storeID, ctx.storeAddIDs)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch storeAdditives: %w", err)
 	}
@@ -331,7 +331,7 @@ func validateStoreAdditives(
 	}
 
 	// 2) Batch fetch ProductSizeAdditives using the aggregated keys.
-	psaMap, err := repo.GetPSAByProductSizeAndAdditive(ctx.storeAddKeys)
+	psaMap, err := getProductSizeAdditiveMapByKeys(storeAdditiveRepo, ctx.storeAddKeys)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch productSizeAdditives: %w", err)
 	}
@@ -478,7 +478,7 @@ func prepareData(suborders []types.CreateSubOrderDTO) *preparedData {
 
 	// Use maps as sets for uniqueness.
 	spsSet := make(map[uint]struct{})
-	saKeySet := make(map[storeAdditivesTypes.StorePSAdditiveKey]struct{})
+	saKeySet := make(map[storeAdditivesTypes.StorePStoAdditiveKey]struct{})
 	additiveIDSet := make(map[uint]struct{})
 
 	for _, sub := range suborders {
@@ -486,7 +486,7 @@ func prepareData(suborders []types.CreateSubOrderDTO) *preparedData {
 		spsQty[sub.StoreProductSizeID] += sub.Quantity
 
 		for _, storeAdditiveID := range sub.StoreAdditivesIDs {
-			key := storeAdditivesTypes.StorePSAdditiveKey{
+			key := storeAdditivesTypes.StorePStoAdditiveKey{
 				StoreProductSizeID: sub.StoreProductSizeID,
 				StoreAdditiveID:    storeAdditiveID,
 			}
@@ -502,7 +502,7 @@ func prepareData(suborders []types.CreateSubOrderDTO) *preparedData {
 	for id := range spsSet {
 		storeProductSizeIDs = append(storeProductSizeIDs, id)
 	}
-	addKeys := make([]storeAdditivesTypes.StorePSAdditiveKey, 0, len(saKeySet))
+	addKeys := make([]storeAdditivesTypes.StorePStoAdditiveKey, 0, len(saKeySet))
 	for k := range saKeySet {
 		addKeys = append(addKeys, k)
 	}
@@ -522,6 +522,81 @@ func prepareData(suborders []types.CreateSubOrderDTO) *preparedData {
 			storeAdditivesQty:    saQty,
 		},
 	}
+}
+
+func getProductSizeAdditiveMapByKeys(
+	storeAdditiveRepo storeAdditives.StoreAdditiveRepository,
+	keys []storeAdditivesTypes.StorePStoAdditiveKey,
+) (map[storeAdditivesTypes.StorePStoAdditiveKey]*data.ProductSizeAdditive, error) {
+	// --- 1) Extract unique store‐side IDs ---
+	spsSet, addSet := map[uint]struct{}{}, map[uint]struct{}{}
+	for _, k := range keys {
+		spsSet[k.StoreProductSizeID] = struct{}{}
+		addSet[k.StoreAdditiveID] = struct{}{}
+	}
+	var storePSIDs, storeAddIDs []uint
+	for id := range spsSet {
+		storePSIDs = append(storePSIDs, id)
+	}
+	for id := range addSet {
+		storeAddIDs = append(storeAddIDs, id)
+	}
+
+	// --- 2) Fetch the ID maps from repo ---
+	spsToPs, err := storeAdditiveRepo.GetProductSizeIDMap(storePSIDs)
+	if err != nil {
+		return nil, err
+	}
+	addToAdd, err := storeAdditiveRepo.GetAdditiveIDMap(storeAddIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	// --- 3) Build set of real (productSizeID, additiveID) pairs ---
+	type pair struct{ PS, A uint }
+	pairSet := map[pair]struct{}{}
+	for _, k := range keys {
+		psID, ok1 := spsToPs[k.StoreProductSizeID]
+		addID, ok2 := addToAdd[k.StoreAdditiveID]
+		if !ok1 || !ok2 {
+			continue
+		}
+		pairSet[pair{psID, addID}] = struct{}{}
+	}
+	if len(pairSet) == 0 {
+		return make(map[storeAdditivesTypes.StorePStoAdditiveKey]*data.ProductSizeAdditive), nil
+	}
+
+	// --- 4) Query PSAs for those pairs ---
+	var productSizeIDs, additiveIDs []uint
+	for p := range pairSet {
+		productSizeIDs = append(productSizeIDs, p.PS)
+		additiveIDs = append(additiveIDs, p.A)
+	}
+	psas, err := storeAdditiveRepo.GetPSAsByPSAndAdditive(productSizeIDs, additiveIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	// --- 5) Build a lookup from the DB rows ---
+	psaLookup := make(map[pair]*data.ProductSizeAdditive, len(psas))
+	for i := range psas {
+		p := &psas[i]
+		psaLookup[pair{p.ProductSizeID, p.AdditiveID}] = p
+	}
+
+	// --- 6) Map back to the original keys ---
+	result := make(map[storeAdditivesTypes.StorePStoAdditiveKey]*data.ProductSizeAdditive, len(keys))
+	for _, k := range keys {
+		if psID, ok1 := spsToPs[k.StoreProductSizeID]; ok1 {
+			if addID, ok2 := addToAdd[k.StoreAdditiveID]; ok2 {
+				if psa, ok3 := psaLookup[pair{psID, addID}]; ok3 {
+					result[k] = psa
+				}
+			}
+		}
+	}
+	return result, nil
 }
 
 func (s *orderService) CheckAndAccumulateSuborders(

@@ -52,7 +52,7 @@ type StoreAdditiveCategoryDTO struct {
 	IsRequired       bool                           `json:"isRequired"`
 }
 
-type StorePSAdditiveKey struct {
+type StorePStoAdditiveKey struct {
 	StoreProductSizeID uint
 	StoreAdditiveID    uint
 }

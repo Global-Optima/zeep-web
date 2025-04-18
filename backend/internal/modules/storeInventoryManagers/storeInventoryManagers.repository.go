@@ -95,7 +95,7 @@ func (r *storeInventoryManagerRepository) GetProvisionsByIDs(provisionIDs []uint
 func (r *storeInventoryManagerRepository) DeductStoreInventory(storeID uint, inventory *types.InventoryUsage) (*types.DeductedInventoryMap, error) {
 	deductedInventory := &types.DeductedInventoryMap{
 		IngredientStoreStockMap:     make(map[uint]*data.StoreStock),
-		ProvisionStoreProvisionsMap: make(map[uint][]data.StoreProvision),
+		ProvisionStoreProvisionsMap: make(map[uint][]*data.StoreProvision),
 	}
 
 	err := r.db.Transaction(func(tx *gorm.DB) error {

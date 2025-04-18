@@ -4,6 +4,9 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers"
+	storeInventoryManagersTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers/types"
+
 	"go.uber.org/zap"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -38,26 +41,29 @@ type StockRequestService interface {
 }
 
 type stockRequestService struct {
-	repo                StockRequestRepository
-	stockMaterialRepo   stockMaterial.StockMaterialRepository
-	transactionManager  TransactionManager
-	notificationService notifications.NotificationService
-	logger              *zap.SugaredLogger
+	repo                      StockRequestRepository
+	stockMaterialRepo         stockMaterial.StockMaterialRepository
+	storeInventoryManagerRepo storeInventoryManagers.StoreInventoryManagerRepository
+	transactionManager        TransactionManager
+	notificationService       notifications.NotificationService
+	logger                    *zap.SugaredLogger
 }
 
 func NewStockRequestService(
 	repo StockRequestRepository,
 	stockMaterialRepo stockMaterial.StockMaterialRepository,
+	storeInventoryManagerRepo storeInventoryManagers.StoreInventoryManagerRepository,
 	transactionManager TransactionManager,
 	notificationService notifications.NotificationService,
 	logger *zap.SugaredLogger,
 ) StockRequestService {
 	return &stockRequestService{
-		repo:                repo,
-		stockMaterialRepo:   stockMaterialRepo,
-		transactionManager:  transactionManager,
-		notificationService: notificationService,
-		logger:              logger,
+		repo:                      repo,
+		stockMaterialRepo:         stockMaterialRepo,
+		storeInventoryManagerRepo: storeInventoryManagerRepo,
+		transactionManager:        transactionManager,
+		notificationService:       notificationService,
+		logger:                    logger,
 	}
 }
 
@@ -307,23 +313,39 @@ func (s *stockRequestService) SetCompletedStatus(requestID uint) (*data.StockReq
 		return nil, fmt.Errorf("invalid status transition from %s to %s", request.Status, data.StockRequestCompleted)
 	}
 
-	err = s.transactionManager.HandleCompleteStockRequest(request)
+	ingredientIDs, err := s.transactionManager.HandleCompleteStockRequest(request)
 	if err != nil {
 		return nil, err
 	}
 
-	requestDetails := &details.StockRequestStatusUpdatedDetails{
-		BaseNotificationDetails: details.BaseNotificationDetails{
-			ID:           request.WarehouseID,
-			FacilityName: request.Warehouse.Name,
-		},
-		StockRequestID: request.ID,
-		RequestStatus:  request.Status,
+	if len(ingredientIDs) > 0 {
+		go func() {
+			err := s.storeInventoryManagerRepo.RecalculateStoreInventory(
+				request.StoreID,
+				&storeInventoryManagersTypes.RecalculateInput{
+					IngredientIDs: ingredientIDs,
+				},
+			)
+			if err != nil {
+				s.logger.Errorf("failed to recalculate store inventory: %v", err)
+			}
+		}()
 	}
-	err = s.notificationService.NotifyStockRequestStatusUpdated(requestDetails)
-	if err != nil {
-		s.logger.Errorf("failed to send notification: %v", err)
-	}
+
+	go func() {
+		requestDetails := &details.StockRequestStatusUpdatedDetails{
+			BaseNotificationDetails: details.BaseNotificationDetails{
+				ID:           request.WarehouseID,
+				FacilityName: request.Warehouse.Name,
+			},
+			StockRequestID: request.ID,
+			RequestStatus:  request.Status,
+		}
+		err = s.notificationService.NotifyStockRequestStatusUpdated(requestDetails)
+		if err != nil {
+			s.logger.Errorf("failed to send notification: %v", err)
+		}
+	}()
 
 	return request, nil
 }
@@ -343,22 +365,39 @@ func (s *stockRequestService) AcceptStockRequestWithChange(requestID uint, dto t
 		return nil, fmt.Errorf("invalid status transition from %s to %s", request.Status, data.StockRequestAcceptedWithChange)
 	}
 
-	if err := s.transactionManager.HandleAcceptedWithChange(request, store.ID, dto.Items, dto.Comment); err != nil {
+	ingredientIDs, err := s.transactionManager.HandleAcceptedWithChange(request, store.ID, dto.Items, dto.Comment)
+	if err != nil {
 		return nil, err
 	}
 
-	requestDetails := &details.StockRequestStatusUpdatedDetails{
-		BaseNotificationDetails: details.BaseNotificationDetails{
-			ID:           request.WarehouseID,
-			FacilityName: request.Warehouse.Name,
-		},
-		StockRequestID: request.ID,
-		RequestStatus:  request.Status,
+	if len(ingredientIDs) > 0 {
+		go func() {
+			err := s.storeInventoryManagerRepo.RecalculateStoreInventory(
+				request.StoreID,
+				&storeInventoryManagersTypes.RecalculateInput{
+					IngredientIDs: ingredientIDs,
+				},
+			)
+			if err != nil {
+				s.logger.Errorf("failed to recalculate store inventory: %v", err)
+			}
+		}()
 	}
-	err = s.notificationService.NotifyStockRequestStatusUpdated(requestDetails)
-	if err != nil {
-		s.logger.Errorf("failed to send notification: %v", err)
-	}
+
+	go func() {
+		requestDetails := &details.StockRequestStatusUpdatedDetails{
+			BaseNotificationDetails: details.BaseNotificationDetails{
+				ID:           request.WarehouseID,
+				FacilityName: request.Warehouse.Name,
+			},
+			StockRequestID: request.ID,
+			RequestStatus:  request.Status,
+		}
+		err = s.notificationService.NotifyStockRequestStatusUpdated(requestDetails)
+		if err != nil {
+			s.logger.Errorf("failed to send notification: %v", err)
+		}
+	}()
 
 	return request, nil
 }
