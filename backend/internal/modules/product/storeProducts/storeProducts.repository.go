@@ -143,7 +143,9 @@ func (r *storeProductRepository) GetTranslatedStoreProductById(
 	})
 
 	q = q.Preload("StoreProductSizes.ProductSize", func(d *gorm.DB) *gorm.DB {
-		d = d.Preload("Unit")
+		d = d.Preload("Unit", func(u *gorm.DB) *gorm.DB {
+			return utils.ApplyLocalizedPreloads(u, locale, unitTypes.UnitPreloadMap)
+		})
 
 		d = d.Preload("ProductSizeIngredients.Ingredient", func(d2 *gorm.DB) *gorm.DB {
 			return utils.ApplyLocalizedPreloads(d2, locale, ingredientTypes.IngredientPreloadMap)
