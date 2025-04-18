@@ -30,7 +30,7 @@ import type { ProductCategoryTranslationsDTO } from '@/modules/kiosk/products/mo
 import { productsService } from '@/modules/kiosk/products/services/products.service'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { Globe } from 'lucide-vue-next'
-import { computed, defineAsyncComponent, defineProps, ref, toRefs } from 'vue'
+import { computed, defineAsyncComponent, ref, toRefs } from 'vue'
 
 // Async dialog component
 const AdminTranslationsDialog = defineAsyncComponent(

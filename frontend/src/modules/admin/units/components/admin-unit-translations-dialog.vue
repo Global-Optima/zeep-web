@@ -30,7 +30,7 @@ import type { UnitTranslationsDTO } from '@/modules/admin/units/models/units.mod
 import { unitsService } from '@/modules/admin/units/services/units.service'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { Globe } from 'lucide-vue-next'
-import { computed, defineAsyncComponent, defineProps, ref, toRefs } from 'vue'
+import { computed, defineAsyncComponent, ref, toRefs } from 'vue'
 
 // Async dialog component
 const AdminTranslationsDialog = defineAsyncComponent(
