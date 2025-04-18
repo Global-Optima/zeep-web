@@ -114,10 +114,11 @@ func (r *Router) RegisterRecipeRoutes(handler *recipes.RecipeHandler) {
 func (r *Router) RegisterStoreProductRoutes(handler *storeProducts.StoreProductHandler) {
 	router := r.EmployeeRoutes.Group("/store-products")
 	{
-		router.GET("/categories", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetStoreProductCategories)
-		router.GET("", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetStoreProducts)
+		router.GET("/categories", middleware.LocaleMiddleware(), middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetStoreProductCategories)
+		router.GET("", middleware.LocaleMiddleware(), middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetStoreProducts)
+		router.GET("/:id", middleware.LocaleMiddleware(), middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetStoreProduct)
+
 		router.GET("/available-to-add", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetAvailableProductsToAdd)
-		router.GET("/:id", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetStoreProduct)
 		router.GET("/recommended", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetRecommendedStoreProducts)
 		router.GET("/sizes/:id", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetStoreProductSizeByID)
 		router.POST("", middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...), handler.CreateStoreProduct)
@@ -202,7 +203,7 @@ func (r *Router) RegisterStoreAdditivesRoutes(handler *storeAdditives.StoreAddit
 	{
 		router.GET("", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetStoreAdditives)
 		router.GET("/available-to-add", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetAdditivesListToAdd)
-		router.GET("/categories/:storeProductSizeId", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetStoreAdditiveCategories)
+		router.GET("/categories/:storeProductSizeId", middleware.LocaleMiddleware(), middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetStoreAdditiveCategories)
 		router.GET("/:id", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetStoreAdditiveByID)
 		router.POST("", middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...), handler.CreateStoreAdditives)
 		router.PUT("/:id", middleware.EmployeeRoleMiddleware(data.StoreManagementPermissions...), handler.UpdateStoreAdditive)

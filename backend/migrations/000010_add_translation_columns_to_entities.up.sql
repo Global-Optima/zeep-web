@@ -1,7 +1,7 @@
 -- ========================================================
 -- 0) Create or Recreate the translations table with new design.
 -- ========================================================
-DROP TABLE IF EXISTS app_translations;
+DROP TABLE app_translations;
 CREATE TABLE app_translations (
   id SERIAL PRIMARY KEY,
   translation_id BIGINT NOT NULL,  -- translation group ID; many rows can share this value.
@@ -21,12 +21,12 @@ CREATE INDEX idx_translation_id ON app_translations(translation_id);
 -- ========================================================
 -- Drop pre-existing constraints and columns if they exist.
 ALTER TABLE products 
-  DROP CONSTRAINT IF EXISTS fk_products_name_translation,
-  DROP CONSTRAINT IF EXISTS fk_products_description_translation;
+  DROP CONSTRAINT fk_products_name_translation,
+  DROP CONSTRAINT fk_products_description_translation;
 
 ALTER TABLE products 
-  DROP COLUMN IF EXISTS name_translation_id,
-  DROP COLUMN IF EXISTS description_translation_id;
+  DROP COLUMN name_translation_id,
+  DROP COLUMN description_translation_id;
 
 -- Add new columns (no FK constraint, because translation_id is not unique by itself).
 ALTER TABLE products 
@@ -39,12 +39,12 @@ ALTER TABLE products
 -- 2) Update the 'additives' table
 -- ========================================================
 ALTER TABLE additives 
-  DROP CONSTRAINT IF EXISTS fk_additives_name_translation,
-  DROP CONSTRAINT IF EXISTS fk_additives_description_translation;
+  DROP CONSTRAINT fk_additives_name_translation,
+  DROP CONSTRAINT fk_additives_description_translation;
 
 ALTER TABLE additives 
-  DROP COLUMN IF EXISTS name_translation_id,
-  DROP COLUMN IF EXISTS description_translation_id;
+  DROP COLUMN name_translation_id,
+  DROP COLUMN description_translation_id;
 
 ALTER TABLE additives
   ADD COLUMN name_translation_id BIGINT NULL,
@@ -54,10 +54,10 @@ ALTER TABLE additives
 -- 3) Update the 'ingredients' table
 -- ========================================================
 ALTER TABLE ingredients 
-  DROP CONSTRAINT IF EXISTS fk_ingredients_name_translation;
+  DROP CONSTRAINT fk_ingredients_name_translation;
 
 ALTER TABLE ingredients 
-  DROP COLUMN IF EXISTS name_translation_id;
+  DROP COLUMN name_translation_id;
 
 ALTER TABLE ingredients
   ADD COLUMN name_translation_id BIGINT NULL;
@@ -65,12 +65,12 @@ ALTER TABLE ingredients
 
 -- Categories
 ALTER TABLE product_categories 
-  DROP CONSTRAINT IF EXISTS fk_product_categories_name_translation,
-  DROP CONSTRAINT IF EXISTS fk_product_categories_description_translation;
+  DROP CONSTRAINT fk_product_categories_name_translation,
+  DROP CONSTRAINT fk_product_categories_description_translation;
 
 ALTER TABLE product_categories 
-  DROP COLUMN IF EXISTS name_translation_id,
-  DROP COLUMN IF EXISTS description_translation_id;
+  DROP COLUMN name_translation_id,
+  DROP COLUMN description_translation_id;
 
 ALTER TABLE product_categories
   ADD COLUMN name_translation_id BIGINT NULL,
@@ -78,12 +78,12 @@ ALTER TABLE product_categories
 
 -- Additive categories
 ALTER TABLE additive_categories 
-  DROP CONSTRAINT IF EXISTS fk_additive_categories_name_translation,
-  DROP CONSTRAINT IF EXISTS fk_additive_categories_description_translation;
+  DROP CONSTRAINT fk_additive_categories_name_translation,
+  DROP CONSTRAINT fk_additive_categories_description_translation;
 
 ALTER TABLE additive_categories 
-  DROP COLUMN IF EXISTS name_translation_id,
-  DROP COLUMN IF EXISTS description_translation_id;
+  DROP COLUMN name_translation_id,
+  DROP COLUMN description_translation_id;
 
 ALTER TABLE additive_categories
   ADD COLUMN name_translation_id BIGINT NULL,
@@ -91,12 +91,12 @@ ALTER TABLE additive_categories
 
 -- Ingredient categories
 ALTER TABLE ingredient_categories 
-  DROP CONSTRAINT IF EXISTS fk_ingredient_categories_name_translation,
-  DROP CONSTRAINT IF EXISTS fk_ingredient_categories_description_translation;
+  DROP CONSTRAINT fk_ingredient_categories_name_translation,
+  DROP CONSTRAINT fk_ingredient_categories_description_translation;
 
 ALTER TABLE ingredient_categories 
-  DROP COLUMN IF EXISTS name_translation_id,
-  DROP COLUMN IF EXISTS description_translation_id;
+  DROP COLUMN name_translation_id,
+  DROP COLUMN description_translation_id;
 
 ALTER TABLE ingredient_categories
   ADD COLUMN name_translation_id BIGINT NULL,
@@ -105,10 +105,10 @@ ALTER TABLE ingredient_categories
 
 -- Units
 ALTER TABLE units 
-  DROP CONSTRAINT IF EXISTS fk_units_name_translation;
+  DROP CONSTRAINT fk_units_name_translation;
 
 ALTER TABLE units 
-  DROP COLUMN IF EXISTS name_translation_id;
+  DROP COLUMN name_translation_id;
 
 ALTER TABLE units
   ADD COLUMN name_translation_id BIGINT NULL;

@@ -3,6 +3,7 @@ package types
 import (
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	additiveTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 )
 
 func ConvertToStoreAdditiveDTO(storeAdditive *data.StoreAdditive) *StoreAdditiveDTO {
@@ -42,12 +43,14 @@ func ConvertToStoreAdditiveDetailsDTO(storeAdditive *data.StoreAdditive) *StoreA
 
 func ConvertToStoreAdditiveCategoryDTO(category *data.AdditiveCategory) *StoreAdditiveCategoryDTO {
 	return &StoreAdditiveCategoryDTO{
-		ID:               category.ID,
-		Name:             category.Name,
-		Description:      category.Description,
-		IsMultipleSelect: category.IsMultipleSelect,
-		IsRequired:       category.IsRequired,
-		Additives:        ConvertToStoreAdditiveCategoryItemDTOs(category), // Always initialized as a slice
+		ID:                    category.ID,
+		Name:                  category.Name,
+		TranslatedName:        utils.FirstTranslation(category.NameTranslation),
+		Description:           category.Description,
+		TranslatedDescription: utils.FirstTranslation(category.DescriptionTranslation),
+		IsMultipleSelect:      category.IsMultipleSelect,
+		IsRequired:            category.IsRequired,
+		Additives:             ConvertToStoreAdditiveCategoryItemDTOs(category), // Always initialized as a slice
 	}
 }
 

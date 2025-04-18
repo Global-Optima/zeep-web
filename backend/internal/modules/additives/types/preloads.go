@@ -1,6 +1,9 @@
 package types
 
-import "github.com/Global-Optima/zeep-web/backend/pkg/utils"
+import (
+	unitTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/units/types"
+	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
+)
 
 var AdditivePreloadMap = []utils.LocalizedPreload{
 	utils.Translation("NameTranslation"),
@@ -11,7 +14,7 @@ var AdditivePreloadMap = []utils.LocalizedPreload{
 		utils.Translation("DescriptionTranslation"),
 	}},
 
-	{Relation: "Unit"},
+	{Relation: "Unit", Nested: unitTypes.UnitPreloadMap},
 
 	{Relation: "Ingredients.Ingredient.Unit"},
 	{Relation: "Ingredients.Ingredient.IngredientCategory", Nested: []utils.LocalizedPreload{
