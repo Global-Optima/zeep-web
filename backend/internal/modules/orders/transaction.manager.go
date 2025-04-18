@@ -52,7 +52,7 @@ func (m *transactionManager) SetNextSubOrderStatus(suborder *data.Suborder) erro
 		repoTx := m.repo.CloneWithTransaction(tx)
 		storeInventoryManagerRepoTx := m.storeInventoryManagerRepo.CloneWithTransaction(tx)
 		// Attempt to advance suborder status
-		if err := m.nextSuborderStatus(&repoTx, storeInventoryManagerRepoTx, suborder.ID, suborder); err != nil {
+		if err := m.nextSuborderStatus(&repoTx, storeInventoryManagerRepoTx, suborder); err != nil {
 			return err
 		}
 
@@ -65,7 +65,7 @@ func (m *transactionManager) SetNextSubOrderStatus(suborder *data.Suborder) erro
 	}) // Handle fallback if suborder is already completed within time gap
 }
 
-func (m *transactionManager) nextSuborderStatus(repoTx OrderRepository, storeInventoryManagerRepoTx storeInventoryManagers.StoreInventoryManagerRepository, subOrderID uint, suborder *data.Suborder) error {
+func (m *transactionManager) nextSuborderStatus(repoTx OrderRepository, storeInventoryManagerRepoTx storeInventoryManagers.StoreInventoryManagerRepository, suborder *data.Suborder) error {
 	currentStatus := suborder.Status
 	nextStatus, ok := allowedTransitions[currentStatus]
 	if !ok {
@@ -77,13 +77,13 @@ func (m *transactionManager) nextSuborderStatus(repoTx OrderRepository, storeInv
 		Status:      nextStatus,
 		CompletedAt: &completedAt,
 	}
-	if err := repoTx.UpdateSubOrderStatus(subOrderID, update); err != nil {
+	if err := repoTx.UpdateSubOrderStatus(suborder.ID, update); err != nil {
 		return fmt.Errorf("failed to update suborder status: %w", err)
 	}
 
 	// If suborder is completed, deduct ingredients
 	if nextStatus == data.SubOrderStatusCompleted {
-		if err := m.handleSuborderCompletion(repoTx, storeInventoryManagerRepoTx, subOrderID); err != nil {
+		if err := m.handleSuborderCompletion(repoTx, storeInventoryManagerRepoTx, suborder); err != nil {
 			return err
 		}
 	}
@@ -91,23 +91,14 @@ func (m *transactionManager) nextSuborderStatus(repoTx OrderRepository, storeInv
 	return nil
 }
 
-func (m *transactionManager) handleSuborderCompletion(repoTx OrderRepository, storeInventoryManagerRepoTx storeInventoryManagers.StoreInventoryManagerRepository, subOrderID uint) error {
-	suborder, err := repoTx.GetSuborderByID(subOrderID)
+func (m *transactionManager) handleSuborderCompletion(repoTx OrderRepository, storeInventoryManagerRepoTx storeInventoryManagers.StoreInventoryManagerRepository, suborder *data.Suborder) error {
+	order, err := repoTx.GetOrderBySubOrderID(suborder.ID)
 	if err != nil {
-		return fmt.Errorf("failed to retrieve updated suborder: %w", err)
+		return fmt.Errorf("failed to retrieve order for suborder %d: %w", suborder.ID, err)
 	}
 
-	order, err := repoTx.GetOrderBySubOrderID(subOrderID)
+	inventoryMap, err := m.deductSuborderInventoryFromStock(storeInventoryManagerRepoTx, order.StoreID, suborder)
 	if err != nil {
-		return fmt.Errorf("failed to retrieve order for suborder %d: %w", subOrderID, err)
-	}
-
-	inventoryMap := &types.DeductedInventoryMap{
-		IngredientStoreStockMap:     make(map[uint]*data.StoreStock),
-		ProvisionStoreProvisionsMap: make(map[uint][]data.StoreProvision),
-	}
-
-	if err := m.deductSuborderInventoryFromStock(storeInventoryManagerRepoTx, order.StoreID, suborder, inventoryMap); err != nil {
 		return fmt.Errorf("failed to deduct ingredients: %w", err)
 	}
 
@@ -118,16 +109,23 @@ func (m *transactionManager) handleSuborderCompletion(repoTx OrderRepository, st
 		}
 	}
 
-	ingredientIDs, provisionIDs := inventoryMap.GetKeys()
+	inventory := inventoryMap.GetIDs()
 	err = storeInventoryManagerRepoTx.RecalculateStoreInventory(order.StoreID, &storeInventoryManagersTypes.RecalculateInput{
-		IngredientIDs: ingredientIDs,
-		ProvisionIDs:  provisionIDs,
+		IngredientIDs: inventory.IngredientIDs,
+		ProvisionIDs:  inventory.ProvisionIDs,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to recalculate out of stock: %w", err)
 	}
 
-	m.notifyLowStockIngredients(order, inventoryMap.IngredientStoreStockMap)
+	if len(inventoryMap.IngredientStoreStockMap) == 0 {
+		return nil
+	}
+
+	go func() {
+		m.notifyLowStockIngredients(order, inventoryMap.IngredientStoreStockMap)
+	}()
+
 	return nil
 }
 
@@ -190,38 +188,22 @@ func (m *transactionManager) evaluateSuborderStatuses(suborders []data.Suborder)
 	return
 }
 
-func (m *transactionManager) deductSuborderInventoryFromStock(storeInventoryManagerRepoTx storeInventoryManagers.StoreInventoryManagerRepository, storeID uint, suborder *data.Suborder, inventoryMap *types.DeductedInventoryMap) error {
-	if storeID == 0 || suborder == nil || inventoryMap == nil {
-		return fmt.Errorf("failed to deduct suborder: invalid input parameters passed")
+func (m *transactionManager) deductSuborderInventoryFromStock(storeInventoryManagerRepoTx storeInventoryManagers.StoreInventoryManagerRepository, storeID uint, suborder *data.Suborder) (*storeInventoryManagersTypes.DeductedInventoryMap, error) {
+	if storeID == 0 || suborder == nil {
+		return nil, fmt.Errorf("failed to deduct suborder: invalid input parameters passed")
 	}
 
-	deductedInventoryFromProductSize, err := storeInventoryManagerRepoTx.DeductStoreInventoryByProductSize(storeID, suborder.StoreProductSize.ProductSizeID)
+	inventory, err := storeInventoryManagerRepoTx.GetSuborderInventoryUsage(suborder)
 	if err != nil {
-		return fmt.Errorf("failed to deduct product size ingredients: %w", err)
-	}
-	for _, stock := range deductedInventoryFromProductSize.StoreStocks {
-		if existingStock, exists := inventoryMap.IngredientStoreStockMap[stock.IngredientID]; exists {
-			existingStock.Quantity = stock.Quantity
-		} else {
-			inventoryMap.IngredientStoreStockMap[stock.IngredientID] = &stock
-		}
+		return nil, fmt.Errorf("failed to deduct suborder: %w", err)
 	}
 
-	for _, subAdditive := range suborder.SuborderAdditives {
-		deductedInventoryFromAdditive, err := storeInventoryManagerRepoTx.DeductStoreInventoryByAdditive(storeID, subAdditive.StoreAdditive.AdditiveID)
-		if err != nil {
-			return fmt.Errorf("failed to deduct additive ingredients: %w", err)
-		}
-		for _, stock := range deductedInventoryFromAdditive.StoreStocks {
-			if existingStock, exists := inventoryMap.IngredientStoreStockMap[stock.IngredientID]; exists {
-				existingStock.Quantity = stock.Quantity
-			} else {
-				inventoryMap.IngredientStoreStockMap[stock.IngredientID] = &stock
-			}
-		}
+	deductedInventoryMap, err := storeInventoryManagerRepoTx.DeductStoreInventory(storeID, inventory)
+	if err != nil {
+		return nil, fmt.Errorf("failed to deduct suborder: %w", err)
 	}
 
-	return nil
+	return deductedInventoryMap, nil
 }
 
 func (m *transactionManager) notifyLowStockIngredients(order *data.Order, stockMap map[uint]*data.StoreStock) {

@@ -127,6 +127,7 @@ type Provision struct {
 	LimitPerDay                uint                  `gorm:"not null" sort:"limitPerDay"`
 	IngredientsUpdatedAt       time.Time             `gorm:"not null" sort:"ingredientsUpdatedAt"`
 	ProvisionIngredients       []ProvisionIngredient `gorm:"foreignKey:ProvisionID"`
+	StoreProvisions            []StoreProvision      `gorm:"foreignKey:ProvisionID"`
 }
 
 type ProvisionIngredient struct {

@@ -4,9 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers"
-	storeInventoryManagersTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers/types"
-
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stockRequests/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/warehouse/stockMaterial"
@@ -14,42 +11,39 @@ import (
 )
 
 type TransactionManager interface {
-	HandleCompleteStockRequest(request *data.StockRequest) error
+	HandleCompleteStockRequest(request *data.StockRequest) (ingredientIDs []uint, err error)
 	HandleAcceptedWithChange(
 		request *data.StockRequest,
 		storeID uint,
 		items []types.StockRequestStockMaterialDTO,
 		comment *string,
-	) error
+	) (ingredientIDs []uint, err error)
 }
 
 type transactionManager struct {
-	db                        *gorm.DB
-	repo                      StockRequestRepository
-	stockMaterialRepo         stockMaterial.StockMaterialRepository
-	storeInventoryManagerRepo storeInventoryManagers.StoreInventoryManagerRepository
+	db                *gorm.DB
+	repo              StockRequestRepository
+	stockMaterialRepo stockMaterial.StockMaterialRepository
 }
 
 func NewTransactionManager(
 	db *gorm.DB,
 	repo StockRequestRepository,
 	stockMaterialRepo stockMaterial.StockMaterialRepository,
-	storeInventoryManagerRepo storeInventoryManagers.StoreInventoryManagerRepository,
 ) TransactionManager {
 	return &transactionManager{
-		db:                        db,
-		repo:                      repo,
-		stockMaterialRepo:         stockMaterialRepo,
-		storeInventoryManagerRepo: storeInventoryManagerRepo,
+		db:                db,
+		repo:              repo,
+		stockMaterialRepo: stockMaterialRepo,
 	}
 }
 
-func (m *transactionManager) HandleCompleteStockRequest(request *data.StockRequest) error {
+func (m *transactionManager) HandleCompleteStockRequest(request *data.StockRequest) (ingredientIDs []uint, err error) {
 	if request == nil {
-		return fmt.Errorf("request is nil")
+		return nil, fmt.Errorf("request is nil")
 	}
 
-	return m.db.Transaction(func(tx *gorm.DB) error {
+	err = m.db.Transaction(func(tx *gorm.DB) error {
 		stockMaterialIDs := make([]uint, len(request.Ingredients))
 		repoTx := m.repo.CloneWithTransaction(tx)
 
@@ -75,7 +69,7 @@ func (m *transactionManager) HandleCompleteStockRequest(request *data.StockReque
 			return fmt.Errorf("failed to fetch stock materials: %w", err)
 		}
 
-		ingredientIDs := make([]uint, len(stockMaterials))
+		ingredientIDs = make([]uint, len(stockMaterials))
 		for i, sm := range stockMaterials {
 			ingredientIDs[i] = sm.IngredientID
 		}
@@ -85,26 +79,25 @@ func (m *transactionManager) HandleCompleteStockRequest(request *data.StockReque
 			return fmt.Errorf("failed to update stock request status: %w", err)
 		}
 
-		storeInventoryManagerRepoTx := m.storeInventoryManagerRepo.CloneWithTransaction(tx)
-		err = storeInventoryManagerRepoTx.RecalculateStoreInventory(
-			request.StoreID,
-			&storeInventoryManagersTypes.RecalculateInput{
-				IngredientIDs: ingredientIDs,
-			},
-		)
-		if err != nil {
-			return err
-		}
-
 		return nil
 	})
+	if err != nil {
+		return nil, err
+	}
+
+	return ingredientIDs, nil
 }
 
-func (m *transactionManager) HandleAcceptedWithChange(request *data.StockRequest, storeID uint, items []types.StockRequestStockMaterialDTO, comment *string) error {
-	updatedIngredients := []data.StockRequestIngredient{}
+func (m *transactionManager) HandleAcceptedWithChange(
+	request *data.StockRequest,
+	storeID uint,
+	items []types.StockRequestStockMaterialDTO,
+	comment *string,
+) (ingredientIDs []uint, err error) {
+	var updatedIngredients []data.StockRequestIngredient
 	var changeDetails []types.StockRequestDetails
 
-	return m.db.Transaction(func(tx *gorm.DB) error {
+	err = m.db.Transaction(func(tx *gorm.DB) error {
 		repoTx := m.repo.CloneWithTransaction(tx)
 		stockMaterialIDs := make([]uint, len(items))
 		for i, item := range items {
@@ -117,7 +110,7 @@ func (m *transactionManager) HandleAcceptedWithChange(request *data.StockRequest
 		}
 
 		materialMap := make(map[uint]data.StockMaterial)
-		ingredientIDs := make([]uint, len(stockMaterials))
+		ingredientIDs = make([]uint, len(stockMaterials))
 		for i, sm := range stockMaterials {
 			ingredientIDs[i] = sm.IngredientID
 			materialMap[sm.ID] = sm
@@ -189,14 +182,11 @@ func (m *transactionManager) HandleAcceptedWithChange(request *data.StockRequest
 			return fmt.Errorf("failed to update stock request status: %w", err)
 		}
 
-		storeInventoryManagerRepoTx := m.storeInventoryManagerRepo.CloneWithTransaction(tx)
-		_ = storeInventoryManagerRepoTx.RecalculateStoreInventory(
-			request.StoreID,
-			&storeInventoryManagersTypes.RecalculateInput{
-				IngredientIDs: ingredientIDs,
-			},
-		)
-
 		return nil
 	})
+	if err != nil {
+		return nil, err
+	}
+
+	return ingredientIDs, nil
 }

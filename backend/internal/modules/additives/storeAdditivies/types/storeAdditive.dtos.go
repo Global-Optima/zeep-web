@@ -51,3 +51,8 @@ type StoreAdditiveCategoryDTO struct {
 	IsMultipleSelect bool                           `json:"isMultipleSelect"`
 	IsRequired       bool                           `json:"isRequired"`
 }
+
+type StorePStoAdditiveKey struct {
+	StoreProductSizeID uint
+	StoreAdditiveID    uint
+}

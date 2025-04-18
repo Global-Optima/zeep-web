@@ -2,19 +2,23 @@ package storeInventoryManagers
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
+	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
 	storeProvisionsTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/storeProvisions/types"
+	provisionsTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers/types"
 	storeStocksTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
 type StoreInventoryManagerRepository interface {
+	GetSuborderInventoryUsage(suborder *data.Suborder) (*types.InventoryUsage, error)
+	GetIngredientsByIDs(ingredientIDs []uint) ([]data.Ingredient, error)
+	GetProvisionsByIDs(provisionIDs []uint) ([]data.Provision, error)
+
 	CheckStoreStocks(
 		storeID uint,
 		requiredIngredientQuantityMap map[uint]float64,
@@ -26,9 +30,8 @@ type StoreInventoryManagerRepository interface {
 		frozenInventory *types.FrozenInventory,
 	) error
 
-	DeductStoreInventoryByProductSize(storeID, productSizeID uint) (*types.DeductedStoreInventory, error)
-	DeductStoreInventoryByAdditive(storeID, additiveID uint) (*types.DeductedStoreInventory, error)
-	DeductStoreStocksByStoreProvision(storeProvision *data.StoreProvision) ([]data.StoreStock, error)
+	DeductStoreInventory(storeID uint, inventory *types.InventoryUsage) (*types.DeductedInventoryMap, error)
+	DeductStoreStocksByStoreProvision(storeProvision *data.StoreProvision) (map[uint]*data.StoreStock, error)
 
 	RecalculateStoreAdditives(storeAdditiveIDs []uint, storeID uint, frozenInventory *types.FrozenInventory) error
 	RecalculateStoreInventory(storeID uint, input *types.RecalculateInput) error
@@ -55,96 +58,56 @@ func (r *storeInventoryManagerRepository) CloneWithTransaction(tx *gorm.DB) Stor
 	}
 }
 
-func (r *storeInventoryManagerRepository) DeductStoreInventoryByProductSize(storeID, productSizeID uint) (*types.DeductedStoreInventory, error) {
-	productSizeIngredients, err := r.getProductSizeIngredients(productSizeID)
+func (r *storeInventoryManagerRepository) GetIngredientsByIDs(ingredientIDs []uint) ([]data.Ingredient, error) {
+	var ingredients []data.Ingredient
+	err := r.db.Model(&data.Ingredient{}).
+		Where("id IN (?)", ingredientIDs).
+		Preload("Unit").
+		Preload("IngredientCategory").
+		Find(&ingredients).Error
 	if err != nil {
-		return nil, err
-	}
-
-	productSizeProvisions, err := r.getProductSizeProvisions(productSizeID)
-	if err != nil {
-		return nil, err
-	}
-
-	defaultProductSizeAdditiveIngredients, err := r.getProductSizeDefaultAdditiveIngredients(productSizeID)
-	if err != nil {
-		return nil, err
-	}
-
-	defaultProductSizeAdditiveProvisions, err := r.getProductSizeDefaultAdditiveProvisions(productSizeID)
-	if err != nil {
-		return nil, err
-	}
-
-	ingredientMap := make(map[uint]float64)
-	for _, ing := range productSizeIngredients {
-		ingredientMap[ing.IngredientID] += ing.Quantity
-	}
-	for _, ing := range defaultProductSizeAdditiveIngredients {
-		ingredientMap[ing.IngredientID] += ing.Quantity
-	}
-
-	provisionMap := make(map[uint]float64)
-	for _, prov := range productSizeProvisions {
-		provisionMap[prov.ProvisionID] += prov.Volume
-	}
-	for _, prov := range defaultProductSizeAdditiveProvisions {
-		provisionMap[prov.ProvisionID] += prov.Volume
-	}
-
-	deducted := &types.DeductedStoreInventory{}
-	err = r.db.Transaction(func(tx *gorm.DB) error {
-		for ingID, qty := range ingredientMap {
-			updatedStock, err := deductStoreStock(tx, storeID, ingID, qty)
-			if err != nil {
-				return err
-			}
-			deducted.StoreStocks = append(deducted.StoreStocks, *updatedStock)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, ingredientTypes.ErrIngredientNotFound
 		}
-
-		for provID, vol := range provisionMap {
-			updatedProvisions, err := deductStoreProvisions(tx, storeID, provID, vol)
-			if err != nil {
-				return err
-			}
-			deducted.StoreProvisions = append(deducted.StoreProvisions, updatedProvisions...)
-		}
-		return nil
-	})
-	if err != nil {
 		return nil, err
 	}
-	return deducted, nil
+
+	return ingredients, nil
 }
 
-func (r *storeInventoryManagerRepository) DeductStoreInventoryByAdditive(storeID, additiveID uint) (*types.DeductedStoreInventory, error) {
-	additiveIngredients, err := r.getAdditiveIngredients(additiveID)
+func (r *storeInventoryManagerRepository) GetProvisionsByIDs(provisionIDs []uint) ([]data.Provision, error) {
+	var provisions []data.Provision
+
+	err := r.db.Model(&data.Provision{}).
+		Where("id IN ?", provisionIDs).
+		Preload("Unit").
+		Find(&provisions).Error
 	if err != nil {
-		return nil, err
-	}
-
-	additiveProvisions, err := r.getAdditiveProvisions(additiveID)
-	if err != nil {
-		return nil, err
-	}
-
-	deductedStoreInventory := &types.DeductedStoreInventory{}
-
-	err = r.db.Transaction(func(tx *gorm.DB) error {
-		for _, ingredient := range additiveIngredients {
-			updatedStock, err := deductStoreStock(tx, storeID, ingredient.IngredientID, ingredient.Quantity)
-			if err != nil {
-				return err
-			}
-			deductedStoreInventory.StoreStocks = append(deductedStoreInventory.StoreStocks, *updatedStock)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, provisionsTypes.ErrProvisionNotFound
 		}
+		return nil, err
+	}
 
-		for _, provision := range additiveProvisions {
-			updatedProvisions, err := deductStoreProvisions(tx, storeID, provision.ProvisionID, provision.Volume)
-			if err != nil {
-				return err
-			}
-			deductedStoreInventory.StoreProvisions = append(deductedStoreInventory.StoreProvisions, updatedProvisions...)
+	return provisions, nil
+}
+
+func (r *storeInventoryManagerRepository) DeductStoreInventory(storeID uint, inventory *types.InventoryUsage) (*types.DeductedInventoryMap, error) {
+	deductedInventory := &types.DeductedInventoryMap{
+		IngredientStoreStockMap:     make(map[uint]*data.StoreStock),
+		ProvisionStoreProvisionsMap: make(map[uint][]*data.StoreProvision),
+	}
+
+	err := r.db.Transaction(func(tx *gorm.DB) error {
+		var err error
+
+		deductedInventory.IngredientStoreStockMap, err = deductStoreStocks(tx, storeID, inventory.Ingredients)
+		if err != nil {
+			return err
+		}
+		deductedInventory.ProvisionStoreProvisionsMap, err = deductStoreProvisions(tx, storeID, inventory.Provisions)
+		if err != nil {
+			return err
 		}
 		return nil
 	})
@@ -152,10 +115,10 @@ func (r *storeInventoryManagerRepository) DeductStoreInventoryByAdditive(storeID
 		return nil, err
 	}
 
-	return deductedStoreInventory, nil
+	return deductedInventory, nil
 }
 
-func (r *storeInventoryManagerRepository) DeductStoreStocksByStoreProvision(storeProvision *data.StoreProvision) ([]data.StoreStock, error) {
+func (r *storeInventoryManagerRepository) DeductStoreStocksByStoreProvision(storeProvision *data.StoreProvision) (map[uint]*data.StoreStock, error) {
 	if storeProvision == nil || storeProvision.StoreID == 0 || storeProvision.ID == 0 {
 		return nil, fmt.Errorf("invalid input parameters")
 	}
@@ -165,15 +128,17 @@ func (r *storeInventoryManagerRepository) DeductStoreStocksByStoreProvision(stor
 		return nil, err
 	}
 
-	var deductedStocks []data.StoreStock
-
+	deductedStocks := make(map[uint]*data.StoreStock)
+	requiredIngredientQtyMap := make(map[uint]float64)
 	err = r.db.Transaction(func(tx *gorm.DB) error {
-		for _, ingredient := range storeProvisionIngredients {
-			updatedStock, err := deductStoreStock(tx, storeProvision.StoreID, ingredient.IngredientID, ingredient.Quantity)
+		var err error
+		for _, spIngredient := range storeProvisionIngredients {
+			requiredIngredientQtyMap[spIngredient.IngredientID] = spIngredient.Quantity
+
+			deductedStocks, err = deductStoreStocks(tx, storeProvision.StoreID, requiredIngredientQtyMap)
 			if err != nil {
 				return err
 			}
-			deductedStocks = append(deductedStocks, *updatedStock)
 		}
 		return nil
 	})
@@ -185,9 +150,6 @@ func (r *storeInventoryManagerRepository) DeductStoreStocksByStoreProvision(stor
 }
 
 func (r *storeInventoryManagerRepository) RecalculateStoreInventory(storeID uint, input *types.RecalculateInput) error {
-	logrus.Infof("=================RECALCULATION STARTS============================")
-	start := time.Now()
-
 	if storeID == 0 {
 		return errors.New("failed to recalculate with invalid input parameters")
 	}
@@ -229,9 +191,13 @@ func (r *storeInventoryManagerRepository) RecalculateStoreInventory(storeID uint
 		ctx.additiveProvisionIDs,
 	)
 
-	frozenInventory, err := r.buildFrozenInventory(ctx, storeID)
-	if err != nil {
-		return err
+	frozenInventory := input.FrozenInventory
+	if frozenInventory == nil {
+		var err error
+		frozenInventory, err = r.buildFrozenInventory(ctx, storeID)
+		if err != nil {
+			return err
+		}
 	}
 
 	if err := r.gatherStoreProductAndAdditiveIDsFromResources(ctx, storeID); err != nil {
@@ -271,7 +237,6 @@ func (r *storeInventoryManagerRepository) RecalculateStoreInventory(storeID uint
 			}
 		}
 
-		logrus.Infof("=====================Total time taken is: %v=====================", time.Since(start))
 		return nil
 	})
 }
@@ -329,13 +294,11 @@ func (r *storeInventoryManagerRepository) buildFrozenInventory(ctx *recalculateC
 		IngredientIDs: ctx.totalIngredientIDs,
 		ProvisionIDs:  ctx.totalProvisionIDs,
 	}
-	logrus.Infof("Filter: %v", frozenInventoryFilter)
 
 	frozen, err := calculateFrozenInventory(r.db, storeID, frozenInventoryFilter)
 	if err != nil {
 		return nil, err
 	}
-	logrus.Infof("FROZEN INVENTORY FETCHED(filtered): %v", frozen)
 
 	return frozen, nil
 }
@@ -472,6 +435,70 @@ func (r *storeInventoryManagerRepository) CheckStoreProvisions(
 	return nil
 }
 
+func (r *storeInventoryManagerRepository) GetSuborderInventoryUsage(suborder *data.Suborder) (*types.InventoryUsage, error) {
+	productSizeIngredients, err := r.getProductSizeIngredients(suborder.StoreProductSize.ProductSizeID)
+	if err != nil {
+		return nil, err
+	}
+
+	productSizeProvisions, err := r.getProductSizeProvisions(suborder.StoreProductSize.ProductSizeID)
+	if err != nil {
+		return nil, err
+	}
+
+	defaultProductSizeAdditiveIngredients, err := r.getProductSizeDefaultAdditiveIngredients(suborder.StoreProductSize.ProductSizeID)
+	if err != nil {
+		return nil, err
+	}
+
+	defaultProductSizeAdditiveProvisions, err := r.getProductSizeDefaultAdditiveProvisions(suborder.StoreProductSize.ProductSizeID)
+	if err != nil {
+		return nil, err
+	}
+
+	additiveIDs := make([]uint, len(suborder.SuborderAdditives))
+	for i, subAdditive := range suborder.SuborderAdditives {
+		additiveIDs[i] = subAdditive.StoreAdditive.AdditiveID
+	}
+
+	additiveIngredients, err := r.getAdditiveIngredients(additiveIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	additiveProvisions, err := r.getAdditiveProvisions(additiveIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	ingredientMap := make(map[uint]float64)
+	for _, ing := range productSizeIngredients {
+		ingredientMap[ing.IngredientID] += ing.Quantity
+	}
+	for _, ing := range defaultProductSizeAdditiveIngredients {
+		ingredientMap[ing.IngredientID] += ing.Quantity
+	}
+	for _, ing := range additiveIngredients {
+		ingredientMap[ing.IngredientID] += ing.Quantity
+	}
+
+	provisionMap := make(map[uint]float64)
+	for _, prov := range productSizeProvisions {
+		provisionMap[prov.ProvisionID] += prov.Volume
+	}
+	for _, prov := range defaultProductSizeAdditiveProvisions {
+		provisionMap[prov.ProvisionID] += prov.Volume
+	}
+	for _, prov := range additiveProvisions {
+		provisionMap[prov.ProvisionID] += prov.Volume
+	}
+
+	return &types.InventoryUsage{
+		Ingredients: ingredientMap,
+		Provisions:  provisionMap,
+	}, nil
+}
+
 func (r *storeInventoryManagerRepository) getProductSizeIngredients(productSizeID uint) ([]data.ProductSizeIngredient, error) {
 	var productSizeIngredients []data.ProductSizeIngredient
 	err := r.db.Preload("Ingredient").
@@ -520,10 +547,10 @@ func (r *storeInventoryManagerRepository) getProductSizeProvisions(productSizeID
 	return productSizeProvisions, nil
 }
 
-func (r *storeInventoryManagerRepository) getAdditiveIngredients(additiveID uint) ([]data.AdditiveIngredient, error) {
+func (r *storeInventoryManagerRepository) getAdditiveIngredients(additiveIDs []uint) ([]data.AdditiveIngredient, error) {
 	var additiveIngredients []data.AdditiveIngredient
 	err := r.db.Preload("Ingredient.Unit").
-		Where("additive_id = ?", additiveID).
+		Where("additive_id IN ?", additiveIDs).
 		Find(&additiveIngredients).Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch additive ingredients: %w", err)
@@ -531,10 +558,10 @@ func (r *storeInventoryManagerRepository) getAdditiveIngredients(additiveID uint
 	return additiveIngredients, nil
 }
 
-func (r *storeInventoryManagerRepository) getAdditiveProvisions(additiveID uint) ([]data.AdditiveProvision, error) {
+func (r *storeInventoryManagerRepository) getAdditiveProvisions(additiveIDs []uint) ([]data.AdditiveProvision, error) {
 	var additiveProvisions []data.AdditiveProvision
 	err := r.db.Preload("Provision.Unit").
-		Where("additive_id = ?", additiveID).
+		Where("additive_id IN ?", additiveIDs).
 		Find(&additiveProvisions).Error
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch additive provisions: %w", err)

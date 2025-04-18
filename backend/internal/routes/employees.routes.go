@@ -29,6 +29,7 @@ import (
 	provisionsTechnicalMap "github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/technicalMap"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/regions"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stockRequests"
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeSynchronizers"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/stores"
@@ -440,6 +441,13 @@ func (r *Router) RegisterStoreSynchronizerSynchronizerRoutes(handler *storeSynch
 	{
 		router.GET("/store", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.IsSynchronizedStore)
 		router.POST("/store", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.SynchronizeStore)
+	}
+}
+
+func (r *Router) RegisterStoreInventoryManagerRoutes(handler *storeInventoryManagers.StoreInventoryManagerHandler) {
+	router := r.EmployeeRoutes.Group("/store-inventory-manager")
+	{
+		router.GET("/frozen", middleware.EmployeeRoleMiddleware(data.StoreReadPermissions...), handler.GetFrozenInventory)
 	}
 }
 

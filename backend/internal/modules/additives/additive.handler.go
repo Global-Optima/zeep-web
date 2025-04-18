@@ -4,14 +4,12 @@ import (
 	"net/http"
 	"strconv"
 
-	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
-	provisionsTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/types"
-	"github.com/sirupsen/logrus"
-
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	"github.com/Global-Optima/zeep-web/backend/internal/localization"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/additives/types"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/audit"
+	ingredientTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients/types"
+	provisionsTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/types"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/media"
 	"github.com/gin-gonic/gin"
@@ -259,8 +257,6 @@ func (h *AdditiveHandler) UpdateAdditive(c *gin.Context) {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageGettingImage)
 		return
 	}
-
-	logrus.Info(dto.Provisions)
 
 	additive, err := h.service.UpdateAdditive(uint(additiveID), &dto)
 	if err != nil {

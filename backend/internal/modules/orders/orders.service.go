@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/config"
+	storeAdditivesTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies/types"
+	storeStocksTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks/types"
+
+	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers"
 	storeInventoryManagersTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers/types"
-	"github.com/sirupsen/logrus"
-
-	"github.com/Global-Optima/zeep-web/backend/internal/config"
-	"github.com/Global-Optima/zeep-web/backend/internal/middleware/contexts"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks"
 	"github.com/Global-Optima/zeep-web/backend/pkg/utils/taskqueue"
 
@@ -25,15 +26,11 @@ import (
 	"go.uber.org/zap"
 )
 
-const (
-	OrderPaymentFailure = "order-payment-failure"
-)
-
 type OrderService interface {
 	GetOrders(filter types.OrdersFilterQuery) ([]types.OrderDTO, error)
 	GetAllBaristaOrders(filter types.OrdersTimeZoneFilter) ([]types.OrderDTO, error)
 	GetSubOrders(orderID uint) ([]types.SuborderDTO, error)
-	CreateOrder(storeId uint, createOrderDTO *types.CreateOrderDTO) (*data.Order, error)
+	CreateOrder(createOrderDTO *types.CreateOrderDTO) (*data.Order, error)
 	GetOrderBySubOrder(subOrderID uint) (*data.Order, error)
 	GetOrderById(orderId uint) (types.OrderDTO, error)
 
@@ -44,13 +41,6 @@ type OrderService interface {
 
 	SuccessOrderPayment(orderID uint, dto *types.TransactionDTO) error
 	FailOrderPayment(orderID uint) error
-}
-
-type orderValidationResults struct {
-	ProductPrices  map[uint]float64
-	ProductNames   map[uint]string
-	AdditivePrices map[uint]float64
-	AdditiveNames  map[uint]string
 }
 
 type orderService struct {
@@ -156,8 +146,7 @@ func ExpandSuborders(suborders []types.CreateSubOrderDTO) []types.CreateSubOrder
 	return expanded
 }
 
-func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrderDTO) (*data.Order, error) {
-	start := time.Now()
+func (s *orderService) CreateOrder(createOrderDTO *types.CreateOrderDTO) (*data.Order, error) {
 	censorValidator := censor.GetCensorValidator()
 
 	if err := censorValidator.ValidateText(createOrderDTO.CustomerName); err != nil {
@@ -169,171 +158,211 @@ func (s *orderService) CreateOrder(storeID uint, createOrderDTO *types.CreateOrd
 		return nil, fmt.Errorf("order can not be empty")
 	}
 
-	logrus.Infof("Order: %v", createOrderDTO)
-	logrus.Infof("storeID: %v, createOrderDTO: %v, storeAdditiveRepo: %v", storeID, createOrderDTO, s.storeAdditiveRepo)
-	if err := ValidateMultipleSelect(storeID, *createOrderDTO, s.storeAdditiveRepo); err != nil {
-		s.logger.Error(err)
-		return nil, types.ErrMultipleSelect // TODO: test updates
-	}
-
-	frozenInventory, err := s.storeInventoryManagerRepo.CalculateFrozenInventory(storeID, nil)
+	validationRes, err := validateSuborders(createOrderDTO, s.storeProductRepo, s.storeAdditiveRepo)
 	if err != nil {
-		return nil, fmt.Errorf("failed to calculate frozen inventory: %w", err)
-	}
-
-	logrus.Infof("Frozen Stock BEFORE creating order: %v", frozenInventory)
-	if err := s.CheckAndAccumulateSuborders(storeID, createOrderDTO.Suborders, frozenInventory); err != nil {
+		wrappedErr := fmt.Errorf("suborders validation failed: %v", err)
+		s.logger.Error(wrappedErr)
 		return nil, err
 	}
 
-	storeProductSizeIDs, storeAdditiveIDs := RetrieveIDs(*createOrderDTO)
-	validations, err := s.StockAndPriceValidationResults(
-		createOrderDTO.Suborders,
-		storeID,
-		storeProductSizeIDs,
-		storeAdditiveIDs,
-		frozenInventory,
-	)
+	frozenInventory, err := s.storeInventoryManagerRepo.CalculateFrozenInventory(createOrderDTO.StoreID, nil)
 	if err != nil {
-		s.logger.Error("validation failed: %w", err)
+		wrappedErr := fmt.Errorf("suborders inventory check failed: %w", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
+	}
+
+	if err := s.checkAndAccumulateInventory(createOrderDTO.StoreID, validationRes.subordersCtx, frozenInventory); err != nil {
+		wrappedErr := fmt.Errorf("suborders inventory check failed: %v", err)
+		s.logger.Error(wrappedErr)
 		return nil, err
 	}
 
-	createOrderDTO.StoreID = storeID
 	order, total := types.ConvertCreateOrderDTOToOrder(
 		createOrderDTO,
-		validations.ProductPrices,
-		validations.AdditivePrices,
+		validationRes.productPrices,
+		validationRes.additivePrices,
 	)
 	order.Status = data.OrderStatusWaitingForPayment
 	order.Total = total
 
 	id, err := s.orderRepo.CreateOrder(&order)
 	if err != nil {
-		return nil, fmt.Errorf("failed to create order: %w", err)
+		wrappedErr := fmt.Errorf("failed to create order: %w", err)
+		s.logger.Error(wrappedErr)
+		return nil, wrappedErr
 	}
 
-	inventoryLists, err := s.orderRepo.GetOrderInventory(id)
-	if err != nil {
-		return nil, fmt.Errorf("failed to get ingredients: %w", err)
-	}
+	go func() {
+		inventoryLists, err := s.orderRepo.GetOrderInventory(id)
+		if err != nil {
+			s.logger.Error("failed to get ingredients", zap.Error(err))
+			return
+		}
 
-	err = s.storeInventoryManagerRepo.RecalculateStoreInventory(order.StoreID, &storeInventoryManagersTypes.RecalculateInput{
-		IngredientIDs: inventoryLists.IngredientIDs,
-		ProvisionIDs:  inventoryLists.ProvisionIDs,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to recalculate out of stock: %w", err)
-	}
+		err = s.storeInventoryManagerRepo.RecalculateStoreInventory(order.StoreID, &storeInventoryManagersTypes.RecalculateInput{
+			IngredientIDs:   inventoryLists.IngredientIDs,
+			ProvisionIDs:    inventoryLists.ProvisionIDs,
+			FrozenInventory: frozenInventory,
+		})
+		if err != nil {
+			s.logger.Error("failed to recalculate out of stock", zap.Error(err))
+			return
+		}
+	}()
 
-	payload, err := json.Marshal(types.WaitingOrderPayload{OrderID: id})
-	if err != nil {
-		return &order, err
-	}
+	go func() {
+		payload, err := json.Marshal(types.WaitingOrderPayload{OrderID: id})
+		if err != nil {
+			s.logger.Error("failed to marshal payload", zap.Error(err))
+			return
+		}
 
-	err = s.taskQueue.EnqueueTask(OrderPaymentFailure, payload, config.GetConfig().Payment.WaitingTime)
-	if err != nil {
-		return &order, err
-	}
+		err = s.taskQueue.EnqueueTask(OrderPaymentFailure, payload, config.GetConfig().Payment.WaitingTime)
+		if err != nil {
+			s.logger.Error("failed to enqueue payment failure", zap.Error(err))
+			return
+		}
+	}()
 
-	logrus.Infof("________________order done in %v_________________", time.Since(start))
 	return &order, nil
 }
 
-func (s *orderService) StockAndPriceValidationResults(
-	suborders []types.CreateSubOrderDTO,
-	storeID uint,
-	storeProductSizeIDs, storeAdditiveIDs []uint,
-	frozenInventory *storeInventoryManagersTypes.FrozenInventory,
+func validateSuborders(
+	order *types.CreateOrderDTO,
+	storeProductRepo storeProducts.StoreProductRepository,
+	storeAdditiveRepo storeAdditives.StoreAdditiveRepository,
 ) (*orderValidationResults, error) {
-	productPrices, productNames, err := ValidateStoreProductSizes(storeID, storeProductSizeIDs, s.storeProductRepo, frozenInventory)
+	orderData := prepareData(order.Suborders)
+
+	spsValRes, err := validateStoreProductSizes(order.StoreID, orderData.storeProductSizeIDs, storeProductRepo)
 	if err != nil {
-		s.logger.Error(fmt.Errorf("product validation failed: %w", err))
-		return nil, err
+		return nil, fmt.Errorf("product validation failed: %w", err)
 	}
 
-	additivePrices, additiveNames, err := ValidateStoreAdditives(
-		storeID,
-		suborders,
-		s.storeAdditiveRepo,
-		frozenInventory,
+	saValRes, err := validateStoreAdditives(
+		order.StoreID,
+		orderData.suborderStoreAdditivesCtx,
+		storeAdditiveRepo,
 	)
 	if err != nil {
-		s.logger.Error(fmt.Errorf("additive validation failed: %w", err))
+		return nil, fmt.Errorf("additive validation failed: %w", err)
+	}
+
+	if err := validateMultipleSelect(order.Suborders, saValRes.storeAdditivesList); err != nil {
 		return nil, err
 	}
 
 	return &orderValidationResults{
-		ProductPrices:  productPrices,
-		ProductNames:   productNames,
-		AdditivePrices: additivePrices,
-		AdditiveNames:  additiveNames,
+		productPrices:  spsValRes.prices,
+		productNames:   spsValRes.names,
+		additivePrices: saValRes.prices,
+		additiveNames:  saValRes.names,
+		subordersCtx: &subordersContext{
+			subordersQuantities:   orderData.suborderQuantities,
+			storeProductSizesList: spsValRes.storeProductSizesList,
+			storeAdditivesList:    saValRes.storeAdditivesList,
+		},
 	}, nil
 }
 
-func ValidateStoreAdditives(
+func validateStoreAdditives(
 	storeID uint,
-	suborders []types.CreateSubOrderDTO,
-	repo storeAdditives.StoreAdditiveRepository,
-	frozenInventory *storeInventoryManagersTypes.FrozenInventory,
-) (map[uint]float64, map[uint]string, error) {
+	ctx *suborderAdditivesContext,
+	storeAdditiveRepo storeAdditives.StoreAdditiveRepository,
+) (*storeAdditiveValidationResults, error) {
+	// 1) Batch fetch StoreAdditives by the collected additive IDs.
+	storeAdditivesList, err := storeAdditiveRepo.GetStoreAdditivesWithDetailsByIDs(storeID, ctx.storeAddIDs)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch storeAdditives: %w", err)
+	}
+	// Build a lookup map: StoreAdditiveID -> *StoreAdditive
+	storeAdditivesMap := make(map[uint]*data.StoreAdditive, len(storeAdditivesList))
+	for i := range storeAdditivesList {
+		// Use index-based addressing so that the pointer is stable.
+		sa := &storeAdditivesList[i]
+		storeAdditivesMap[sa.ID] = sa
+	}
+
+	// 2) Batch fetch ProductSizeAdditives using the aggregated keys.
+	psaMap, err := getProductSizeAdditiveMapByKeys(storeAdditiveRepo, ctx.storeAddKeys)
+	if err != nil {
+		return nil, fmt.Errorf("failed to fetch productSizeAdditives: %w", err)
+	}
+
+	// 3) Validate each aggregated key and build results.
 	prices := make(map[uint]float64)
 	additiveNames := make(map[uint]string)
 
-	for _, suborder := range suborders {
-		storePsID := suborder.StoreProductSizeID
-		for _, storeAddID := range suborder.StoreAdditivesIDs {
-			sa, psa, err := repo.GetStoreAdditiveWithProductSizeAdditive(storeID, storePsID, storeAddID)
-			if err != nil {
-				return nil, nil, fmt.Errorf("error loading storeAdditive/PSA for suborder: %w", err)
-			}
-			if sa == nil {
-				return nil, nil, fmt.Errorf("no storeAdditive found for storeAddID=%d", storeAddID)
-			}
-
-			if psa == nil {
-				return nil, nil, fmt.Errorf(
-					"additive %d not linked to storeProductSize %d in store %d",
-					storeAddID, storePsID, storeID,
-				)
-			}
-
-			if sa.IsOutOfStock {
-				return nil, nil, fmt.Errorf(
-					"additive %s (ID=%d) is out of stock",
-					sa.Additive.Name, storeAddID,
-				)
-			}
-
-			var price float64
-			if psa.IsDefault {
-				price = 0
-			} else {
-				if sa.StorePrice != nil {
-					price = *sa.StorePrice
-				} else {
-					price = sa.Additive.BasePrice
-				}
-			}
-
-			prices[storeAddID] = price
-			additiveNames[storeAddID] = sa.Additive.Name
+	// Iterate over the unique keys from context
+	for _, key := range ctx.storeAddKeys {
+		sa := storeAdditivesMap[key.StoreAdditiveID]
+		if sa == nil {
+			return nil, fmt.Errorf("no storeAdditive found for ID=%d", key.StoreAdditiveID)
 		}
+		// Look up the corresponding ProductSizeAdditive
+		psa, ok := psaMap[key]
+		if !ok || psa == nil {
+			return nil, fmt.Errorf(
+				"additive %d not linked to storeProductSize %d in store %d",
+				key.StoreAdditiveID, key.StoreProductSizeID, storeID,
+			)
+		}
+
+		// Check stock
+		if sa.IsOutOfStock {
+			return nil, fmt.Errorf(
+				"%w: additive %s (ID=%d) is out of stock",
+				storeStocksTypes.ErrInsufficientStock, sa.Additive.Name, key.StoreAdditiveID,
+			)
+		}
+
+		// Compute the final price:
+		var price float64
+		if psa.IsDefault {
+			return nil, fmt.Errorf("additive with ID %d is a default additive for productSize with ID %d", psa.AdditiveID, psa.ProductSizeID)
+		} else if sa.StorePrice != nil {
+			price = *sa.StorePrice
+		} else {
+			price = sa.Additive.BasePrice
+		}
+
+		// We store the results keyed by StoreAdditiveID.
+		prices[key.StoreAdditiveID] = price
+		additiveNames[key.StoreAdditiveID] = sa.Additive.Name
 	}
-	return prices, additiveNames, nil
+
+	return &storeAdditiveValidationResults{
+		storeAdditivesList: storeAdditivesList,
+		prices:             prices,
+		names:              additiveNames,
+	}, nil
 }
 
-func ValidateMultipleSelect(storeID uint, createOrderDTO types.CreateOrderDTO, repo storeAdditives.StoreAdditiveRepository) error {
-	for _, suborder := range createOrderDTO.Suborders {
+func validateMultipleSelect(
+	suborders []types.CreateSubOrderDTO,
+	storeAdditivesList []data.StoreAdditive,
+) error {
+	// Build a map: storeAdditiveID → *StoreAdditive
+	storeAdditivesMap := make(map[uint]*data.StoreAdditive, len(storeAdditivesList))
+	for i := range storeAdditivesList {
+		sa := &storeAdditivesList[i]
+		storeAdditivesMap[sa.ID] = sa
+	}
+
+	// For each suborder, ensure non-multiple-select categories aren’t picked >1 time
+	for _, suborder := range suborders {
 		categoryCount := make(map[uint]int)
 		for _, addID := range suborder.StoreAdditivesIDs {
-			storeAdd, err := repo.GetStoreAdditiveWithDetailsByID(addID, &contexts.StoreContextFilter{StoreID: &storeID})
-			if err != nil {
-				return err
+			sa := storeAdditivesMap[addID]
+			if sa == nil {
+				return fmt.Errorf("additive %d not found in the storeAdditivesList map", addID)
 			}
-			categoryID := storeAdd.Additive.AdditiveCategoryID
+
+			categoryID := sa.Additive.AdditiveCategoryID
 			categoryCount[categoryID]++
-			if !storeAdd.Additive.Category.IsMultipleSelect && categoryCount[categoryID] > 1 {
+
+			if !sa.Additive.Category.IsMultipleSelect && categoryCount[categoryID] > 1 {
 				return types.ErrMultipleSelect
 			}
 		}
@@ -342,47 +371,191 @@ func ValidateMultipleSelect(storeID uint, createOrderDTO types.CreateOrderDTO, r
 	return nil
 }
 
-func ValidateStoreProductSizes(
+func validateStoreProductSizes(
 	storeID uint,
 	storeProductSizeIDs []uint,
 	repo storeProducts.StoreProductRepository,
-	frozenInventory *storeInventoryManagersTypes.FrozenInventory,
-) (map[uint]float64, map[uint]string, error) {
-	prices := make(map[uint]float64)
-	productNames := make(map[uint]string)
+) (*storeProductSizeValidationResults, error) {
+	// 1) Fetch all needed storeProductSizes at once
+	storePSList, err := repo.GetStoreProductSizesWithDetailsByIDs(storeID, storeProductSizeIDs)
+	if err != nil {
+		return nil, fmt.Errorf("error fetching store product sizes: %w", err)
+	}
+
+	// 2) Convert slice → map for quick lookups by ID
+	storePSMap := make(map[uint]*data.StoreProductSize, len(storePSList))
+	for i := range storePSList {
+		ps := &storePSList[i]
+		storePSMap[ps.ID] = ps
+	}
+
+	// 3) Validate & collect results
+	prices := make(map[uint]float64, len(storeProductSizeIDs))
+	productNames := make(map[uint]string, len(storeProductSizeIDs))
 
 	for _, psID := range storeProductSizeIDs {
-		storePS, err := repo.GetStoreProductSizeWithDetailsByID(storeID, psID)
-		if err != nil {
-			return nil, nil, fmt.Errorf("error with store product size: %w", err)
-		}
+		storePS := storePSMap[psID]
 		if storePS == nil {
-			return nil, nil, fmt.Errorf("store product size with ID %d is nil", psID)
-		}
-		if storePS.ProductSize.Product.Name == "" {
-			return nil, nil, fmt.Errorf("product size with ID %d has an associated product with an empty name", psID)
+			return nil, fmt.Errorf("storeProductSize with ID %d not found in store %d", psID, storeID)
 		}
 
+		// Check for missing product name
+		// (We assume storePS.ProductSize is preloaded)
+		if storePS.ProductSize.Product.Name == "" {
+			return nil, fmt.Errorf(
+				"product size with ID %d has an associated product with an empty name",
+				psID,
+			)
+		}
+
+		// Compute the final price
 		price := storePS.ProductSize.BasePrice
 		if storePS.StorePrice != nil {
 			price = *storePS.StorePrice
 		}
 
 		prices[psID] = price
-		productNames[psID] = storePS.StoreProduct.Product.Name
+		// storePS.StoreProduct.Product.Name is the "actual" product name
+		productNames[psID] = storePS.ProductSize.Product.Name
 	}
 
-	return prices, productNames, nil
+	return &storeProductSizeValidationResults{
+		storeProductSizesList: storePSList,
+		prices:                prices,
+		names:                 productNames,
+	}, nil
 }
 
-func RetrieveIDs(createOrderDTO types.CreateOrderDTO) ([]uint, []uint) {
-	var storeProductSizeIDs []uint
-	var storeAdditiveIDs []uint
-	for _, product := range createOrderDTO.Suborders {
-		storeProductSizeIDs = append(storeProductSizeIDs, product.StoreProductSizeID)
-		storeAdditiveIDs = append(storeAdditiveIDs, product.StoreAdditivesIDs...)
+func prepareData(suborders []types.CreateSubOrderDTO) *preparedData {
+	spsQty := make(map[uint]uint)
+	saQty := make(map[uint]uint)
+
+	// Use maps as sets for uniqueness.
+	spsSet := make(map[uint]struct{})
+	saKeySet := make(map[storeAdditivesTypes.StorePStoAdditiveKey]struct{})
+	additiveIDSet := make(map[uint]struct{})
+
+	for _, sub := range suborders {
+		spsSet[sub.StoreProductSizeID] = struct{}{}
+		spsQty[sub.StoreProductSizeID] += sub.Quantity
+
+		for _, storeAdditiveID := range sub.StoreAdditivesIDs {
+			key := storeAdditivesTypes.StorePStoAdditiveKey{
+				StoreProductSizeID: sub.StoreProductSizeID,
+				StoreAdditiveID:    storeAdditiveID,
+			}
+			saKeySet[key] = struct{}{}
+			additiveIDSet[storeAdditiveID] = struct{}{}
+
+			saQty[storeAdditiveID] += sub.Quantity
+		}
 	}
-	return storeProductSizeIDs, storeAdditiveIDs
+
+	// Convert set to slice.
+	storeProductSizeIDs := make([]uint, 0, len(spsSet))
+	for id := range spsSet {
+		storeProductSizeIDs = append(storeProductSizeIDs, id)
+	}
+	addKeys := make([]storeAdditivesTypes.StorePStoAdditiveKey, 0, len(saKeySet))
+	for k := range saKeySet {
+		addKeys = append(addKeys, k)
+	}
+	additiveIDs := make([]uint, 0, len(additiveIDSet))
+	for id := range additiveIDSet {
+		additiveIDs = append(additiveIDs, id)
+	}
+
+	return &preparedData{
+		storeProductSizeIDs: storeProductSizeIDs,
+		suborderStoreAdditivesCtx: &suborderAdditivesContext{
+			storeAddKeys: addKeys,
+			storeAddIDs:  additiveIDs,
+		},
+		suborderQuantities: &subordersQuantities{
+			storeProductSizesQty: spsQty,
+			storeAdditivesQty:    saQty,
+		},
+	}
+}
+
+func getProductSizeAdditiveMapByKeys(
+	storeAdditiveRepo storeAdditives.StoreAdditiveRepository,
+	keys []storeAdditivesTypes.StorePStoAdditiveKey,
+) (map[storeAdditivesTypes.StorePStoAdditiveKey]*data.ProductSizeAdditive, error) {
+	// --- 1) Extract unique store‐side IDs ---
+	spsSet, addSet := map[uint]struct{}{}, map[uint]struct{}{}
+	for _, k := range keys {
+		spsSet[k.StoreProductSizeID] = struct{}{}
+		addSet[k.StoreAdditiveID] = struct{}{}
+	}
+	var storePSIDs, storeAddIDs []uint
+	for id := range spsSet {
+		storePSIDs = append(storePSIDs, id)
+	}
+	for id := range addSet {
+		storeAddIDs = append(storeAddIDs, id)
+	}
+
+	// --- 2) Fetch the ID maps from repo ---
+	spsToPs, err := storeAdditiveRepo.GetStoreProductSizeToProductSizeMap(storePSIDs)
+	if err != nil {
+		return nil, err
+	}
+	addToAdd, err := storeAdditiveRepo.GetStoreAdditiveToAdditiveMap(storeAddIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	// --- 3) Build set of real (productSizeID, additiveID) pairs ---
+	pairSet := map[productSizeToAdditiveKey]struct{}{}
+	for _, k := range keys {
+		psID, successProductSize := spsToPs[k.StoreProductSizeID]
+		addID, successAdditive := addToAdd[k.StoreAdditiveID]
+		if !successProductSize || !successAdditive {
+			continue
+		}
+		pairSet[productSizeToAdditiveKey{psID, addID}] = struct{}{}
+	}
+	if len(pairSet) == 0 {
+		return make(map[storeAdditivesTypes.StorePStoAdditiveKey]*data.ProductSizeAdditive), nil
+	}
+
+	// --- 4) Query PSAs for those pairs ---
+	var productSizeIDs, additiveIDs []uint
+	for p := range pairSet {
+		productSizeIDs = append(productSizeIDs, p.productSizeID)
+		additiveIDs = append(additiveIDs, p.additiveID)
+	}
+	psas, err := storeAdditiveRepo.GetProductSizeAdditivesByProductSizeAndAdditive(productSizeIDs, additiveIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	// --- 5) Build a lookup from the DB rows ---
+	psaLookup := make(map[productSizeToAdditiveKey]*data.ProductSizeAdditive, len(psas))
+	for i := range psas {
+		p := &psas[i]
+		psaLookup[productSizeToAdditiveKey{
+			productSizeID: p.ProductSizeID,
+			additiveID:    p.AdditiveID,
+		}] = p
+	}
+
+	// --- 6) Map back to the original keys ---
+	result := make(map[storeAdditivesTypes.StorePStoAdditiveKey]*data.ProductSizeAdditive, len(keys))
+	for _, k := range keys {
+		if psID, ok1 := spsToPs[k.StoreProductSizeID]; ok1 {
+			if addID, ok2 := addToAdd[k.StoreAdditiveID]; ok2 {
+				if psa, keyExists := psaLookup[productSizeToAdditiveKey{
+					productSizeID: psID,
+					additiveID:    addID,
+				}]; keyExists {
+					result[k] = psa
+				}
+			}
+		}
+	}
+	return result, nil
 }
 
 func (s *orderService) CheckAndAccumulateSuborders(
@@ -397,7 +570,6 @@ func (s *orderService) CheckAndAccumulateSuborders(
 	for _, sub := range expanded {
 		// Product Size
 
-		logrus.Infof("storeID: %v, storeProductSizeID: %v, frozenInventory: %v", storeID, sub.StoreProductSizeID, frozenInventory)
 		err := s.storeProductService.CheckSufficientStoreProductSizeByID(storeID, sub.StoreProductSizeID, frozenInventory)
 		if err != nil {
 			s.logger.Error(fmt.Errorf(
@@ -406,7 +578,6 @@ func (s *orderService) CheckAndAccumulateSuborders(
 			))
 			return err
 		}
-		logrus.Infof("Frozen Stock AFTER 1st suborder: %v", frozenInventory)
 
 		// Additives
 		for _, addID := range sub.StoreAdditivesIDs {
@@ -578,6 +749,75 @@ func (s *orderService) FailOrderPayment(orderID uint) error {
 			s.logger.Errorf("could not recalculate stock after order deletion: %v", err)
 		}
 	}()
+
+	return nil
+}
+
+// in your orderService (or wherever it belongs)
+
+func (s *orderService) checkAndAccumulateInventory(
+	storeID uint,
+	ctx *subordersContext,
+	frozen *storeInventoryManagersTypes.FrozenInventory,
+) error {
+	// 1) Build the two requirement maps
+	requiredIngredientQty := make(map[uint]float64)
+	requiredProvisionVol := make(map[uint]float64)
+
+	// From each StoreProductSize → its ProductSizeIngredients & ProductSizeProvisions
+	for _, sps := range ctx.storeProductSizesList {
+		// how many of this productSize was ordered?
+		count := float64(ctx.subordersQuantities.storeProductSizesQty[sps.ID])
+		if count == 0 {
+			continue
+		}
+
+		// productSize direct ingredients and provisions
+		for _, psi := range sps.ProductSize.ProductSizeIngredients {
+			requiredIngredientQty[psi.IngredientID] += psi.Quantity * count
+		}
+		for _, psp := range sps.ProductSize.ProductSizeProvisions {
+			requiredProvisionVol[psp.ProvisionID] += psp.Volume * count
+		}
+
+		// productSize default additives ingredients and provisions
+		for _, psa := range sps.ProductSize.Additives {
+			if !psa.IsDefault {
+				continue
+			}
+			for _, ai := range psa.Additive.Ingredients {
+				requiredIngredientQty[ai.IngredientID] += ai.Quantity * count
+			}
+			for _, ap := range psa.Additive.AdditiveProvisions {
+				requiredProvisionVol[ap.ProvisionID] += ap.Volume * count
+			}
+		}
+	}
+
+	// From each StoreAdditive → its Additive.Ingredients & Additive.AdditiveProvisions
+	for _, sa := range ctx.storeAdditivesList {
+		count := float64(ctx.subordersQuantities.storeAdditivesQty[sa.ID])
+		if count == 0 {
+			continue
+		}
+		for _, ai := range sa.Additive.Ingredients {
+			requiredIngredientQty[ai.IngredientID] += ai.Quantity * count
+		}
+		for _, ap := range sa.Additive.AdditiveProvisions {
+			requiredProvisionVol[ap.ProvisionID] += ap.Volume * count
+		}
+	}
+
+	if err := s.storeInventoryManagerRepo.CheckStoreStocks(
+		storeID, requiredIngredientQty, frozen,
+	); err != nil {
+		return err
+	}
+	if err := s.storeInventoryManagerRepo.CheckStoreProvisions(
+		storeID, requiredProvisionVol, frozen,
+	); err != nil {
+		return err
+	}
 
 	return nil
 }

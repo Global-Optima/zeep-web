@@ -395,7 +395,7 @@ func TestOrderService_CreateOrder_Combined(t *testing.T) {
 					{
 						StoreProductSizeID: 1, // product size with store_price 2.75
 						Quantity:           2,
-						StoreAdditivesIDs:  []uint{1}, // additive with store_price 0.55
+						StoreAdditivesIDs:  []uint{}, // default additive(ID = 1) with store_price 0.55
 					},
 				},
 				StoreID: 1,
@@ -404,6 +404,24 @@ func TestOrderService_CreateOrder_Combined(t *testing.T) {
 			expectedError: false,
 			// Expected total = 2 * (2.75 + 0(0.55 not counted since it is a default additive)) = 5.50
 			expectedTotal: 5.5,
+		},
+		{
+			name: "Successful order creation with additives - John Doe, quantity 2",
+			dto: types.CreateOrderDTO{
+				CustomerName: "John",
+				Suborders: []types.CreateSubOrderDTO{
+					{
+						StoreProductSizeID: 1, // product size with store_price 2.75
+						Quantity:           2,
+						StoreAdditivesIDs:  []uint{2}, // additive(ID = 2) with store_price 0.80
+					},
+				},
+				StoreID: 1,
+			},
+			storeID:       1,
+			expectedError: false,
+			// Expected total = 2 * (2.75 + 0.80) = 7.10
+			expectedTotal: 7.1,
 		},
 		{
 			name: "Failure due to empty suborders",
@@ -424,7 +442,7 @@ func TestOrderService_CreateOrder_Combined(t *testing.T) {
 					{
 						StoreProductSizeID: 1,
 						Quantity:           1,
-						StoreAdditivesIDs:  []uint{1},
+						StoreAdditivesIDs:  []uint{2},
 					},
 				},
 				StoreID: 1,
@@ -441,7 +459,7 @@ func TestOrderService_CreateOrder_Combined(t *testing.T) {
 					{
 						StoreProductSizeID: 9999, // non-existent ID
 						Quantity:           1,
-						StoreAdditivesIDs:  []uint{1},
+						StoreAdditivesIDs:  []uint{2},
 					},
 				},
 				StoreID: 1,
@@ -455,7 +473,7 @@ func TestOrderService_CreateOrder_Combined(t *testing.T) {
 	// Run each test case.
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			order, err := module.Service.CreateOrder(tc.storeID, &tc.dto)
+			order, err := module.Service.CreateOrder(&tc.dto)
 			if tc.expectedError {
 				assert.Error(t, err, "Expected error in case %q", tc.name)
 				if tc.expectedErrSubstr != "" {

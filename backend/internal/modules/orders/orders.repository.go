@@ -33,7 +33,7 @@ type OrderRepository interface {
 	GetOrderDetails(orderID uint, filter *contexts.StoreContextFilter) (*data.Order, error)
 	GetOrdersForExport(filter *types.OrdersExportFilterQuery) ([]data.Order, error)
 	GetSuborderByID(suborderID uint) (*data.Suborder, error)
-	GetOrderInventory(orderID uint) (*storeInventoryManagersTypes.InventoryIDsLists, error)
+	GetOrderInventory(orderID uint) (*storeInventoryManagersTypes.InventoryIDsList, error)
 
 	HandlePaymentSuccess(orderID uint, paymentTransaction *data.Transaction) (*data.Order, error)
 	HardDeleteOrderByID(orderID uint) error
@@ -144,7 +144,7 @@ func getShiftDate(t time.Time, shiftStartHour int) time.Time {
 	return shifted
 }
 
-func (r *orderRepository) GetOrderInventory(orderID uint) (*storeInventoryManagersTypes.InventoryIDsLists, error) {
+func (r *orderRepository) GetOrderInventory(orderID uint) (*storeInventoryManagersTypes.InventoryIDsList, error) {
 	ingredientIDsFromProductSizes, err := r.getOrderProductSizeIngredientIDs(orderID)
 	if err != nil {
 		return nil, err
@@ -165,7 +165,7 @@ func (r *orderRepository) GetOrderInventory(orderID uint) (*storeInventoryManage
 		return nil, err
 	}
 
-	return &storeInventoryManagersTypes.InventoryIDsLists{
+	return &storeInventoryManagersTypes.InventoryIDsList{
 		IngredientIDs: utils.UnionSlices(ingredientIDsFromProductSizes, ingredientIDsFromAdditives),
 		ProvisionIDs:  utils.UnionSlices(provisionIDsFromProductSizes, provisionIDsFromAdditives),
 	}, nil

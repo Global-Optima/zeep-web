@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/errors/handlerErrors"
+
 	storeProvisionsTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/provisions/storeProvisions/types"
 
 	storeStocksTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeStocks/types"
@@ -122,13 +124,14 @@ func (h *OrderHandler) CreateOrder(c *gin.Context) {
 		return
 	}
 
-	storeID, errH := contexts.GetStoreId(c)
+	var errH *handlerErrors.HandlerError
+	orderDTO.StoreID, errH = contexts.GetStoreId(c)
 	if errH != nil {
 		utils.SendErrorWithStatus(c, errH.Error(), errH.Status())
 		return
 	}
 
-	createdOrder, err := h.service.CreateOrder(storeID, &orderDTO)
+	createdOrder, err := h.service.CreateOrder(&orderDTO)
 	if err != nil || createdOrder == nil {
 		if errors.Is(err, storeStocksTypes.ErrInsufficientStock) ||
 			errors.Is(err, storeProvisionsTypes.ErrInsufficientStoreProvision) {

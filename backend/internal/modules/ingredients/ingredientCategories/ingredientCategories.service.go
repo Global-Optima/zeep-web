@@ -39,11 +39,7 @@ func (s *ingredientCategoryService) GetByID(id uint) (*types.IngredientCategoryR
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch ingredient category: %w", err)
 	}
-	return &types.IngredientCategoryResponse{
-		ID:          category.ID,
-		Name:        category.Name,
-		Description: category.Description,
-	}, nil
+	return types.ToIngredientCategoryResponse(category), nil
 }
 
 func (s *ingredientCategoryService) Update(id uint, dto types.UpdateIngredientCategoryDTO) error {
@@ -72,11 +68,7 @@ func (s *ingredientCategoryService) GetAll(filter *types.IngredientCategoryFilte
 
 	responses := make([]types.IngredientCategoryResponse, len(categories))
 	for i, category := range categories {
-		responses[i] = types.IngredientCategoryResponse{
-			ID:          category.ID,
-			Name:        category.Name,
-			Description: category.Description,
-		}
+		responses[i] = *types.ToIngredientCategoryResponse(&category)
 	}
 	return responses, nil
 }

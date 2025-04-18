@@ -4,11 +4,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
 	"github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers"
 	storeInventoryManagersTypes "github.com/Global-Optima/zeep-web/backend/internal/modules/storeInventoryManagers/types"
-	"github.com/sirupsen/logrus"
-
-	"github.com/Global-Optima/zeep-web/backend/internal/modules/ingredients"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
 	storeAdditives "github.com/Global-Optima/zeep-web/backend/internal/modules/additives/storeAdditivies"
@@ -76,9 +74,6 @@ func (m *transactionManager) GetSynchronizationStatus(storeID uint) (*types.Sync
 		return nil, fmt.Errorf("could not fetch unsyncData: nil pointer dereference")
 	}
 
-	logrus.Infof("ingredientIDs: %v, productSizeIDs: %v, additiveIDs: %v, provisionIDs: %v",
-		unsyncData.IngredientIDs, unsyncData.ProductSizeIDs, unsyncData.AdditiveIDs, unsyncData.ProvisionIDs)
-
 	if len(unsyncData.AdditiveIDs) > 0 || len(unsyncData.IngredientIDs) > 0 || len(unsyncData.ProductSizeIDs) > 0 || len(unsyncData.ProvisionIDs) > 0 {
 		syncStatus.IsSync = false
 	}
@@ -125,8 +120,6 @@ func (m *transactionManager) SynchronizeStoreInventory(storeID uint) error {
 		if err != nil {
 			return err
 		}
-
-		logrus.Infof("ingredientIDs: %v, productSizeIDs: %v, additiveIDs: %v, provisionIDs: %v", ingredientIDs, productSizeIDs, additiveIDs, provisionIDs)
 
 		storeRepoTx := m.storeRepo.CloneWithTransaction(tx)
 		_, err = storeRepoTx.UpdateStoreSyncTime(storeID)
