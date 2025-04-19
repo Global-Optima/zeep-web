@@ -346,17 +346,103 @@ func TestOrderService_ExportOrders(t *testing.T) {
 	_ = resetTestData(t)
 	module := tests.GetOrdersModule()
 
-	start := time.Now().Add(-72 * time.Hour)
-	end := time.Now().Add(24 * time.Hour)
-	filter := types.OrdersExportFilterQuery{
-		StartDate: &start,
-		EndDate:   &end,
-		StoreID:   uintPtr(1),
+	now := time.Now()
+	// Default date range: 72 hours ago to 24 hours ahead.
+	defaultStart := now.Add(-72 * time.Hour)
+	defaultEnd := now.Add(24 * time.Hour)
+
+	// Same day: truncate current time to the day.
+	sameDay := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+	// Yesterday and today range.
+	yesterday := sameDay.Add(-24 * time.Hour)
+	today := sameDay
+
+	// Define table-driven test cases.
+	testCases := []struct {
+		description   string
+		filter        types.OrdersExportFilterQuery
+		expectedCount int
+	}{
+		{
+			description: "Basic export with start and end date (expect 2 orders in store 1)",
+			filter: types.OrdersExportFilterQuery{
+				StartDate: &defaultStart,
+				EndDate:   &defaultEnd,
+				StoreID:   uintPtr(1),
+			},
+			expectedCount: 2,
+		},
+		{
+			description: "Export with only startDate specified (expect 2 orders)",
+			filter: types.OrdersExportFilterQuery{
+				StartDate: &defaultStart,
+				// EndDate omitted
+				StoreID: uintPtr(1),
+			},
+			expectedCount: 2,
+		},
+		{
+			description: "Export with only endDate specified (expect 2 orders)",
+			filter: types.OrdersExportFilterQuery{
+				// StartDate omitted
+				EndDate: &defaultEnd,
+				StoreID: uintPtr(1),
+			},
+			expectedCount: 2,
+		},
+		{
+			description: "Export with different language specified (e.g., 'kk'; expect 0 orders if none match)",
+			filter: types.OrdersExportFilterQuery{
+				StartDate: &defaultStart,
+				EndDate:   &defaultEnd,
+				StoreID:   uintPtr(1),
+				Language:  "kk",
+			},
+			expectedCount: 2,
+		},
+		{
+			description: "Export when no orders exist (use non-existent store id)",
+			filter: types.OrdersExportFilterQuery{
+				StartDate: &defaultStart,
+				EndDate:   &defaultEnd,
+				StoreID:   uintPtr(999), // assuming store 999 has no orders
+			},
+			expectedCount: 0,
+		},
+		{
+			description: "Export orders when orders are status-changing (simulate transient state; expect 2 orders)",
+			filter: types.OrdersExportFilterQuery{
+				StartDate: &defaultStart,
+				EndDate:   &defaultEnd,
+				StoreID:   uintPtr(1),
+			},
+			expectedCount: 2,
+		},
+		{
+			description: "Export with same day for start and end (narrow range; expect 0 orders if no order falls exactly on that day)",
+			filter: types.OrdersExportFilterQuery{
+				StartDate: &sameDay,
+				EndDate:   &sameDay,
+				StoreID:   uintPtr(1),
+			},
+			expectedCount: 0,
+		},
+		{
+			description: "Export from yesterday to today (expect 1 order)",
+			filter: types.OrdersExportFilterQuery{
+				StartDate: &yesterday,
+				EndDate:   &today,
+				StoreID:   uintPtr(1),
+			},
+			expectedCount: 1,
+		},
 	}
-	exports, err := module.Service.ExportOrders(&filter)
-	assert.NoError(t, err, "ExportOrders should not error")
-	// Assuming test data for store 1 contains 2 orders.
-	assert.Equal(t, 2, len(exports), "Expected 2 orders for export in store 1")
+
+	for _, tc := range testCases {
+		exports, err := module.Service.ExportOrders(&tc.filter)
+		assert.NoError(t, err, "ExportOrders should not error: "+tc.description)
+		assert.Equal(t, tc.expectedCount, len(exports), "Unexpected number of orders for test case: "+tc.description)
+	}
 }
 
 // Test GetSubOrders function.

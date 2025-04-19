@@ -8,8 +8,8 @@ import (
 )
 
 type CreateSupplierDTO struct {
-	Name         string `json:"name" validate:"required"`
-	ContactEmail string `json:"contactEmail" validate:"email"`
+	Name         string `json:"name" binding:"required" validate:"required"`
+	ContactEmail string `json:"contactEmail" binding:"required" validate:"email"`
 	ContactPhone string `json:"contactPhone" binding:"required"`
 	City         string `json:"city" binding:"required"`
 	Address      string `json:"address,omitempty"`

@@ -7,7 +7,7 @@ type CreateRegionDTO struct {
 }
 
 type UpdateRegionDTO struct {
-	Name *string `json:"name,omitempty"`
+	Name *string `json:"name" binding:"min=1,omitempty"`
 }
 
 type RegionDTO struct {

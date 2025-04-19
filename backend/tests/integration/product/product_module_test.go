@@ -3,6 +3,7 @@ package product_test
 import (
 	"mime/multipart"
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/Global-Optima/zeep-web/backend/tests/mockFiles"
@@ -58,6 +59,90 @@ func TestProductEndpoints(t *testing.T) {
 				ExpectedCode: http.StatusCreated,
 			},
 			{
+				Description: "Creating new product empty name",
+				Method:      http.MethodPost,
+				URL:         "/api/test/products",
+				FormData: map[string]string{
+					"name":        " ",
+					"description": "A smooth coffee with milk",
+					"categoryId":  "2",
+					// "machineId":   "TEST0000111122223333000001",
+				},
+				Files: map[string][]*multipart.FileHeader{
+					"image": imageFileHeaders,
+					"video": videoFileHeaders,
+				},
+				AuthRole:     data.RoleAdmin,
+				ExpectedCode: http.StatusBadRequest,
+			},
+			{
+				Description: "Creating new product with duplicate name",
+				Method:      http.MethodPost,
+				URL:         "/api/test/products",
+				FormData: map[string]string{
+					"name":        "Espresso",
+					"description": "",
+					"categoryId":  "2",
+					// "machineId":   "TEST0000111122223333000001",
+				},
+				Files: map[string][]*multipart.FileHeader{
+					"image": imageFileHeaders,
+					"video": videoFileHeaders,
+				},
+				AuthRole:     data.RoleAdmin,
+				ExpectedCode: http.StatusInternalServerError,
+			},
+			{
+				Description: "Creating new product long description",
+				Method:      http.MethodPost,
+				URL:         "/api/test/products",
+				FormData: map[string]string{
+					"name":        "Test product",
+					"description": strings.Repeat("long description ", 1000),
+					"categoryId":  "2",
+					// "machineId":   "TEST0000111122223333000001",
+				},
+				Files: map[string][]*multipart.FileHeader{
+					"image": imageFileHeaders,
+					"video": videoFileHeaders,
+				},
+				AuthRole:     data.RoleAdmin,
+				ExpectedCode: http.StatusBadRequest,
+			},
+			{
+				Description: "Creating new product empty description",
+				Method:      http.MethodPost,
+				URL:         "/api/test/products",
+				FormData: map[string]string{
+					"name":        "Test product",
+					"description": "",
+					"categoryId":  "2",
+					// "machineId":   "TEST0000111122223333000001",
+				},
+				Files: map[string][]*multipart.FileHeader{
+					"image": imageFileHeaders,
+					"video": videoFileHeaders,
+				},
+				AuthRole:     data.RoleAdmin,
+				ExpectedCode: http.StatusCreated,
+			},
+			{
+				Description: "Creating new product with empty category",
+				Method:      http.MethodPost,
+				URL:         "/api/test/products",
+				FormData: map[string]string{
+					"name":        "Test product",
+					"description": "Description",
+					// "machineId":   "TEST0000111122223333000001",
+				},
+				Files: map[string][]*multipart.FileHeader{
+					"image": imageFileHeaders,
+					"video": videoFileHeaders,
+				},
+				AuthRole:     data.RoleAdmin,
+				ExpectedCode: http.StatusBadRequest,
+			},
+			{
 				Description: "Barista should NOT be able to create a product",
 				Method:      http.MethodPost,
 				URL:         "/api/test/products",
@@ -90,6 +175,13 @@ func TestProductEndpoints(t *testing.T) {
 				Method:       http.MethodGet,
 				URL:          "/api/test/products",
 				AuthRole:     data.RoleStoreManager,
+				ExpectedCode: http.StatusOK,
+			},
+			{
+				Description:  "Admin should search",
+				Method:       http.MethodGet,
+				URL:          "/api/test/products?search=Espresso",
+				AuthRole:     data.RoleAdmin,
 				ExpectedCode: http.StatusOK,
 			},
 		}
@@ -161,6 +253,36 @@ func TestProductEndpoints(t *testing.T) {
 				AuthRole:     data.RoleAdmin,
 				ExpectedCode: http.StatusOK,
 			},
+			{
+				Description: "Update product with empty description",
+				Method:      http.MethodPut,
+				URL:         "/api/test/products/1",
+				FormData: map[string]string{
+					"name":        "Updated Latte",
+					"description": "",
+					"categoryId":  "1",
+				},
+				Files: map[string][]*multipart.FileHeader{
+					"image": imageFileHeaders,
+				},
+				AuthRole:     data.RoleAdmin,
+				ExpectedCode: http.StatusOK,
+			},
+			{
+				Description: "Update product with empty name",
+				Method:      http.MethodPut,
+				URL:         "/api/test/products/1",
+				FormData: map[string]string{
+					"name":        " ",
+					"description": "",
+					"categoryId":  "1",
+				},
+				Files: map[string][]*multipart.FileHeader{
+					"image": imageFileHeaders,
+				},
+				AuthRole:     data.RoleAdmin,
+				ExpectedCode: http.StatusBadRequest,
+			},
 		}
 		env.RunTests(t, testCases)
 	})
@@ -173,6 +295,13 @@ func TestProductEndpoints(t *testing.T) {
 				URL:          "/api/test/products/1",
 				AuthRole:     data.RoleAdmin,
 				ExpectedCode: http.StatusConflict,
+			},
+			{
+				Description:  "Admin should delete a product",
+				Method:       http.MethodDelete,
+				URL:          "/api/test/products/3",
+				AuthRole:     data.RoleAdmin,
+				ExpectedCode: http.StatusOK,
 			},
 		}
 		env.RunTests(t, testCases)

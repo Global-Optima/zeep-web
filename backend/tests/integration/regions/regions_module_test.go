@@ -34,6 +34,16 @@ func TestRegionEndpoints(t *testing.T) {
 				AuthRole:     data.RoleBarista, // Unauthorized role
 				ExpectedCode: http.StatusForbidden,
 			},
+			{
+				Description: "Admin should NOT create a region with an empty name",
+				Method:      http.MethodPost,
+				URL:         "/api/test/regions",
+				Body: map[string]interface{}{
+					"name": " ", // Empty name test case
+				},
+				AuthRole:     data.RoleAdmin,
+				ExpectedCode: http.StatusBadRequest, // Expected failure due to empty name
+			},
 		}
 		env.RunTests(t, testCases)
 	})
@@ -120,6 +130,16 @@ func TestRegionEndpoints(t *testing.T) {
 				},
 				AuthRole:     data.RoleRegionWarehouseManager, // Not allowed to update
 				ExpectedCode: http.StatusForbidden,
+			},
+			{
+				Description: "Admin should NOT update a region with an empty name",
+				Method:      http.MethodPut,
+				URL:         "/api/test/regions/1",
+				Body: map[string]interface{}{
+					"name": " ", // Empty name test case for update
+				},
+				AuthRole:     data.RoleAdmin,
+				ExpectedCode: http.StatusBadRequest, // Expected failure due to empty name
 			},
 		}
 		env.RunTests(t, testCases)

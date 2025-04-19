@@ -26,7 +26,7 @@ func NewRegionHandler(service RegionService, auditService audit.AuditService) *R
 
 func (h *RegionHandler) CreateRegion(c *gin.Context) {
 	var dto types.CreateRegionDTO
-	if err := c.ShouldBindJSON(&dto); err != nil {
+	if err := utils.ParseRequestBody(c, &dto); err != nil {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}
@@ -57,7 +57,7 @@ func (h *RegionHandler) UpdateRegion(c *gin.Context) {
 	}
 
 	var dto types.UpdateRegionDTO
-	if err := c.ShouldBindJSON(&dto); err != nil {
+	if err := utils.ParseRequestBody(c, &dto); err != nil {
 		localization.SendLocalizedResponseWithKey(c, localization.ErrMessageBindingJSON)
 		return
 	}

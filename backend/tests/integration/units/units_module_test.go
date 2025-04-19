@@ -2,6 +2,7 @@ package units_test
 
 import (
 	"net/http"
+	"strings"
 	"testing"
 
 	"github.com/Global-Optima/zeep-web/backend/internal/data"
@@ -36,6 +37,39 @@ func TestUnitEndpoints(t *testing.T) {
 				AuthRole:     data.RoleBarista, // ❌ Barista doesn't have permission
 				ExpectedCode: http.StatusForbidden,
 			},
+			{
+				Description: "Admin should NOT create a unit with a name containing only spaces",
+				Method:      http.MethodPost,
+				URL:         "/api/test/units",
+				Body: map[string]interface{}{
+					"name":             "    ", // Only spaces
+					"conversionFactor": 1.0,
+				},
+				AuthRole:     data.RoleAdmin,
+				ExpectedCode: http.StatusBadRequest,
+			},
+			{
+				Description: "Admin should NOT create a unit with too many characters in the name",
+				Method:      http.MethodPost,
+				URL:         "/api/test/units",
+				Body: map[string]interface{}{
+					"name":             strings.Repeat("A", 300), // Exceeding typical length limits
+					"conversionFactor": 1.0,
+				},
+				AuthRole:     data.RoleAdmin,
+				ExpectedCode: http.StatusInternalServerError,
+			},
+			{
+				Description: "Admin should NOT create a unit with out of boundary excessively high conversion factor",
+				Method:      http.MethodPost,
+				URL:         "/api/test/units",
+				Body: map[string]interface{}{
+					"name":             "HighConversionUnit",
+					"conversionFactor": 1e10, // Example of an excessively high conversion factor
+				},
+				AuthRole:     data.RoleAdmin,
+				ExpectedCode: http.StatusInternalServerError,
+			},
 		}
 		env.RunTests(t, testCases)
 	})
@@ -46,6 +80,13 @@ func TestUnitEndpoints(t *testing.T) {
 				Description:  "Admin should fetch all units",
 				Method:       http.MethodGet,
 				URL:          "/api/test/units",
+				AuthRole:     data.RoleAdmin, // ✅ Only admin can access
+				ExpectedCode: http.StatusOK,
+			},
+			{
+				Description:  "Admin should search units by name",
+				Method:       http.MethodGet,
+				URL:          "/api/test/units?search=Kilogram",
 				AuthRole:     data.RoleAdmin, // ✅ Only admin can access
 				ExpectedCode: http.StatusOK,
 			},
@@ -99,6 +140,28 @@ func TestUnitEndpoints(t *testing.T) {
 				},
 				AuthRole:     data.RoleAdmin, // ✅ Admin access required
 				ExpectedCode: http.StatusOK,
+			},
+			{
+				Description: "Admin should NOT update a unit with a name containing only spaces",
+				Method:      http.MethodPut,
+				URL:         "/api/test/units/1",
+				Body: map[string]interface{}{
+					"name":             "    ", // Name with whitespace only
+					"conversionFactor": 0.001,
+				},
+				AuthRole:     data.RoleAdmin,
+				ExpectedCode: http.StatusBadRequest,
+			},
+			{
+				Description: "Admin should NOT update a unit with an excessively high conversion factor",
+				Method:      http.MethodPut,
+				URL:         "/api/test/units/1",
+				Body: map[string]interface{}{
+					"name":             "Gram",
+					"conversionFactor": 1e10, // Out-of-bound conversion factor
+				},
+				AuthRole:     data.RoleAdmin,
+				ExpectedCode: http.StatusInternalServerError,
 			},
 			{
 				Description: "Store Manager should NOT be able to update a unit",
